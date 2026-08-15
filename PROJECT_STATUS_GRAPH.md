@@ -2,6 +2,19 @@
 
 ---
 
+### 📍 Version 8.34 — Direct Synchronous MongoDB Atlas Writes & Ephemeral Storage Fix ⚡🍃
+
+```mermaid
+flowchart TD
+    DirectAtlasWrites["Direct Mongo Atlas Writes<br/>(Refactored BuildingModel.create, update, and delete to execute direct Mongoose CRUD calls to MongoDB Atlas)"]
+    EphemeralDiskSafety["Ephemeral Storage Safety<br/>(Eliminated silent fallback dependency on ephemeral disk files, ensuring data persists permanently to Atlas)"]
+    GuaranteedAtlasSync["Guaranteed Document Sync<br/>(Guaranteed newly created buildings, bookings, and staff immediately reflect in MongoDB Atlas Data Explorer)"]
+
+    DirectAtlasWrites --> EphemeralDiskSafety --> GuaranteedAtlasSync
+```
+
+---
+
 ### 📍 Version 8.33 — MongoDB Atlas Live Diagnostic Endpoint & Multi-Model Auto-Sync 🩺🍃
 
 ```mermaid

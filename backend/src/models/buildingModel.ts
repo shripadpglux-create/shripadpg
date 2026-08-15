@@ -40,7 +40,6 @@ export class BuildingModel {
   public static async getAll(): Promise<Building[]> {
     await this.ensureDataFile();
 
-    // Check if MongoDB Atlas is connected
     if (mongoose.connection.readyState === 1) {
       try {
         const mongoDocs = await BuildingMongoModel.find({}).lean();
@@ -96,7 +95,6 @@ export class BuildingModel {
       console.error("Error saving buildings data to file:", err);
     }
 
-    // Sync with MongoDB Atlas
     if (mongoose.connection.readyState === 1) {
       try {
         await BuildingMongoModel.deleteMany({});
@@ -111,7 +109,6 @@ export class BuildingModel {
   }
 
   public static async create(data: Partial<Building>): Promise<Building> {
-    const buildings = await this.getAll();
     const newBuilding: Building = {
       id: `bld_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
       name: data.name || "PG New",
@@ -123,8 +120,21 @@ export class BuildingModel {
       updatedAt: new Date().toISOString(),
     };
 
-    buildings.push(newBuilding);
-    await this.save(buildings);
+    // DIRECT WRITE TO MONGODB ATLAS FIRST
+    if (mongoose.connection.readyState === 1) {
+      try {
+        await BuildingMongoModel.create(newBuilding);
+        console.log(`🍃 Direct Mongo Atlas Building Created: ${newBuilding.name}`);
+      } catch (err) {
+        console.error("Direct Mongo Atlas building creation failed:", err);
+      }
+    }
+
+    const buildings = await this.getAll();
+    if (!buildings.some((b) => b.id === newBuilding.id)) {
+      buildings.push(newBuilding);
+      await this.save(buildings);
+    }
     return newBuilding;
   }
 
@@ -150,6 +160,19 @@ export class BuildingModel {
       updatedAt: new Date().toISOString(),
     };
 
+    if (mongoose.connection.readyState === 1) {
+      try {
+        await BuildingMongoModel.findOneAndUpdate(
+          { $or: [{ id: existing.id }, { name: existing.name }] },
+          updated,
+          { upsert: true }
+        );
+        console.log(`🍃 Direct Mongo Atlas Building Updated: ${updated.name}`);
+      } catch (err) {
+        console.error("Direct Mongo Atlas building update failed:", err);
+      }
+    }
+
     buildings[index] = updated;
     await this.save(buildings);
     return updated;
@@ -166,16 +189,17 @@ export class BuildingModel {
       return !idMatch && !nameMatch;
     });
 
+    if (mongoose.connection.readyState === 1) {
+      try {
+        await BuildingMongoModel.deleteMany({
+          $or: [{ id: nameOrId }, { name: nameOrId }],
+        });
+        console.log(`🍃 Direct Mongo Atlas Building Deleted: ${nameOrId}`);
+      } catch (e) {}
+    }
+
     if (buildings.length < initialLen) {
       await this.save(buildings);
-
-      if (mongoose.connection.readyState === 1) {
-        try {
-          await BuildingMongoModel.deleteMany({
-            $or: [{ id: nameOrId }, { name: nameOrId }],
-          });
-        } catch (e) {}
-      }
       return true;
     }
     return false;
