@@ -2,6 +2,18 @@
 
 ---
 
+### 📍 Version 8.22 — Live Render Web Service URL Mapping 🌐⚡
+
+```mermaid
+flowchart TD
+    LiveRenderUrlMapping["Live Render URL Mapping<br/>(Updated apiConfig.ts production backend URL to target exact live Render service at https://shripadpg.onrender.com)"]
+    ZeroCorsErrorResolved["0 CORS Errors & Clean Cloudflare Communication<br/>(Verified clean preflight resolution and backend route access across all live endpoints)"]
+
+    LiveRenderUrlMapping --> ZeroCorsErrorResolved
+```
+
+---
+
 ### 📍 Version 8.21 — Enterprise Free Tier Fallback & Silent Console Error Shield 🛡️💯
 
 ```mermaid
