@@ -1517,17 +1517,21 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     // Determine room sharing capacity: check custom setting, or infer from allocations, fallback to 2
     let capacity = customRoomSharing[`${buildingName}_${cleanRoom}`] || 2;
 
-    // Expand capacity if there are existing bookings for Bed C, D, E, F, etc.
+    // Expand capacity if there are existing bookings for Bed C, D, E, F, G, H, I, J, etc.
     allocations.forEach((bk) => {
       const bkBed = (bk.allocatedBed || bk.bed || "").toLowerCase();
       if (bkBed.includes("c") || bkBed.includes("3")) capacity = Math.max(capacity, 3);
       if (bkBed.includes("d") || bkBed.includes("4")) capacity = Math.max(capacity, 4);
       if (bkBed.includes("e") || bkBed.includes("5")) capacity = Math.max(capacity, 5);
       if (bkBed.includes("f") || bkBed.includes("6")) capacity = Math.max(capacity, 6);
+      if (bkBed.includes("g") || bkBed.includes("7")) capacity = Math.max(capacity, 7);
+      if (bkBed.includes("h") || bkBed.includes("8")) capacity = Math.max(capacity, 8);
+      if (bkBed.includes("i") || bkBed.includes("9")) capacity = Math.max(capacity, 9);
+      if (bkBed.includes("j") || bkBed.includes("10")) capacity = Math.max(capacity, 10);
     });
 
-    const letterLabels = ["Bed A", "Bed B", "Bed C", "Bed D", "Bed E", "Bed F", "Bed G", "Bed H"];
-    const bedNames = letterLabels.slice(0, Math.max(1, capacity));
+    const letterLabels = ["Bed A", "Bed B", "Bed C", "Bed D", "Bed E", "Bed F", "Bed G", "Bed H", "Bed I", "Bed J", "Bed K", "Bed L"];
+    const bedNames = letterLabels.slice(0, Math.min(12, Math.max(1, capacity)));
 
     // Track used booking IDs to guarantee 100% no duplicate resident assignment
     const assignedIds = new Set<string>();
@@ -5482,10 +5486,10 @@ function doPost(e) {
                   <Bed className="h-4 w-4 text-indigo-600" /> 3. Select Bed in Room {bmsRoom}
                 </span>
 
-                {/* Dynamic Room Sharing / Bed Capacity Switcher */}
+                {/* Dynamic Room Sharing / Bed Capacity Switcher (1 to 10 Beds) */}
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-[10px] font-black text-indigo-700 uppercase tracking-wider">Room Sharing:</span>
-                  {[1, 2, 3, 4, 5, 6].map((cap) => {
+                  <span className="text-[10px] font-black text-indigo-700 uppercase tracking-wider">Room Capacity:</span>
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((cap) => {
                     const cleanRoom = (bmsRoom || "101").toString().replace(/^Room\s+/i, "").trim();
                     const currentCap = customRoomSharing[`${bmsBuilding}_${cleanRoom}`] || 2;
                     const isActive = currentCap === cap;
@@ -5502,19 +5506,19 @@ function doPost(e) {
                           if (typeof window !== "undefined") {
                             localStorage.setItem("shripad_custom_room_sharing", JSON.stringify(updated));
                           }
-                          const letterLabels = ["Bed A", "Bed B", "Bed C", "Bed D", "Bed E", "Bed F"];
+                          const letterLabels = ["Bed A", "Bed B", "Bed C", "Bed D", "Bed E", "Bed F", "Bed G", "Bed H", "Bed I", "Bed J", "Bed K", "Bed L"];
                           const maxBedIndex = letterLabels.indexOf(bmsBed);
                           if (maxBedIndex >= cap) {
                             setBmsBed("Bed A");
                           }
                         }}
-                        className={`px-2.5 py-1 rounded-xl text-[11px] font-black transition-all cursor-pointer ${
+                        className={`px-2 py-0.5 rounded-xl text-[11px] font-black transition-all cursor-pointer ${
                           isActive
                             ? "bg-indigo-600 text-white shadow-md scale-105"
                             : "bg-white text-indigo-900 border border-indigo-200 hover:bg-indigo-100"
                         }`}
                       >
-                        {cap === 1 ? "1 (Single)" : `${cap}-Sharing`}
+                        {cap === 1 ? "1 (Single)" : `${cap} Beds`}
                       </button>
                     );
                   })}
@@ -5528,11 +5532,13 @@ function doPost(e) {
                   : rmState.beds.length === 2
                     ? "grid-cols-1 sm:grid-cols-2"
                     : rmState.beds.length <= 4
-                      ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-4"
-                      : "grid-cols-2 sm:grid-cols-3 md:grid-cols-6";
+                      ? "grid-cols-2 sm:grid-cols-2 md:grid-cols-4"
+                      : rmState.beds.length <= 6
+                        ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-6"
+                        : "grid-cols-2 sm:grid-cols-4 md:grid-cols-5";
 
                 return (
-                  <div className={`grid ${gridColsClass} gap-3`}>
+                  <div className={`grid ${gridColsClass} gap-2.5 max-h-72 overflow-y-auto p-1`}>
                     {rmState.beds.map((b) => {
                       const isBedSelected = bmsBed === b.bedName;
                       return (
