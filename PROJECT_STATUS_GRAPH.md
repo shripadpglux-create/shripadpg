@@ -2,6 +2,20 @@
 
 ---
 
+### 📍 Version 8.40 — Centralized Complaint Hub & Live Notification Ticketing 📢🚨
+
+```mermaid
+flowchart TD
+    CustomerComplaintForm["Customer Complaint Submissions<br/>(Category, Title, Priority, Description, Timestamp)"]
+    AdminNotificationBadge["Header Notification Badge<br/>(Real-time glowing active complaint counter in top bar & resident history)"]
+    CentralComplaintHub["Centralized Complaints Hub & Ticketing Modal<br/>(Filter by Pending / In Progress / Resolved, category filtering, search, and direct status updates)"]
+    WhatsAppAndResolution["Direct WhatsApp & Resolution Notes<br/>(1-click WhatsApp messaging to resident & resolution response notes synced to MongoDB)"]
+
+    CustomerComplaintForm --> AdminNotificationBadge --> CentralComplaintHub --> WhatsAppAndResolution
+```
+
+---
+
 ### 📍 Version 8.39 — Dynamic Multi-Sharing Bed Matrix (1 to 6 Sharing per Room) 🛏️🔢
 
 ```mermaid

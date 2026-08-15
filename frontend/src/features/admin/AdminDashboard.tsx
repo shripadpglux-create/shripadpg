@@ -255,6 +255,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const [isPaymentSubmitting, setIsPaymentSubmitting] = useState(false);
   const [viewingAdminInvoiceData, setViewingAdminInvoiceData] = useState<any | null>(null);
 
+  // Centralized Complaints Hub State & Notification Management
+  const [isComplaintsHubModalOpen, setIsComplaintsHubModalOpen] = useState(false);
+  const [complaintsHubFilter, setComplaintsHubFilter] = useState<"all" | "pending" | "in_progress" | "resolved">("all");
+  const [complaintsHubCategoryFilter, setComplaintsHubCategoryFilter] = useState<string>("all");
+  const [complaintsHubSearch, setComplaintsHubSearch] = useState<string>("");
+  const [complaintAdminReplies, setComplaintAdminReplies] = useState<Record<string, string>>({});
+
   // PWA Install Prompt State & Handler
   const [deferredInstallPrompt, setDeferredInstallPrompt] = useState<any>(null);
 
@@ -1687,6 +1694,129 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     };
   }, [scopedBuildingsList, bookings]);
 
+  // Centralized Aggregated Complaints across all residents in scoped buildings
+  const allComplaintsList = useMemo(() => {
+    const list: {
+      bookingId: string;
+      residentName: string;
+      residentPhone: string;
+      building: string;
+      room: string;
+      bed: string;
+      complaint: any;
+    }[] = [];
+
+    scopedBookings.forEach((b) => {
+      (b.complaintHistory || []).forEach((c: any) => {
+        list.push({
+          bookingId: b.id,
+          residentName: b.name || "Resident",
+          residentPhone: b.phone || "",
+          building: b.allocatedBuilding || b.building || "PG A",
+          room: b.allocatedRoom || b.room || "Unallocated",
+          bed: b.allocatedBed || b.bed || "Unallocated",
+          complaint: c,
+        });
+      });
+    });
+
+    return list.sort((a, b) => {
+      const timeA = new Date(a.complaint.createdAt || a.complaint.timestamp || 0).getTime();
+      const timeB = new Date(b.complaint.createdAt || b.complaint.timestamp || 0).getTime();
+      return timeB - timeA;
+    });
+  }, [scopedBookings]);
+
+  const activeComplaintsCount = useMemo(() => {
+    return allComplaintsList.filter(
+      (item) => !item.complaint.status || item.complaint.status === "pending" || item.complaint.status === "in_progress"
+    ).length;
+  }, [allComplaintsList]);
+
+  const handleUpdateComplaintStatus = async (
+    bookingId: string,
+    complaintId: string,
+    newStatus: "pending" | "in_progress" | "resolved",
+    adminComment?: string
+  ) => {
+    // 1. Update React state immediately
+    setBookings((prev) =>
+      prev.map((b) => {
+        if (b.id !== bookingId) return b;
+        const history = b.complaintHistory || [];
+        const updatedHistory = history.map((c: any) =>
+          (c.id || c.title) === (complaintId || c.title)
+            ? {
+                ...c,
+                status: newStatus,
+                adminComment: adminComment !== undefined ? adminComment : c.adminComment,
+                resolvedAt: newStatus === "resolved" ? new Date().toISOString() : c.resolvedAt,
+              }
+            : c
+        );
+        return { ...b, complaintHistory: updatedHistory };
+      })
+    );
+
+    // If viewing resident profile modal, update selectedHistoryResident
+    if (selectedHistoryResident && selectedHistoryResident.id === bookingId) {
+      setSelectedHistoryResident((prev: any) => {
+        if (!prev) return prev;
+        const history = prev.complaintHistory || [];
+        const updatedHistory = history.map((c: any) =>
+          (c.id || c.title) === (complaintId || c.title)
+            ? {
+                ...c,
+                status: newStatus,
+                adminComment: adminComment !== undefined ? adminComment : c.adminComment,
+                resolvedAt: newStatus === "resolved" ? new Date().toISOString() : c.resolvedAt,
+              }
+            : c
+        );
+        return { ...prev, complaintHistory: updatedHistory };
+      });
+    }
+
+    // 2. Update LocalStorage
+    try {
+      const localStr = localStorage.getItem("shripad_admin_bookings");
+      if (localStr) {
+        const list = JSON.parse(localStr);
+        const updatedList = list.map((b: any) => {
+          if (b.id !== bookingId) return b;
+          const history = b.complaintHistory || [];
+          const updatedHistory = history.map((c: any) =>
+            (c.id || c.title) === (complaintId || c.title)
+              ? {
+                  ...c,
+                  status: newStatus,
+                  adminComment: adminComment !== undefined ? adminComment : c.adminComment,
+                  resolvedAt: newStatus === "resolved" ? new Date().toISOString() : c.resolvedAt,
+                }
+              : c
+          );
+          return { ...b, complaintHistory: updatedHistory };
+        });
+        localStorage.setItem("shripad_admin_bookings", JSON.stringify(updatedList));
+      }
+    } catch (e) {
+      console.error("LocalStorage complaint update error:", e);
+    }
+
+    // 3. Send to backend API
+    try {
+      await fetch(`${API_BASE_URL}/api/bookings/${bookingId}/complaints/${complaintId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus, adminComment }),
+      });
+      showToast(`Complaint status updated to ${newStatus.replace("_", " ")}!`, "success");
+    } catch (err) {
+      console.warn("Backend complaint status sync notice:", err);
+      showToast(`Complaint status updated locally.`, "info");
+    }
+  };
+
   const fetchBookings = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/bookings`);
@@ -2021,6 +2151,25 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   <span>Payment & QR</span>
                 </button>
               )}
+
+              {/* Complaints Center Quick Access Notification Button */}
+              <button
+                onClick={() => setIsComplaintsHubModalOpen(true)}
+                className={`relative flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-black transition cursor-pointer shadow-md active:scale-95 border ${
+                  activeComplaintsCount > 0
+                    ? "bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100 animate-pulse"
+                    : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200"
+                }`}
+                title="Manage Resident Complaints & Service Requests"
+              >
+                <MessageSquare className={`h-4 w-4 ${activeComplaintsCount > 0 ? "text-rose-600" : "text-slate-500"}`} />
+                <span className="hidden sm:inline">Complaints</span>
+                {activeComplaintsCount > 0 && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 text-[10px] font-black text-white px-1.5 shadow-xs">
+                    {activeComplaintsCount}
+                  </span>
+                )}
+              </button>
 
               {/* Install SripadPG App Button */}
               <button
@@ -6874,32 +7023,141 @@ function doPost(e) {
 
               {/* ===== COMPLAINT TAB ===== */}
               {historyTab === "complaint" && (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">Complaint History</h3>
-                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                      selectedHistoryResident.complaintHistory?.length
-                        ? "bg-red-100 text-red-600"
-                        : "bg-emerald-100 text-emerald-600"
+                    <span className={`text-[10px] font-black px-3 py-1 rounded-full ${
+                      (selectedHistoryResident.complaintHistory || []).filter((c: any) => c.status !== "resolved").length
+                        ? "bg-rose-100 text-rose-700 border border-rose-200"
+                        : "bg-emerald-100 text-emerald-700 border border-emerald-200"
                     }`}>
-                      {selectedHistoryResident.complaintHistory?.length || 0} complaints
+                      {selectedHistoryResident.complaintHistory?.length || 0} Total • {(selectedHistoryResident.complaintHistory || []).filter((c: any) => c.status !== "resolved").length} Active
                     </span>
                   </div>
+
                   {selectedHistoryResident.complaintHistory?.length ? (
-                    selectedHistoryResident.complaintHistory.map((c: any, i: number) => (
-                      <div key={i} className="p-3 rounded-xl bg-red-50 border border-red-100">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-[11px] font-black text-red-900">{c.subject}</span>
-                          <span className="text-[9px] text-red-400">{c.date}</span>
-                        </div>
-                        <p className="text-[11px] text-red-700">{c.description}</p>
-                      </div>
-                    ))
+                    <div className="space-y-3">
+                      {selectedHistoryResident.complaintHistory.map((c: any, i: number) => {
+                        const compId = c.id || `comp_${i}`;
+                        const isResolved = c.status === "resolved";
+                        const isInProgress = c.status === "in_progress";
+                        const isPending = !c.status || c.status === "pending";
+
+                        return (
+                          <div
+                            key={compId}
+                            className={`p-4 rounded-2xl border-2 space-y-3 transition-all ${
+                              isResolved
+                                ? "bg-emerald-50/60 border-emerald-200"
+                                : isInProgress
+                                  ? "bg-blue-50/70 border-blue-200"
+                                  : "bg-rose-50/70 border-rose-200"
+                            }`}
+                          >
+                            {/* Header: Category & Priority & Status Badge */}
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md bg-white border border-slate-200 text-slate-800 shadow-2xs">
+                                  {c.category === "wifi" ? "📶 Wi-Fi" : c.category === "food" ? "🍲 Food / Mess" : c.category === "electricity" ? "⚡ Electricity" : c.category === "plumbing" ? "🚰 Plumbing" : c.category === "cleaning" ? "🧹 Cleaning" : c.category === "maintenance" ? "🔧 Maintenance" : "📝 General"}
+                                </span>
+                                <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${
+                                  c.priority === "high"
+                                    ? "bg-rose-600 text-white"
+                                    : c.priority === "low"
+                                      ? "bg-slate-200 text-slate-700"
+                                      : "bg-amber-100 text-amber-900 border border-amber-300"
+                                }`}>
+                                  {c.priority || "Medium"} Priority
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${
+                                  isResolved
+                                    ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                                    : isInProgress
+                                      ? "bg-blue-100 text-blue-800 border-blue-300"
+                                      : "bg-amber-100 text-amber-800 border-amber-300"
+                                }`}>
+                                  {isResolved ? "✅ Resolved" : isInProgress ? "🔄 In Progress" : "⏳ Pending"}
+                                </span>
+                                <span className="text-[10px] font-bold text-slate-400">
+                                  {c.createdAt ? new Date(c.createdAt).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : c.date || c.timestamp || "Recently"}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Title & Description */}
+                            <div className="space-y-1">
+                              <h4 className="text-sm font-black text-slate-900">{c.title || c.subject || "Issue Report"}</h4>
+                              <p className="text-xs font-semibold text-slate-700 bg-white/80 p-3 rounded-xl border border-slate-200/80 leading-relaxed">
+                                {c.description}
+                              </p>
+                            </div>
+
+                            {/* Admin Note / Response */}
+                            {c.adminComment && (
+                              <div className="p-2.5 rounded-xl bg-indigo-50/80 border border-indigo-100 text-[11px] font-bold text-indigo-950 flex items-start gap-2">
+                                <span className="text-indigo-600 font-black">Admin Reply:</span>
+                                <span>{c.adminComment}</span>
+                              </div>
+                            )}
+
+                            {/* Action Controls for Admin */}
+                            <div className="pt-2 border-t border-slate-200/60 flex flex-wrap items-center justify-between gap-2">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-[10px] font-black text-slate-500 uppercase">Change Status:</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateComplaintStatus(selectedHistoryResident.id, compId, "pending")}
+                                  className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
+                                    isPending ? "bg-amber-500 text-white shadow-2xs" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+                                  }`}
+                                >
+                                  ⏳ Pending
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateComplaintStatus(selectedHistoryResident.id, compId, "in_progress")}
+                                  className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
+                                    isInProgress ? "bg-blue-600 text-white shadow-2xs" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+                                  }`}
+                                >
+                                  🔄 In Progress
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateComplaintStatus(selectedHistoryResident.id, compId, "resolved")}
+                                  className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
+                                    isResolved ? "bg-emerald-600 text-white shadow-2xs" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+                                  }`}
+                                >
+                                  ✅ Resolved
+                                </button>
+                              </div>
+
+                              {selectedHistoryResident.phone && (
+                                <a
+                                  href={`https://wa.me/91${selectedHistoryResident.phone.replace(/\D/g, "")}?text=${encodeURIComponent(
+                                    `Hello ${selectedHistoryResident.name}, regarding your complaint "${c.title || c.subject || "Issue"}": We are looking into this.`
+                                  )}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black transition shadow-2xs cursor-pointer"
+                                >
+                                  <MessageSquare className="h-3 w-3" /> WhatsApp
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   ) : (
-                    <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100 text-center">
-                      <MessageSquare className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-                      <p className="text-xs font-black text-slate-500">No Complaints Filed</p>
-                      <p className="text-[11px] text-slate-400 mt-1">Great! This resident has no complaint history.</p>
+                    <div className="p-8 rounded-2xl bg-slate-50 border border-slate-100 text-center space-y-2">
+                      <MessageSquare className="h-8 w-8 text-slate-300 mx-auto" />
+                      <p className="text-xs font-black text-slate-600">No Complaints Filed</p>
+                      <p className="text-[11px] text-slate-400">Great! This resident has zero registered complaints.</p>
                     </div>
                   )}
                 </div>
@@ -7991,6 +8249,311 @@ function doPost(e) {
               hideHeaderTabs={true}
               hideTopBar={true}
             />
+          </div>
+        </div>
+      )}
+
+      {/* CENTRAL COMPLAINTS MANAGEMENT HUB MODAL */}
+      {isComplaintsHubModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md animate-in fade-in" onClick={() => setIsComplaintsHubModalOpen(false)}>
+          <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col bg-white rounded-[2.5rem] shadow-2xl border border-slate-200 animate-in zoom-in-95 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-rose-50/50 via-white to-slate-50">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100 text-rose-700 shadow-sm">
+                  <MessageSquare className="h-6 w-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
+                    Complaints & Service Hub
+                    {activeComplaintsCount > 0 && (
+                      <span className="bg-rose-600 text-white text-xs px-2.5 py-0.5 rounded-full font-black animate-pulse">
+                        {activeComplaintsCount} Active
+                      </span>
+                    )}
+                  </h2>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Real-time issue ticketing system for Wi-Fi, Food, Electricity, Plumbing & Maintenance
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsComplaintsHubModalOpen(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Filter Toolbar & Search Bar */}
+            <div className="p-4 sm:p-5 border-b border-slate-100 bg-slate-50/70 space-y-3">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                {/* Status Tabs */}
+                <div className="flex items-center gap-1.5 p-1 bg-white rounded-xl border border-slate-200 shadow-2xs w-full sm:w-auto overflow-x-auto">
+                  {(["all", "pending", "in_progress", "resolved"] as const).map((st) => {
+                    const count = st === "all"
+                      ? allComplaintsList.length
+                      : allComplaintsList.filter((item) =>
+                          st === "pending"
+                            ? !item.complaint.status || item.complaint.status === "pending"
+                            : item.complaint.status === st
+                        ).length;
+
+                    return (
+                      <button
+                        key={st}
+                        type="button"
+                        onClick={() => setComplaintsHubFilter(st)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
+                          complaintsHubFilter === st
+                            ? st === "pending"
+                              ? "bg-rose-600 text-white shadow-2xs"
+                              : st === "in_progress"
+                                ? "bg-blue-600 text-white shadow-2xs"
+                                : st === "resolved"
+                                  ? "bg-emerald-600 text-white shadow-2xs"
+                                  : "bg-slate-900 text-white shadow-2xs"
+                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                        }`}
+                      >
+                        <span>{st === "all" ? "All" : st === "pending" ? "Pending" : st === "in_progress" ? "In Progress" : "Resolved"}</span>
+                        <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
+                          complaintsHubFilter === st ? "bg-white/20 text-white" : "bg-slate-100 text-slate-700"
+                        }`}>
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Search Input */}
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search resident, room, title..."
+                    value={complaintsHubSearch}
+                    onChange={(e) => setComplaintsHubSearch(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-800 outline-none focus:border-rose-500 transition"
+                  />
+                  {complaintsHubSearch && (
+                    <button onClick={() => setComplaintsHubSearch("")} className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Category Filter Pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider shrink-0">Category:</span>
+                {[
+                  { id: "all", label: "All Categories" },
+                  { id: "wifi", label: "📶 Wi-Fi" },
+                  { id: "food", label: "🍲 Food / Mess" },
+                  { id: "electricity", label: "⚡ Electricity" },
+                  { id: "plumbing", label: "🚰 Plumbing" },
+                  { id: "cleaning", label: "🧹 Cleaning" },
+                  { id: "maintenance", label: "🔧 Maintenance" },
+                ].map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setComplaintsHubCategoryFilter(cat.id)}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-black transition cursor-pointer whitespace-nowrap ${
+                      complaintsHubCategoryFilter === cat.id
+                        ? "bg-slate-800 text-white shadow-2xs scale-105"
+                        : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Complaints List Body */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 max-h-[60vh]">
+              {(() => {
+                const filtered = allComplaintsList.filter((item) => {
+                  const c = item.complaint;
+                  // Status filter
+                  if (complaintsHubFilter !== "all") {
+                    const effectiveStatus = c.status || "pending";
+                    if (effectiveStatus !== complaintsHubFilter) return false;
+                  }
+                  // Category filter
+                  if (complaintsHubCategoryFilter !== "all") {
+                    if ((c.category || "").toLowerCase() !== complaintsHubCategoryFilter.toLowerCase()) return false;
+                  }
+                  // Search query
+                  if (complaintsHubSearch.trim()) {
+                    const q = complaintsHubSearch.toLowerCase();
+                    const matchName = item.residentName.toLowerCase().includes(q);
+                    const matchRoom = item.room.toLowerCase().includes(q);
+                    const matchBuilding = item.building.toLowerCase().includes(q);
+                    const matchTitle = (c.title || c.subject || "").toLowerCase().includes(q);
+                    const matchDesc = (c.description || "").toLowerCase().includes(q);
+                    if (!matchName && !matchRoom && !matchBuilding && !matchTitle && !matchDesc) return false;
+                  }
+                  return true;
+                });
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="py-16 text-center space-y-3">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-50 text-slate-300 mx-auto border border-slate-100 shadow-inner">
+                        <MessageSquare className="h-8 w-8" />
+                      </div>
+                      <p className="text-sm font-black text-slate-700">No Complaints Found</p>
+                      <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                        There are currently no complaints matching your selected filter. All issues may be resolved!
+                      </p>
+                    </div>
+                  );
+                }
+
+                return filtered.map((item, idx) => {
+                  const c = item.complaint;
+                  const compId = c.id || `comp_${idx}`;
+                  const isResolved = c.status === "resolved";
+                  const isInProgress = c.status === "in_progress";
+                  const isPending = !c.status || c.status === "pending";
+                  const replyText = complaintAdminReplies[compId] !== undefined ? complaintAdminReplies[compId] : (c.adminComment || "");
+
+                  return (
+                    <div
+                      key={compId}
+                      className={`p-4 sm:p-5 rounded-2xl border-2 space-y-3 transition-all ${
+                        isResolved
+                          ? "bg-emerald-50/50 border-emerald-200"
+                          : isInProgress
+                            ? "bg-blue-50/60 border-blue-200 shadow-sm"
+                            : "bg-rose-50/60 border-rose-200 shadow-sm"
+                      }`}
+                    >
+                      {/* Resident Info & Badges Header */}
+                      <div className="flex flex-wrap items-center justify-between gap-2.5 pb-2.5 border-b border-slate-200/70">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                            <User className="h-3.5 w-3.5 text-slate-600" />
+                            <span className="text-xs font-black text-slate-900">{item.residentName}</span>
+                            <span className="text-[10px] font-bold text-slate-400">•</span>
+                            <span className="text-xs font-extrabold text-indigo-700">{item.building} (Room {item.room} - {item.bed})</span>
+                          </div>
+
+                          <span className="text-[10px] font-black uppercase px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 shadow-2xs">
+                            {c.category === "wifi" ? "📶 Wi-Fi" : c.category === "food" ? "🍲 Food / Mess" : c.category === "electricity" ? "⚡ Electricity" : c.category === "plumbing" ? "🚰 Plumbing" : c.category === "cleaning" ? "🧹 Cleaning" : c.category === "maintenance" ? "🔧 Maintenance" : "📝 General"}
+                          </span>
+
+                          <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-lg ${
+                            c.priority === "high"
+                              ? "bg-rose-600 text-white"
+                              : c.priority === "low"
+                                ? "bg-slate-200 text-slate-700"
+                                : "bg-amber-100 text-amber-900 border border-amber-300"
+                          }`}>
+                            {c.priority || "Medium"} Priority
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span className={`text-xs font-black px-3 py-1 rounded-full border ${
+                            isResolved
+                              ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                              : isInProgress
+                                ? "bg-blue-100 text-blue-800 border-blue-300"
+                                : "bg-amber-100 text-amber-800 border-amber-300"
+                          }`}>
+                            {isResolved ? "✅ Resolved" : isInProgress ? "🔄 In Progress" : "⏳ Pending"}
+                          </span>
+                          <span className="text-[11px] font-bold text-slate-400">
+                            {c.createdAt ? new Date(c.createdAt).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : c.date || c.timestamp || "Recently"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Complaint Title & Description Body */}
+                      <div className="space-y-1.5">
+                        <h4 className="text-base font-black text-slate-900 flex items-center gap-2">
+                          <AlertCircle className={`h-4 w-4 shrink-0 ${isResolved ? "text-emerald-600" : isInProgress ? "text-blue-600" : "text-rose-600"}`} />
+                          {c.title || c.subject || "Issue Report"}
+                        </h4>
+                        <div className="p-3.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-700 leading-relaxed shadow-2xs">
+                          {c.description}
+                        </div>
+                      </div>
+
+                      {/* Admin Note / Resolution Comment Form */}
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                        <input
+                          type="text"
+                          placeholder="Add resolution note / response to resident..."
+                          value={replyText}
+                          onChange={(e) => setComplaintAdminReplies((prev) => ({ ...prev, [compId]: e.target.value }))}
+                          className="flex-1 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-medium text-slate-800 outline-none focus:border-indigo-500 shadow-2xs"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateComplaintStatus(item.bookingId, compId, c.status || "pending", replyText)}
+                          className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black transition cursor-pointer shadow-2xs whitespace-nowrap"
+                        >
+                          Save Note 💬
+                        </button>
+                      </div>
+
+                      {/* Action Bar: Status Updater & WhatsApp */}
+                      <div className="pt-2.5 border-t border-slate-200/70 flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[11px] font-black text-slate-500 uppercase">Change Status:</span>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateComplaintStatus(item.bookingId, compId, "pending", replyText)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
+                              isPending ? "bg-amber-500 text-white shadow-md scale-105" : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"
+                            }`}
+                          >
+                            ⏳ Pending
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateComplaintStatus(item.bookingId, compId, "in_progress", replyText)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
+                              isInProgress ? "bg-blue-600 text-white shadow-md scale-105" : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"
+                            }`}
+                          >
+                            🔄 In Progress
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateComplaintStatus(item.bookingId, compId, "resolved", replyText)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
+                              isResolved ? "bg-emerald-600 text-white shadow-md scale-105" : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"
+                            }`}
+                          >
+                            ✅ Mark Resolved
+                          </button>
+                        </div>
+
+                        {item.residentPhone && (
+                          <a
+                            href={`https://wa.me/91${item.residentPhone.replace(/\D/g, "")}?text=${encodeURIComponent(
+                              `Hello ${item.residentName}, regarding your complaint "${c.title || c.subject || "Issue"}": `
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition shadow-sm cursor-pointer"
+                          >
+                            <MessageSquare className="h-3.5 w-3.5" /> WhatsApp Resident
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
           </div>
         </div>
       )}
