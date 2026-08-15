@@ -2,6 +2,19 @@
 
 ---
 
+### 📍 Version 8.27 — Demo Buildings Database Cleanup 🧹✨
+
+```mermaid
+flowchart TD
+    BackendDataCleanup["Backend JSON DB Sanitation<br/>(Cleared initial demo buildings from backend/data/buildings.json)"]
+    FrontendInitialStateSync["Frontend Initial State Alignment<br/>(Removed demo fallback array from AdminDashboard.tsx buildingsList initializer)"]
+    CleanProductionDataState["Clean Data Baseline<br/>(Ensured clean production portfolio without phantom or dummy building entries)"]
+
+    BackendDataCleanup --> FrontendInitialStateSync --> CleanProductionDataState
+```
+
+---
+
 ### 📍 Version 8.26 — Custom Modern Confirmation Modal & Native Browser Popup Elimination 🎨✨
 
 ```mermaid

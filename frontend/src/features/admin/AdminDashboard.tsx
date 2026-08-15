@@ -524,12 +524,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
         } catch {}
       }
     }
-    return [
-      { id: "bld_pga", name: "PG A", floors: 4, roomsPerFloor: 4, floorRoomCounts: { 0: 1, 1: 4, 2: 4, 3: 4 } },
-      { id: "bld_pgb", name: "PG B", floors: 4, roomsPerFloor: 4, floorRoomCounts: { 0: 1, 1: 4, 2: 4, 3: 4 } },
-      { id: "bld_pgc", name: "PG C", floors: 4, roomsPerFloor: 4, floorRoomCounts: { 0: 1, 1: 4, 2: 4, 3: 4 } },
-      { id: "bld_pgd", name: "PG D", floors: 4, roomsPerFloor: 4, floorRoomCounts: { 0: 1, 1: 4, 2: 4, 3: 4 } },
-    ];
+    return [];
   });
 
   const fetchBuildings = async () => {
