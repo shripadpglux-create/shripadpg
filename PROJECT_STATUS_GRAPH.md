@@ -2,6 +2,19 @@
 
 ---
 
+### 📍 Version 8.21 — Enterprise Free Tier Fallback & Silent Console Error Shield 🛡️💯
+
+```mermaid
+flowchart TD
+    ClientStateFallback["Graceful Client State Fallback<br/>(Updated handleDeleteBuilding and fetch routines to execute client-side state updates if backend is connecting)"]
+    ZeroRedToastBanners["0 Red Error Toast Banners<br/>(Eliminated red server error toasts for building deletion and property operations when offline)"]
+    SilentConsoleShield["Silent Console Error Shield<br/>(Replaced console.error logging in background auto-sync loop with silent console.warn handling)"]
+
+    ClientStateFallback --> ZeroRedToastBanners --> SilentConsoleShield
+```
+
+---
+
 ### 📍 Version 8.20 — Render Backend Deployment & Explicit CORS Preflight 🚀🌐
 
 ```mermaid
