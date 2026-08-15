@@ -1,0 +1,273 @@
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Inter:wght@300;400;500;600;700;800;900&family=Montserrat:wght@400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+@source "..";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: "Inter", sans-serif;
+  --font-display: "Montserrat", sans-serif;
+  --font-script: "Dancing Script", cursive;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-brand-green: var(--brand-green);
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-gold: var(--brand-gold);
+  --color-brand-green-light: var(--brand-green-light);
+  --color-navy: var(--navy);
+  --color-navy-foreground: var(--navy-foreground);
+  --color-field: var(--field);
+  --color-field-tint: var(--field-tint);
+  --color-paper: var(--paper);
+  --color-slate-900: var(--foreground);
+  --color-slate-800: var(--foreground);
+  --color-slate-950: var(--foreground);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: #ffffff;
+  --foreground: #0f1b3d;
+  --card: #ffffff;
+  --card-foreground: #0f1b3d;
+  --popover: #ffffff;
+  --popover-foreground: #0f1b3d;
+  --primary: #1e3a5f;
+  --primary-foreground: #ffffff;
+  --secondary: #e8edf3;
+  --secondary-foreground: #1e3a5f;
+  --muted: #e8edf3;
+  --muted-foreground: #3b6fa0;
+  --accent: #e8edf3;
+  --accent-foreground: #1e3a5f;
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: #ffffff;
+  --border: oklch(0.929 0.013 255.508);
+  --input: oklch(0.929 0.013 255.508);
+  --ring: #1e3a5f;
+  --chart-1: #1e3a5f;
+  --chart-2: #3b6fa0;
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0f1b3d;
+  --sidebar-primary: #1e3a5f;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e8edf3;
+  --sidebar-accent-foreground: #1e3a5f;
+  --sidebar-border: oklch(0.929 0.013 255.508);
+  --sidebar-ring: #1e3a5f;
+  --brand-green: #1e3a5f;
+  --brand-navy: #0f1b3d;
+  --brand-gold: #3b6fa0;
+  --brand-green-light: #e8edf3;
+
+  /* Rent Invoice Design Tokens */
+  --navy: #0f1b3d;
+  --navy-foreground: #ffffff;
+  --field: #f8fafc;
+  --field-tint: #f0fdf4;
+  --paper: #ffffff;
+}
+
+.dark {
+  --background: #0f1b3d;
+  --foreground: #ffffff;
+  --card: #0f1b3d;
+  --card-foreground: #ffffff;
+  --popover: #0f1b3d;
+  --popover-foreground: #ffffff;
+  --primary: #1e3a5f;
+  --primary-foreground: #ffffff;
+  --secondary: #3b6fa0;
+  --secondary-foreground: #ffffff;
+  --muted: #3b6fa0;
+  --muted-foreground: #e8edf3;
+  --accent: #3b6fa0;
+  --accent-foreground: #ffffff;
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: #ffffff;
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: #1e3a5f;
+  --chart-1: #1e3a5f;
+  --chart-2: #3b6fa0;
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: #0f1b3d;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #1e3a5f;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #3b6fa0;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: #1e3a5f;
+  --brand-green: #1e3a5f;
+  --brand-navy: #0f1b3d;
+  --brand-gold: #3b6fa0;
+  --brand-green-light: #0f1b3d;
+
+  --navy: #0f1b3d;
+  --navy-foreground: #ffffff;
+  --field: #1e293b;
+  --field-tint: #064e3b;
+  --paper: #0f172a;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+  }
+
+  .invoice-sheet {
+    font-family: var(--font-display);
+    width: 210mm;
+    min-height: 297mm;
+  }
+  .inv-input {
+    background-color: var(--field);
+    border-radius: 6px;
+    padding: 0.35rem 0.65rem;
+    width: 100%;
+    outline: none;
+    font-size: 0.85rem;
+    color: var(--navy);
+    border: 1px solid oklch(0.9 0.01 255);
+  }
+  .inv-input:focus {
+    box-shadow: 0 0 0 2px var(--brand-green);
+  }
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html,
+  body {
+    background: white !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    overflow: hidden !important;
+  }
+
+  /* Hide Admin Sidebar, navbars, floating widgets, and control toolbar */
+  aside,
+  nav,
+  .no-print,
+  [role="navigation"],
+  .fixed,
+  .sticky {
+    display: none !important;
+  }
+
+  /* Hide external admin header/footer, but EXPLICITLY KEEP invoice header & footer */
+  body > header,
+  main > header,
+  div > header:not(.invoice-sheet header),
+  body > footer,
+  main > footer,
+  div > footer:not(.invoice-sheet footer) {
+    display: none !important;
+  }
+
+  /* Isolate ONLY the printable A4 Invoice sheet */
+  .invoice-sheet {
+    display: flex !important;
+    visibility: visible !important;
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    min-height: 297mm !important;
+    max-height: 297mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    overflow: hidden !important;
+    z-index: 999999 !important;
+    background-color: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Ensure ALL elements inside .invoice-sheet retain full background colors, polygons, and borders */
+  .invoice-sheet,
+  .invoice-sheet * {
+    visibility: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .invoice-sheet header {
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  .invoice-sheet footer {
+    display: block !important;
+    visibility: visible !important;
+  }
+}
+

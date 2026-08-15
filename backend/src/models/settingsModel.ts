@@ -1,0 +1,85 @@
+import fs from "fs/promises";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export interface PaymentSettings {
+  upiId: string;
+  qrCodeUrl?: string; // Base64 data URL or external image URL
+  bankName: string;
+  accountNo: string;
+  ifscCode: string;
+  accountName: string;
+  adminPhone?: string;
+  wardenPhone?: string;
+  dueDay?: number;
+  includedAmenities?: string;
+}
+
+const DATA_DIR = path.join(__dirname, "..", "..", "data");
+const SETTINGS_FILE = path.join(DATA_DIR, "settings.json");
+
+const DEFAULT_PAYMENT_SETTINGS: PaymentSettings = {
+  upiId: "shripadpg@okaxis",
+  qrCodeUrl: "",
+  bankName: "Axis Bank Ltd",
+  accountNo: "924020058192041",
+  ifscCode: "UTIB0001824",
+  accountName: "Shripad PG Services",
+  adminPhone: "+91 98765 43210",
+  wardenPhone: "+91 98765 00000",
+  dueDay: 5,
+  includedAmenities: "Food, Water, Wi-Fi, Laundry",
+};
+
+export class SettingsModel {
+  private static cache: PaymentSettings | null = null;
+
+  private static async init() {
+    if (this.cache) return;
+
+    try {
+      await fs.mkdir(DATA_DIR, { recursive: true });
+      try {
+        const fileContent = await fs.readFile(SETTINGS_FILE, "utf-8");
+        const parsed = JSON.parse(fileContent);
+        this.cache = { ...DEFAULT_PAYMENT_SETTINGS, ...(parsed.payment || {}) };
+      } catch {
+        this.cache = { ...DEFAULT_PAYMENT_SETTINGS };
+        await this.saveToFile();
+      }
+    } catch (error) {
+      console.error("Failed to initialize Settings database file:", error);
+      this.cache = { ...DEFAULT_PAYMENT_SETTINGS };
+    }
+  }
+
+  private static async saveToFile() {
+    try {
+      await fs.writeFile(
+        SETTINGS_FILE,
+        JSON.stringify({ payment: this.cache }, null, 2),
+        "utf-8"
+      );
+    } catch (error) {
+      console.error("Failed to save settings to file:", error);
+    }
+  }
+
+  public static async getPaymentSettings(): Promise<PaymentSettings> {
+    await this.init();
+    return { ...this.cache! };
+  }
+
+  public static async updatePaymentSettings(data: Partial<PaymentSettings>): Promise<PaymentSettings> {
+    await this.init();
+    this.cache = {
+      ...this.cache!,
+      ...data,
+    };
+    await this.saveToFile();
+    return { ...this.cache };
+  }
+}
