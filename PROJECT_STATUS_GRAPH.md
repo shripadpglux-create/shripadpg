@@ -2,6 +2,19 @@
 
 ---
 
+### 📍 Version 8.17 — Persistent Building Deletion Fix & Disk Synchronization 🏢🗑️
+
+```mermaid
+flowchart TD
+    TrimmedTargetMatching["Case-Insensitive Trimmed Matching<br/>(Updated BuildingModel.delete and update methods to compare normalized id and name strings)"]
+    DiskPersistenceSync["Backend Storage Persistence<br/>(Ensured deleted buildings are immediately saved to buildings.json on disk to prevent reappearance upon page refresh)"]
+    FrontendStateSync["Frontend Real-Time Synchronization<br/>(Updated handleDeleteBuilding to display toasts and sync directly with backend response)"]
+
+    TrimmedTargetMatching --> DiskPersistenceSync --> FrontendStateSync
+```
+
+---
+
 ### 📍 Version 8.16 — Complete Bookings JSON Sanitation & 0 IDE Errors 🛡️🧹
 
 ```mermaid

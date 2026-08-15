@@ -118,8 +118,8 @@ export class BuildingModel {
     const targetClean = decodeURIComponent(originalNameOrId).trim().toLowerCase();
     const index = buildings.findIndex(
       (b) =>
-        (b.id && b.id.toLowerCase() === targetClean) ||
-        b.name.trim().toLowerCase() === targetClean
+        (b.id && b.id.trim().toLowerCase() === targetClean) ||
+        (b.name && b.name.trim().toLowerCase() === targetClean)
     );
 
     if (index === -1) return null;
@@ -144,11 +144,11 @@ export class BuildingModel {
     const initialLen = buildings.length;
     const targetClean = decodeURIComponent(nameOrId).trim().toLowerCase();
 
-    buildings = buildings.filter(
-      (b) =>
-        (!b.id || b.id.toLowerCase() !== targetClean) &&
-        b.name.trim().toLowerCase() !== targetClean
-    );
+    buildings = buildings.filter((b) => {
+      const idMatch = Boolean(b.id && b.id.trim().toLowerCase() === targetClean);
+      const nameMatch = Boolean(b.name && b.name.trim().toLowerCase() === targetClean);
+      return !idMatch && !nameMatch;
+    });
 
     if (buildings.length < initialLen) {
       await this.save(buildings);

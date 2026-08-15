@@ -1030,12 +1030,14 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
         const data = await res.json();
         if (data.success && Array.isArray(data.buildings)) {
           setBuildingsList(data.buildings);
+          showToast(`Building "${buildingName}" deleted permanently!`, "success");
         } else {
-          setBuildingsList((prev) => prev.filter((b) => b.name !== buildingName));
+          showToast(data.message || "Failed to delete building on backend.", "error");
+          fetchBuildings();
         }
-      } catch (err) {
-        console.error("Failed to delete building from backend:", err);
-        setBuildingsList((prev) => prev.filter((b) => b.name !== buildingName));
+      } catch (err: any) {
+        showToast("Server connection error while deleting building.", "error");
+        fetchBuildings();
       }
     }
   };
