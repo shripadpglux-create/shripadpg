@@ -2,6 +2,19 @@
 
 ---
 
+### 📍 Version 8.37 — Google Form & Target Spreadsheet Synchronization 📝📊
+
+```mermaid
+flowchart TD
+    NewGoogleForm["New Google Form Linked<br/>(Updated landing page registration button to point to active Google Form)"]
+    SheetCSVExport["New Sheet CSV Configured<br/>(Configured https://docs.google.com/spreadsheets/d/1CkVNLNy0XUh0hzWLb6-k0f6PtpY1SEQjcK9uD--AtAs/export?format=csv)"]
+    AutoSyncEnabled["Live Booking Ingestion<br/>(Backend seamlessly syncs newly submitted form registrations into MongoDB Atlas)"]
+
+    NewGoogleForm --> SheetCSVExport --> AutoSyncEnabled
+```
+
+---
+
 ### 📍 Version 8.36 — Dynamic Cloudflare Pages & Render CORS Resolution 🌐🔓
 
 ```mermaid

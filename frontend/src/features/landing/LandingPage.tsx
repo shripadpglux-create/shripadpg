@@ -67,7 +67,7 @@ export function LandingPage() {
 
             <div className="flex flex-wrap items-center gap-4 pt-2">
               <a
-                href="https://docs.google.com/forms/d/e/1FAIpQLSfguZr6Kwtse9KNY3QZrBjd0qQSR1g-5_Cwixf9l0aVuzcnDA/viewform?usp=sharing&ouid=111500375136305220120"
+                href="https://docs.google.com/forms/d/e/1FAIpQLSdujAzzMdDMDcO5hZJHTmALxO1eq02TpSD_1_rWFWX535AZqA/viewform?usp=header"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-xl bg-brand-green px-6 py-3.5 text-sm font-bold text-white shadow-lg transition-all hover:bg-brand-green/90 active:scale-95"

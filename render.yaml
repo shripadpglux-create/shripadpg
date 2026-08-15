@@ -15,6 +15,6 @@ services:
       - key: JWT_SECRET
         value: e6ad3523e8cead2ad9009e54b05dfd8438040c7f74cb1867cc98730205d95991c1130e58ef07fc0c3c052f17d2b9cb1983c3f96f70efb92a7e56934769176efe
       - key: GOOGLE_SHEET_CSV_URL
-        value: https://docs.google.com/spreadsheets/d/1HDoeYLCXtky_R0HbIGzSbZLx7IDTnUnVzjIJdYEyAL4/export?format=csv
+        value: https://docs.google.com/spreadsheets/d/1CkVNLNy0XUh0hzWLb6-k0f6PtpY1SEQjcK9uD--AtAs/export?format=csv
       - key: GOOGLE_SHEET_WEBHOOK_URL
         value: https://script.google.com/macros/s/AKfycby7CIvVOQvktQtjAaKZmL7bBi1H6aL9o1QiaMO8J085PBEDqNeywMI2t6mIiGv5lFq2/exec
