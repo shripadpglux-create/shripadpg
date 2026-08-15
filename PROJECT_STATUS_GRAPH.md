@@ -2,6 +2,19 @@
 
 ---
 
+### 📍 Version 8.38 — Zero-Building Allocation Guard & Mismatch Prevention 🛡️🏢
+
+```mermaid
+flowchart TD
+    ZeroBuildingGuard["Zero-Building Allocation Guard<br/>(Replaced dummy 4-floor fallback with explicit empty state when 0 buildings exist)"]
+    AccurateFloorScoping["Strict Property Scoping<br/>(Allocation matrix only lists real rooms/beds belonging to verified created buildings)"]
+    MismatchEliminated["Zero Allocation Mismatch<br/>(Guaranteed residents can only be allocated into active registered PG properties)"]
+
+    ZeroBuildingGuard --> AccurateFloorScoping --> MismatchEliminated
+```
+
+---
+
 ### 📍 Version 8.37 — Google Form & Target Spreadsheet Synchronization 📝📊
 
 ```mermaid

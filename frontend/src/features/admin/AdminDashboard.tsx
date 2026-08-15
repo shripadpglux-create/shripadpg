@@ -5261,113 +5261,142 @@ function doPost(e) {
               </button>
             </div>
 
-            {/* STEP 1: Building & Floor Selector */}
-            <div className="space-y-3 p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <span className="text-xs font-black text-slate-700 uppercase tracking-wider block">1. Select Building & Floor</span>
-                {/* Building Selector */}
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {scopedBuildingsList.map((bld) => (
-                    <button
-                      key={bld.name}
-                      onClick={() => setBmsBuilding(bld.name)}
-                      className={`rounded-full px-3.5 py-1 text-xs font-bold transition-all ${bmsBuilding === bld.name
-                          ? "bg-brand-green text-white shadow-xs"
-                          : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
-                        }`}
-                    >
-                      {bld.name}
-                    </button>
-                  ))}
+            {/* If NO buildings exist, show clean empty state instead of fake dummy rooms */}
+            {scopedBuildingsList.length === 0 ? (
+              <div className="p-8 text-center rounded-3xl bg-amber-50/90 border border-amber-200/90 space-y-4 my-2">
+                <div className="flex h-14 w-14 mx-auto items-center justify-center rounded-2xl bg-amber-100 text-amber-700 border border-amber-200 shadow-2xs">
+                  <Building2 className="h-7 w-7" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-base font-black text-slate-900">No PG Buildings Registered Yet</h3>
+                  <p className="text-xs font-semibold text-slate-600 max-w-sm mx-auto">
+                    You currently have 0 buildings created. Please add your PG property in the Buildings tab first before allocating rooms and beds to residents.
+                  </p>
+                </div>
+                <div className="pt-2">
                   <button
-                    onClick={() => setIsAddBuildingModalOpen(true)}
-                    className="rounded-full px-3 py-1 text-xs font-bold bg-emerald-50 text-brand-green border border-brand-green/30 hover:bg-brand-green hover:text-white transition-all flex items-center gap-1 cursor-pointer"
+                    type="button"
+                    onClick={() => {
+                      setSelectedAllocateCustomer(null);
+                      setIsAddBuildingModalOpen(true);
+                    }}
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-brand-green text-white text-xs font-black shadow-lg shadow-brand-green/20 hover:scale-105 transition cursor-pointer"
                   >
-                    <Plus className="h-3 w-3" /> Add Building
+                    <Plus className="h-4 w-4" /> Add New Building Now
                   </button>
                 </div>
               </div>
-
-              {/* Floor Selector Pills */}
-              <div className="flex items-center gap-2 pt-2 border-t border-slate-200/60 flex-wrap">
-                <span className="text-xs font-bold text-slate-500">Floor Level:</span>
-                {(() => {
-                  const bldObj = scopedBuildingsList.find((b) => b.name === bmsBuilding) || scopedBuildingsList[0] || { name: bmsBuilding, floors: 4, roomsPerFloor: 4, floorRoomCounts: { 0: 1, 1: 4, 2: 4, 3: 4 } };
-                  const floors = getBuildingFloorIndices(bldObj)
-                    .filter((index) => getFloorRoomCount(bldObj, index) > 0)
-                    .map((index) => {
-                      if (index === 0) return { val: 0, label: "Ground Floor" };
-                      if (index === 1) return { val: 1, label: "1st Floor" };
-                      if (index === 2) return { val: 2, label: "2nd Floor" };
-                      if (index === 3) return { val: 3, label: "3rd Floor" };
-                      return { val: index, label: `${index}th Floor` };
-                    });
-                  return floors.map((f) => {
-                    const rCount = getFloorRoomCount(bldObj, f.val);
-                    const isDisabled = rCount === 0;
-                    return (
+            ) : (
+              <>
+                {/* STEP 1: Building & Floor Selector */}
+                <div className="space-y-3 p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <span className="text-xs font-black text-slate-700 uppercase tracking-wider block">1. Select Building & Floor</span>
+                    {/* Building Selector */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {scopedBuildingsList.map((bld) => (
+                        <button
+                          key={bld.name}
+                          onClick={() => setBmsBuilding(bld.name)}
+                          className={`rounded-full px-3.5 py-1 text-xs font-bold transition-all ${bmsBuilding === bld.name
+                              ? "bg-brand-green text-white shadow-xs"
+                              : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+                            }`}
+                        >
+                          {bld.name}
+                        </button>
+                      ))}
                       <button
-                        key={f.val}
-                        type="button"
-                        disabled={isDisabled}
-                        onClick={() => !isDisabled && setBmsFloor(f.val)}
-                        title={isDisabled ? "No PG Rooms on this floor (Parking / Reception)" : `Select ${f.label}`}
-                        className={`rounded-xl px-4 py-1.5 text-xs font-bold transition-all ${
-                          isDisabled
-                            ? "bg-slate-100 text-slate-400 border border-slate-200/60 cursor-not-allowed opacity-60 line-through"
-                            : bmsFloor === f.val
-                            ? "bg-slate-900 text-white shadow-xs cursor-pointer"
-                            : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 cursor-pointer"
-                        }`}
+                        onClick={() => setIsAddBuildingModalOpen(true)}
+                        className="rounded-full px-3 py-1 text-xs font-bold bg-emerald-50 text-brand-green border border-brand-green/30 hover:bg-brand-green hover:text-white transition-all flex items-center gap-1 cursor-pointer"
                       >
-                        {f.label} {isDisabled && "🚫"}
+                        <Plus className="h-3 w-3" /> Add Building
                       </button>
-                    );
-                  });
-                })()}
-              </div>
-            </div>
-
-            {/* BOOKMYSHOW-STYLE LEGEND BAR WITH RED FULLY OCCUPIED INDICATOR */}
-            <div className="flex items-center justify-center gap-5 py-2.5 rounded-2xl bg-slate-100/70 border border-slate-200/60 text-[11px] font-extrabold text-slate-700 flex-wrap">
-              <span className="flex items-center gap-2">
-                <span className="h-3.5 w-3.5 rounded-md border-2 border-emerald-500 bg-emerald-100 shadow-2xs" /> Available
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="h-3.5 w-3.5 rounded-md border-2 border-rose-400 bg-rose-100 shadow-2xs" /> Fully Occupied (Red)
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="h-3.5 w-3.5 rounded-md bg-brand-green shadow-xs" /> Selected
-              </span>
-            </div>
-
-            {/* STEP 2: BookMyShow Cinema-Style Room Seat Grid */}
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-slate-800 uppercase tracking-wider">
-                  2. Select Room ({bmsBuilding} • {bmsFloor === 0 ? "Ground Floor" : bmsFloor === 1 ? "1st Floor" : bmsFloor === 2 ? "2nd Floor" : bmsFloor === 3 ? "3rd Floor" : `${bmsFloor}th Floor`})
-                </span>
-                <span className="text-[11px] font-bold text-slate-500">Tap an available room below</span>
-              </div>
-
-              {(() => {
-                const bldObj = buildingsList.find((b) => b.name === bmsBuilding) || { name: bmsBuilding, floors: 4, roomsPerFloor: 4, floorRoomCounts: { 0: 1, 1: 4, 2: 4, 3: 4 } };
-                const roomCount = getFloorRoomCount(bldObj, bmsFloor);
-                if (roomCount === 0) {
-                  return (
-                    <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-center space-y-1 my-2">
-                      <p className="text-xs font-black text-amber-900 flex items-center justify-center gap-1.5">
-                        <AlertCircle className="h-4 w-4 text-amber-600" />
-                        <span>No PG Rooms Allocated on {bmsFloor === 0 ? "Ground Floor" : `Floor ${bmsFloor}`}</span>
-                      </p>
-                      <p className="text-[11px] font-medium text-amber-800">
-                        This floor is marked for Parking, Reception, Store, or Office use. Please select another floor level above.
-                      </p>
                     </div>
-                  );
-                }
-                return (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2.5 max-h-60 overflow-y-auto p-1">
+                  </div>
+
+                  {/* Floor Selector Pills */}
+                  <div className="flex items-center gap-2 pt-2 border-t border-slate-200/60 flex-wrap">
+                    <span className="text-xs font-bold text-slate-500">Floor Level:</span>
+                    {(() => {
+                      const bldObj = scopedBuildingsList.find((b) => b.name === bmsBuilding) || scopedBuildingsList[0];
+                      if (!bldObj) return null;
+                      const floors = getBuildingFloorIndices(bldObj)
+                        .filter((index) => getFloorRoomCount(bldObj, index) > 0)
+                        .map((index) => {
+                          if (index === 0) return { val: 0, label: "Ground Floor" };
+                          if (index === 1) return { val: 1, label: "1st Floor" };
+                          if (index === 2) return { val: 2, label: "2nd Floor" };
+                          if (index === 3) return { val: 3, label: "3rd Floor" };
+                          return { val: index, label: `${index}th Floor` };
+                        });
+                      return floors.map((f) => {
+                        const rCount = getFloorRoomCount(bldObj, f.val);
+                        const isDisabled = rCount === 0;
+                        return (
+                          <button
+                            key={f.val}
+                            type="button"
+                            disabled={isDisabled}
+                            onClick={() => !isDisabled && setBmsFloor(f.val)}
+                            title={isDisabled ? "No PG Rooms on this floor (Parking / Reception)" : `Select ${f.label}`}
+                            className={`rounded-xl px-4 py-1.5 text-xs font-bold transition-all ${
+                              isDisabled
+                                ? "bg-slate-100 text-slate-400 border border-slate-200/60 cursor-not-allowed opacity-60 line-through"
+                                : bmsFloor === f.val
+                                ? "bg-slate-900 text-white shadow-xs cursor-pointer"
+                                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 cursor-pointer"
+                            }`}
+                          >
+                            {f.label} {isDisabled && "🚫"}
+                          </button>
+                        );
+                      });
+                    })()}
+                  </div>
+                </div>
+
+                {/* BOOKMYSHOW-STYLE LEGEND BAR WITH RED FULLY OCCUPIED INDICATOR */}
+                <div className="flex items-center justify-center gap-5 py-2.5 rounded-2xl bg-slate-100/70 border border-slate-200/60 text-[11px] font-extrabold text-slate-700 flex-wrap">
+                  <span className="flex items-center gap-2">
+                    <span className="h-3.5 w-3.5 rounded-md border-2 border-emerald-500 bg-emerald-100 shadow-2xs" /> Available
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <span className="h-3.5 w-3.5 rounded-md border-2 border-rose-400 bg-rose-100 shadow-2xs" /> Fully Occupied (Red)
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <span className="h-3.5 w-3.5 rounded-md bg-brand-green shadow-xs" /> Selected
+                  </span>
+                </div>
+
+                {/* STEP 2: BookMyShow Cinema-Style Room Seat Grid */}
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-slate-800 uppercase tracking-wider">
+                      2. Select Room ({bmsBuilding || scopedBuildingsList[0]?.name} • {bmsFloor === 0 ? "Ground Floor" : bmsFloor === 1 ? "1st Floor" : bmsFloor === 2 ? "2nd Floor" : bmsFloor === 3 ? "3rd Floor" : `${bmsFloor}th Floor`})
+                    </span>
+                    <span className="text-[11px] font-bold text-slate-500">Tap an available room below</span>
+                  </div>
+
+                  {(() => {
+                    const bldObj = scopedBuildingsList.find((b) => b.name === bmsBuilding) || scopedBuildingsList[0];
+                    if (!bldObj) return null;
+                    const roomCount = getFloorRoomCount(bldObj, bmsFloor);
+                    if (roomCount === 0) {
+                      return (
+                        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-center space-y-1 my-2">
+                          <p className="text-xs font-black text-amber-900 flex items-center justify-center gap-1.5">
+                            <AlertCircle className="h-4 w-4 text-amber-600" />
+                            <span>No PG Rooms Allocated on {bmsFloor === 0 ? "Ground Floor" : `Floor ${bmsFloor}`}</span>
+                          </p>
+                          <p className="text-[11px] font-medium text-amber-800">
+                            This floor is marked for Parking, Reception, Store, or Office use. Please select another floor level above.
+                          </p>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2.5 max-h-60 overflow-y-auto p-1">
                     {Array.from({ length: roomCount }, (_, idx) => {
                       const roomNo = bmsFloor === 0
                         ? `G${(idx + 1).toString().padStart(2, "0")}`
@@ -5655,6 +5684,8 @@ function doPost(e) {
                 </button>
               </div>
             </div>
+          </>
+        )}
           </div>
         </div>
       )}
