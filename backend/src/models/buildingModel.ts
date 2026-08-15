@@ -68,6 +68,15 @@ export class BuildingModel {
       const parsed = JSON.parse(data);
       if (Array.isArray(parsed)) {
         this.cache = parsed;
+        if (mongoose.connection.readyState === 1 && this.cache.length > 0) {
+          try {
+            await BuildingMongoModel.deleteMany({});
+            await BuildingMongoModel.insertMany(this.cache);
+            console.log(`🍃 Auto-seeded ${this.cache.length} buildings to MongoDB Atlas.`);
+          } catch (e) {
+            console.warn("Auto-seed error for buildings:", e);
+          }
+        }
         return this.cache;
       }
     } catch (err) {

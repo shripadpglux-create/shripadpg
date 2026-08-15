@@ -1098,12 +1098,21 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
         const data = await res.json();
         if (data.success && Array.isArray(data.buildings)) {
           setBuildingsList(data.buildings);
+          localStorage.setItem("shripad_cached_buildings", JSON.stringify(data.buildings));
         } else {
-          setBuildingsList((prev) => [...prev.filter((b) => b.name !== formatted), payload]);
+          setBuildingsList((prev) => {
+            const updated = [...prev.filter((b) => b.name !== formatted), payload];
+            localStorage.setItem("shripad_cached_buildings", JSON.stringify(updated));
+            return updated;
+          });
         }
       } catch (err) {
         console.error("Failed to persist building to backend:", err);
-        setBuildingsList((prev) => [...prev.filter((b) => b.name !== formatted), payload]);
+        setBuildingsList((prev) => {
+          const updated = [...prev.filter((b) => b.name !== formatted), payload];
+          localStorage.setItem("shripad_cached_buildings", JSON.stringify(updated));
+          return updated;
+        });
       }
 
       setBmsBuilding(formatted);

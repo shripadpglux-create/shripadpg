@@ -2,6 +2,19 @@
 
 ---
 
+### 📍 Version 8.32 — MongoDB Atlas Building Persistence & Cache Sync 🏢🍃
+
+```mermaid
+flowchart TD
+    BuildingAutoSeed["MongoDB Atlas Building Auto-Seed<br/>(Updated buildingModel.ts getAll to auto-seed local building records to MongoDB Atlas if Atlas collection is empty)"]
+    FrontendCacheSync["Frontend Building Cache Synchronization<br/>(Updated AdminDashboard.tsx handleCreateBuilding to update shripad_cached_buildings localStorage instantly)"]
+    LiveDatabaseVisibility["Live Building Atlas Visibility<br/>(Ensured newly created PG properties immediately populate in MongoDB Atlas buildings collection)"]
+
+    BuildingAutoSeed --> FrontendCacheSync --> LiveDatabaseVisibility
+```
+
+---
+
 ### 📍 Version 8.31 — Production Database Optimization, Compound Indexing & Storage Efficiency ⚡📊
 
 ```mermaid
