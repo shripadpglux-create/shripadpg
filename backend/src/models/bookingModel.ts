@@ -107,9 +107,22 @@ export class BookingModel {
         try {
           const mongoDocs = await BookingMongoModel.find({}).lean();
           if (mongoDocs && mongoDocs.length > 0) {
-            this.cache = mongoDocs as any[];
+            const cleanDocs = mongoDocs.filter((b: any) => {
+              const name = String(b.name || "");
+              const ts = String(b.timestamp || "");
+              return !name.includes("<script") && !name.includes("waffle_api") && !ts.includes("<script");
+            });
+            this.cache = cleanDocs as any[];
             this.isInitialized = true;
             await fs.writeFile(DATA_FILE, JSON.stringify(this.cache, null, 2), "utf-8");
+            // Purge bad HTML records from MongoDB Atlas if present
+            if (cleanDocs.length < mongoDocs.length) {
+              await BookingMongoModel.deleteMany({});
+              if (cleanDocs.length > 0) {
+                await BookingMongoModel.insertMany(cleanDocs);
+              }
+              console.log(`🧹 Purged ${mongoDocs.length - cleanDocs.length} HTML garbage records from MongoDB Atlas.`);
+            }
             return;
           }
         } catch (err) {
@@ -119,7 +132,14 @@ export class BookingModel {
 
       try {
         const fileContent = await fs.readFile(DATA_FILE, "utf-8");
-        this.cache = JSON.parse(fileContent);
+        const parsed = JSON.parse(fileContent);
+        this.cache = Array.isArray(parsed)
+          ? parsed.filter((b: any) => {
+              const name = String(b.name || "");
+              const ts = String(b.timestamp || "");
+              return !name.includes("<script") && !name.includes("waffle_api") && !ts.includes("<script");
+            })
+          : [];
       } catch (err) {
         this.cache = [...SEED_BOOKINGS];
         await this.saveToFile();

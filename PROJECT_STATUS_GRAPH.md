@@ -2,6 +2,19 @@
 
 ---
 
+### 📍 Version 8.30 — Google Sheet CSV HTML Garbage Purge & MongoDB Atlas Sanitization 🧹🍃
+
+```mermaid
+flowchart TD
+    HTMLGarbagePurge["HTML Script Injection Purge<br/>(Filtered 534 raw HTML script injection entries out of bookings.json, reducing size from 2.65 MB to clean 5 records)"]
+    SheetCSVValidation["Google Sheet CSV Parser Guard<br/>(Added HTML error page validation in googleSheetService.ts to reject non-CSV HTML responses)"]
+    MongoAtlasSanitization["MongoDB Atlas Database Sanitization<br/>(Updated bookingModel.ts init to automatically purge bad HTML script documents from MongoDB Atlas)"]
+
+    HTMLGarbagePurge --> SheetCSVValidation --> MongoAtlasSanitization
+```
+
+---
+
 ### 📍 Version 8.29 — MongoDB Atlas Direct Persistence Integration 🍃📦
 
 ```mermaid

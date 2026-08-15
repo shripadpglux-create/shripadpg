@@ -54,6 +54,13 @@ export class GoogleSheetService {
         throw new Error(`Failed to fetch CSV: ${response.statusText}`);
       }
       const csvText = await response.text();
+
+      // Guard: If Google returned HTML error page (login redirect / permission error), ignore it!
+      if (csvText.includes("<!DOCTYPE") || csvText.includes("<html") || csvText.includes("<script") || csvText.includes("waffle_api")) {
+        console.warn("⚠️ Google Sheet URL returned HTML page instead of valid CSV. Skipping sync.");
+        return [];
+      }
+
       const rows = parseCSV(csvText);
 
       if (rows.length <= 1) {
@@ -84,7 +91,9 @@ export class GoogleSheetService {
 
         const name = row[nameIdx] || "Anonymous Customer";
         const phone = row[phoneIdx] || "N/A";
+        const timestamp = row[timeIdx] || "";
         if (name === "Anonymous Customer" && phone === "N/A") continue;
+        if (name.includes("<script") || timestamp.includes("<script") || name.includes("waffle_api")) continue;
 
         bookings.push({
           timestamp: row[timeIdx] || new Date().toISOString().replace("T", " ").substring(0, 19),
