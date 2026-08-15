@@ -240,7 +240,35 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const [isPaymentSubmitting, setIsPaymentSubmitting] = useState(false);
   const [viewingAdminInvoiceData, setViewingAdminInvoiceData] = useState<any | null>(null);
 
-  // Payment & QR Settings State
+  // PWA Install Prompt State & Handler
+  const [deferredInstallPrompt, setDeferredInstallPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredInstallPrompt(e);
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      }
+    };
+  }, []);
+
+  const handleInstallPwa = async () => {
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      const choiceResult = await deferredInstallPrompt.userChoice;
+      if (choiceResult && choiceResult.outcome === "accepted") {
+        setDeferredInstallPrompt(null);
+      }
+    } else {
+      alert("📱 To install SripadPG App on your phone home screen:\n\n• Android / Chrome: Tap 3 dots (⋮) at top-right → select 'Install app' or 'Add to Home screen'.\n• iPhone / Safari: Tap Share icon (⬆️) → select 'Add to Home Screen' (➕).");
+    }
+  };
   const [isPaymentSettingsModalOpen, setIsPaymentSettingsModalOpen] = useState(false);
   const [paymentSettings, setPaymentSettings] = useState({
     upiId: "shripadpg@okaxis",
@@ -1759,6 +1787,17 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   <span>Payment & QR</span>
                 </button>
               )}
+
+              {/* Install SripadPG App Button */}
+              <button
+                onClick={handleInstallPwa}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white text-xs font-black transition cursor-pointer shadow-md active:scale-95 border border-indigo-400/30"
+                title="Install SripadPG App on your Phone"
+              >
+                <span className="text-sm">📱</span>
+                <span className="hidden sm:inline">Install SripadPG App</span>
+                <span className="sm:hidden">Install App</span>
+              </button>
 
               {/* Profile Dropdown Container */}
               <div className="relative">

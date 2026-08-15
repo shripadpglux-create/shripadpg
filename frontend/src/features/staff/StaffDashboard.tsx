@@ -51,6 +51,36 @@ export default function StaffDashboard() {
   const [payTxnId, setPayTxnId] = useState("");
   const [payDate, setPayDate] = useState(new Date().toISOString().split("T")[0]);
 
+  // PWA Install Prompt State & Handler
+  const [deferredInstallPrompt, setDeferredInstallPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredInstallPrompt(e);
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      }
+    };
+  }, []);
+
+  const handleInstallPwa = async () => {
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      const choiceResult = await deferredInstallPrompt.userChoice;
+      if (choiceResult && choiceResult.outcome === "accepted") {
+        setDeferredInstallPrompt(null);
+      }
+    } else {
+      alert("📱 To install SripadPG App on your phone home screen:\n\n• Android / Chrome: Tap 3 dots (⋮) at top-right → select 'Install app' or 'Add to Home screen'.\n• iPhone / Safari: Tap Share icon (⬆️) → select 'Add to Home Screen' (➕).");
+    }
+  };
+
   // Login Modal State
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");
@@ -238,6 +268,16 @@ export default function StaffDashboard() {
               ))}
             </select>
           </div>
+
+          {/* Install SripadPG App Button */}
+          <button
+            onClick={handleInstallPwa}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black transition cursor-pointer shadow-xs active:scale-95 border border-indigo-400/30"
+            title="Install SripadPG App on your Phone"
+          >
+            <span>📱</span>
+            <span className="hidden sm:inline">Install App</span>
+          </button>
 
           <button
             onClick={() => setIsLoginModalOpen(true)}

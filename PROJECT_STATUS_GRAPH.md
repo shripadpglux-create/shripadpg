@@ -2,6 +2,19 @@
 
 ---
 
+### 📍 Version 8.18 — SripadPG PWA Web App & Mobile Installation Support 📱⚡
+
+```mermaid
+flowchart TD
+    PWAManifest["PWA Web App Manifest<br/>(Created manifest.json with app name 'SripadPG', theme colors, and 192x192 / 512x512 icons)"]
+    ServiceWorkerCache["Service Worker & Offline Cache<br/>(Implemented sw.js service worker to cache static assets for instant app loading)"]
+    OneTapInstallCTA["One-Tap Phone Install CTA<br/>(Added '📱 Install SripadPG App' button to Admin & Staff headers with native beforeinstallprompt support)"]
+
+    PWAManifest --> ServiceWorkerCache --> OneTapInstallCTA
+```
+
+---
+
 ### 📍 Version 8.17 — Persistent Building Deletion Fix & Disk Synchronization 🏢🗑️
 
 ```mermaid
