@@ -26,7 +26,6 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   })
 );
-app.options("*", cors());
 app.use(express.json({ limit: "10mb" }));
 
 // Static uploads serving

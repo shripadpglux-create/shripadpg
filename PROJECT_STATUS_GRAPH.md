@@ -2,6 +2,19 @@
 
 ---
 
+### 📍 Version 8.23 — Express 5 Path-To-Regexp Compatibility Fix 🛠️⚡
+
+```mermaid
+flowchart TD
+    PathToRegexpFix["Express 5 Compatibility Fix<br/>(Removed app.options('*', cors()) which triggered PathError in Express 5 path-to-regexp parser)"]
+    CorsMiddlewareVerification["Built-in CORS Handler Verification<br/>(Verified app.use(cors(...)) natively handles all HTTP OPTIONS preflight requests with zero errors)"]
+    RenderServerSuccess["Clean Render Startup & Execution<br/>(Server starts cleanly with exit code 0 on Node v24.14.1 on Render)"]
+
+    PathToRegexpFix --> CorsMiddlewareVerification --> RenderServerSuccess
+```
+
+---
+
 ### 📍 Version 8.22 — Live Render Web Service URL Mapping 🌐⚡
 
 ```mermaid
