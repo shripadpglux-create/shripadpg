@@ -2,6 +2,19 @@
 
 ---
 
+### 📍 Version 8.26 — Custom Modern Confirmation Modal & Native Browser Popup Elimination 🎨✨
+
+```mermaid
+flowchart TD
+    CustomConfirmComponent["Custom Glassmorphic Modal Component<br/>(Created CustomConfirmModal.tsx with animated backdrop blur, icon themes, and keyboard ESC accessibility)"]
+    NativePopupElimination["Native Browser Popup Replacement<br/>(Replaced all window.confirm() and window.alert() popups across Admin, Staff, and Invoice components)"]
+    ModernUIExperience["Sleek Branded Confirmation UX<br/>(Delivered a unified, high-end enterprise popup design with 0 native browser dialogs)"]
+
+    CustomConfirmComponent --> NativePopupElimination --> ModernUIExperience
+```
+
+---
+
 ### 📍 Version 8.25 — Global Zero-Flash LocalStorage Cache for All Dashboards ⚡🛡️
 
 ```mermaid

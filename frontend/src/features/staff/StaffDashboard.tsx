@@ -1,5 +1,6 @@
 import { API_BASE_URL } from "../../lib/apiConfig";
 import React, { useState, useEffect, useMemo } from "react";
+import { CustomConfirmModal } from "../../components/CustomConfirmModal";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   LayoutDashboard,
@@ -103,6 +104,21 @@ export default function StaffDashboard() {
     };
   }, []);
 
+  const [confirmModalState, setConfirmModalState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    type?: "danger" | "warning" | "info";
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+  });
+
   const handleInstallPwa = async () => {
     if (deferredInstallPrompt) {
       deferredInstallPrompt.prompt();
@@ -111,7 +127,15 @@ export default function StaffDashboard() {
         setDeferredInstallPrompt(null);
       }
     } else {
-      alert("📱 To install SripadPG App on your phone home screen:\n\n• Android / Chrome: Tap 3 dots (⋮) at top-right → select 'Install app' or 'Add to Home screen'.\n• iPhone / Safari: Tap Share icon (⬆️) → select 'Add to Home Screen' (➕).");
+      setConfirmModalState({
+        isOpen: true,
+        title: "📱 SripadPG App Installation Guide",
+        message: "To install SripadPG App on your phone home screen:\n\n• Android / Chrome: Tap 3 dots (⋮) at top-right → select 'Install app' or 'Add to Home screen'.\n• iPhone / Safari: Tap Share icon (⬆️) → select 'Add to Home Screen' (➕).",
+        confirmText: "Got it",
+        cancelText: "",
+        type: "info",
+        onConfirm: () => {},
+      });
     }
   };
 
@@ -717,6 +741,18 @@ export default function StaffDashboard() {
           </div>
         </div>
       )}
+
+      {/* CUSTOM SLEEK ENTERPRISE CONFIRMATION MODAL */}
+      <CustomConfirmModal
+        isOpen={confirmModalState.isOpen}
+        title={confirmModalState.title}
+        message={confirmModalState.message}
+        confirmText={confirmModalState.confirmText}
+        cancelText={confirmModalState.cancelText}
+        type={confirmModalState.type}
+        onConfirm={confirmModalState.onConfirm}
+        onClose={() => setConfirmModalState((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

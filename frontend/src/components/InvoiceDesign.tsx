@@ -1,5 +1,6 @@
 import { API_BASE_URL } from "../lib/apiConfig";
 import React, { useState, useEffect } from "react";
+import { CustomConfirmModal } from "./CustomConfirmModal";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import {
@@ -342,21 +343,45 @@ export function InvoiceDesign({
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const [confirmModalState, setConfirmModalState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    type?: "danger" | "warning" | "info";
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+  });
+
   // Delete invoice handler
-  const handleDeleteInvoice = async (invId: string, invNo: string) => {
-    if (confirm(`Are you sure you want to delete invoice record "${invNo}"?`)) {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/invoices/${invId}`, {
-          method: "DELETE",
-        });
-        const data = await res.json();
-        if (data.success) {
+  const handleDeleteInvoice = (invId: string, invNo: string) => {
+    setConfirmModalState({
+      isOpen: true,
+      title: "Delete Invoice Record",
+      message: `Are you sure you want to delete invoice record "${invNo}"?`,
+      confirmText: "Delete Invoice",
+      cancelText: "Cancel",
+      type: "danger",
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/invoices/${invId}`, {
+            method: "DELETE",
+          });
+          const data = await res.json();
+          if (data.success) {
+            setInvoicesList((prev) => prev.filter((i) => i.id !== invId));
+          }
+        } catch (err) {
+          console.warn("Failed to delete invoice:", err);
           setInvoicesList((prev) => prev.filter((i) => i.id !== invId));
         }
-      } catch (err) {
-        console.error("Failed to delete invoice:", err);
-      }
-    }
+      },
+    });
   };
 
   const modes = ["CASH", "UPI", "BANK TRANSFER", "OTHER"];
@@ -1162,6 +1187,18 @@ export function InvoiceDesign({
           )}
         </div>
       )}
+
+      {/* CUSTOM SLEEK ENTERPRISE CONFIRMATION MODAL */}
+      <CustomConfirmModal
+        isOpen={confirmModalState.isOpen}
+        title={confirmModalState.title}
+        message={confirmModalState.message}
+        confirmText={confirmModalState.confirmText}
+        cancelText={confirmModalState.cancelText}
+        type={confirmModalState.type}
+        onConfirm={confirmModalState.onConfirm}
+        onClose={() => setConfirmModalState((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

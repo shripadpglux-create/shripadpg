@@ -1,5 +1,6 @@
 import { API_BASE_URL } from "../../lib/apiConfig";
 import React, { useState, useEffect, useMemo } from "react";
+import { CustomConfirmModal } from "../../components/CustomConfirmModal";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   LayoutDashboard,
@@ -259,6 +260,21 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     };
   }, []);
 
+  const [confirmModalState, setConfirmModalState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    type?: "danger" | "warning" | "info";
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+  });
+
   const handleInstallPwa = async () => {
     if (deferredInstallPrompt) {
       deferredInstallPrompt.prompt();
@@ -267,7 +283,15 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
         setDeferredInstallPrompt(null);
       }
     } else {
-      alert("📱 To install SripadPG App on your phone home screen:\n\n• Android / Chrome: Tap 3 dots (⋮) at top-right → select 'Install app' or 'Add to Home screen'.\n• iPhone / Safari: Tap Share icon (⬆️) → select 'Add to Home Screen' (➕).");
+      setConfirmModalState({
+        isOpen: true,
+        title: "📱 SripadPG App Installation Guide",
+        message: "To install SripadPG App on your phone home screen:\n\n• Android / Chrome: Tap 3 dots (⋮) at top-right → select 'Install app' or 'Add to Home screen'.\n• iPhone / Safari: Tap Share icon (⬆️) → select 'Add to Home Screen' (➕).",
+        confirmText: "Got it",
+        cancelText: "",
+        type: "info",
+        onConfirm: () => {},
+      });
     }
   };
   const [isPaymentSettingsModalOpen, setIsPaymentSettingsModalOpen] = useState(false);
@@ -778,21 +802,41 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     }
   };
 
-  const handleDeleteExpense = async (id: string, title: string) => {
-    if (confirm(`Are you sure you want to delete expense record "${title}"?`)) {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/expenses/${id}`, { method: "DELETE" });
-        const data = await res.json();
-        if (data.success && Array.isArray(data.expenses)) {
-          setExpensesList(data.expenses);
-        } else {
-          setExpensesList((prev) => prev.filter((e) => e.id !== id));
+  const handleDeleteExpense = (id: string, title: string) => {
+    setConfirmModalState({
+      isOpen: true,
+      title: "Delete Expense",
+      message: `Are you sure you want to delete expense record "${title}"?`,
+      confirmText: "Delete Expense",
+      cancelText: "Cancel",
+      type: "danger",
+      onConfirm: async () => {
+        let updated: any[] = [];
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/expenses/${id}`, { method: "DELETE" });
+          const data = await res.json();
+          if (data.success && Array.isArray(data.expenses)) {
+            updated = data.expenses;
+            setExpensesList(updated);
+            if (typeof window !== "undefined") {
+              localStorage.setItem("shripad_cached_expenses", JSON.stringify(updated));
+            }
+            showToast("Expense record deleted!", "success");
+            return;
+          }
+        } catch (err) {
+          console.warn("Failed to delete expense:", err);
         }
-      } catch (err) {
-        console.error("Failed to delete expense:", err);
-        setExpensesList((prev) => prev.filter((e) => e.id !== id));
-      }
-    }
+        setExpensesList((prev) => {
+          updated = prev.filter((e) => e.id !== id);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("shripad_cached_expenses", JSON.stringify(updated));
+          }
+          return updated;
+        });
+        showToast("Expense record deleted!", "success");
+      },
+    });
   };
 
   const resetExpenseForm = () => {
@@ -945,21 +989,41 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     setEditingStaffId(null);
   };
 
-  const handleDeleteStaffMember = async (id: string, name: string) => {
-    if (confirm(`Are you sure you want to remove staff member "${name}"?`)) {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/staff/${id}`, { method: "DELETE" });
-        const data = await res.json();
-        if (data.success && Array.isArray(data.staff)) {
-          setStaffList(data.staff);
-        } else {
-          setStaffList((prev) => prev.filter((s) => s.id !== id));
+  const handleDeleteStaffMember = (id: string, name: string) => {
+    setConfirmModalState({
+      isOpen: true,
+      title: "Remove Staff Member",
+      message: `Are you sure you want to remove staff member "${name}"?`,
+      confirmText: "Remove Staff",
+      cancelText: "Cancel",
+      type: "danger",
+      onConfirm: async () => {
+        let updated: any[] = [];
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/staff/${id}`, { method: "DELETE" });
+          const data = await res.json();
+          if (data.success && Array.isArray(data.staff)) {
+            updated = data.staff;
+            setStaffList(updated);
+            if (typeof window !== "undefined") {
+              localStorage.setItem("shripad_cached_staff", JSON.stringify(updated));
+            }
+            showToast(`Staff member "${name}" removed!`, "success");
+            return;
+          }
+        } catch (err) {
+          console.warn("Error deleting staff member:", err);
         }
-      } catch (err) {
-        console.error("Error deleting staff member:", err);
-        setStaffList((prev) => prev.filter((s) => s.id !== id));
-      }
-    }
+        setStaffList((prev) => {
+          updated = prev.filter((s) => s.id !== id);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("shripad_cached_staff", JSON.stringify(updated));
+          }
+          return updated;
+        });
+        showToast(`Staff member "${name}" removed!`, "success");
+      },
+    });
   };
 
   const [isAddBuildingModalOpen, setIsAddBuildingModalOpen] = useState(false);
@@ -1091,38 +1155,46 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     bed?: string;
   } | null>(null);
 
-  // Delete Building Handler (Backend Persisted with Client Fallback & Local Storage Sync)
-  const handleDeleteBuilding = async (buildingName: string) => {
-    if (confirm(`Are you sure you want to delete building "${buildingName}"?`)) {
-      let updated: any[] = [];
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/buildings/${encodeURIComponent(buildingName)}`, {
-          method: "DELETE",
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.success && Array.isArray(data.buildings)) {
-            updated = data.buildings;
-            setBuildingsList(updated);
-            if (typeof window !== "undefined") {
-              localStorage.setItem("shripad_cached_buildings", JSON.stringify(updated));
+  // Delete Building Handler (Custom Modern Confirm Modal & Local Cache Sync)
+  const handleDeleteBuilding = (buildingName: string) => {
+    setConfirmModalState({
+      isOpen: true,
+      title: "Delete Building",
+      message: `Are you sure you want to delete building "${buildingName}"?`,
+      confirmText: "Delete Building",
+      cancelText: "Cancel",
+      type: "danger",
+      onConfirm: async () => {
+        let updated: any[] = [];
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/buildings/${encodeURIComponent(buildingName)}`, {
+            method: "DELETE",
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success && Array.isArray(data.buildings)) {
+              updated = data.buildings;
+              setBuildingsList(updated);
+              if (typeof window !== "undefined") {
+                localStorage.setItem("shripad_cached_buildings", JSON.stringify(updated));
+              }
+              showToast(`Building "${buildingName}" deleted permanently!`, "success");
+              return;
             }
-            showToast(`Building "${buildingName}" deleted permanently!`, "success");
-            return;
           }
+        } catch (err: any) {
+          console.warn("Backend API offline, deleting building in client state:", err);
         }
-      } catch (err: any) {
-        console.warn("Backend API offline, deleting building in client state:", err);
-      }
-      setBuildingsList((prev) => {
-        updated = prev.filter((b) => b.name !== buildingName);
-        if (typeof window !== "undefined") {
-          localStorage.setItem("shripad_cached_buildings", JSON.stringify(updated));
-        }
-        return updated;
-      });
-      showToast(`Building "${buildingName}" deleted successfully!`, "success");
-    }
+        setBuildingsList((prev) => {
+          updated = prev.filter((b) => b.name !== buildingName);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("shripad_cached_buildings", JSON.stringify(updated));
+          }
+          return updated;
+        });
+        showToast(`Building "${buildingName}" deleted successfully!`, "success");
+      },
+    });
   };
 
   // Update Building Handler (Backend Persisted)
@@ -1163,19 +1235,42 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   };
 
   // Delete Customer Handler
-  const handleDeleteCustomer = async (id: string, name: string, e: React.MouseEvent) => {
+  const handleDeleteCustomer = (id: string, name: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm(`Are you sure you want to delete customer "${name}"?`)) {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/bookings/${id}`, { method: "DELETE" });
-        const data = await res.json();
-        if (data.success) {
-          setBookings((prev) => prev.filter((b) => b.id !== id));
+    setConfirmModalState({
+      isOpen: true,
+      title: "Delete Resident Record",
+      message: `Are you sure you want to delete customer "${name}"?`,
+      confirmText: "Delete Resident",
+      cancelText: "Cancel",
+      type: "danger",
+      onConfirm: async () => {
+        let updated: any[] = [];
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/bookings/${id}`, { method: "DELETE" });
+          const data = await res.json();
+          if (data.success && Array.isArray(data.bookings)) {
+            updated = data.bookings;
+            setBookings(updated);
+            if (typeof window !== "undefined") {
+              localStorage.setItem("shripad_cached_bookings", JSON.stringify(updated));
+            }
+            showToast(`Customer "${name}" deleted!`, "success");
+            return;
+          }
+        } catch (err) {
+          console.warn("Failed to delete customer:", err);
         }
-      } catch (err) {
-        console.error("Failed to delete customer:", err);
-      }
-    }
+        setBookings((prev) => {
+          updated = prev.filter((b) => b.id !== id);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("shripad_cached_bookings", JSON.stringify(updated));
+          }
+          return updated;
+        });
+        showToast(`Customer "${name}" deleted!`, "success");
+      },
+    });
   };
 
   // Update Customer Handler
@@ -1199,19 +1294,45 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   };
 
   // Deallocate Customer Handler
-  const handleDeallocateCustomer = async (id: string, name: string, e: React.MouseEvent) => {
+  const handleDeallocateCustomer = (id: string, name: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm(`Are you sure you want to remove room allocation for "${name}"?`)) {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/bookings/${id}/deallocate`, { method: "POST" });
-        const data = await res.json();
-        if (data.success && data.booking) {
-          setBookings((prev) => prev.map((b) => (b.id === id ? data.booking : b)));
+    setConfirmModalState({
+      isOpen: true,
+      title: "Remove Room Allocation",
+      message: `Are you sure you want to remove room allocation for "${name}"?`,
+      confirmText: "Deallocate Room",
+      cancelText: "Cancel",
+      type: "warning",
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/bookings/${id}/deallocate`, { method: "POST" });
+          const data = await res.json();
+          if (data.success && data.booking) {
+            setBookings((prev) => {
+              const updated = prev.map((b) => (b.id === id ? data.booking : b));
+              if (typeof window !== "undefined") {
+                localStorage.setItem("shripad_cached_bookings", JSON.stringify(updated));
+              }
+              return updated;
+            });
+            showToast(`Room allocation removed for "${name}"`, "success");
+            return;
+          }
+        } catch (err) {
+          console.warn("Failed to deallocate customer:", err);
         }
-      } catch (err) {
-        console.error("Failed to deallocate customer:", err);
-      }
-    }
+        setBookings((prev) => {
+          const updated = prev.map((b) =>
+            b.id === id ? { ...b, allocatedBuilding: "", allocatedFloor: null, allocatedRoom: "" } : b
+          );
+          if (typeof window !== "undefined") {
+            localStorage.setItem("shripad_cached_bookings", JSON.stringify(updated));
+          }
+          return updated;
+        });
+        showToast(`Room allocation removed for "${name}"`, "success");
+      },
+    });
   };
 
   // BookMyShow-Style Interactive Layout Selection State
@@ -7763,6 +7884,18 @@ function doPost(e) {
           </button>
         </div>
       )}
+
+      {/* CUSTOM SLEEK ENTERPRISE CONFIRMATION MODAL */}
+      <CustomConfirmModal
+        isOpen={confirmModalState.isOpen}
+        title={confirmModalState.title}
+        message={confirmModalState.message}
+        confirmText={confirmModalState.confirmText}
+        cancelText={confirmModalState.cancelText}
+        type={confirmModalState.type}
+        onConfirm={confirmModalState.onConfirm}
+        onClose={() => setConfirmModalState((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }
