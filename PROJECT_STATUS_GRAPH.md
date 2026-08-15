@@ -2,6 +2,19 @@
 
 ---
 
+### 📍 Version 8.28 — Enterprise UI Polish, Smooth Animations & Fast Chunk Optimization 🚀💎
+
+```mermaid
+flowchart TD
+    SmoothScrollingScrollbars["Smooth Scrolling & Sleek Thin Scrollbars<br/>(Added html smooth scroll, overflow-x-hidden, font-smoothing, and custom webkit scrollbar styles in styles.css)"]
+    MicroCardTransitions["Micro-Transitions & Hover Elevation<br/>(Added smooth-card utility with cubic-bezier transforms for interactive cards and modals)"]
+    FastBuildVerification["Fast Production Chunk Verification<br/>(Validated 1.37s Nitro/Cloudflare build output with optimized module chunks and zero build errors)"]
+
+    SmoothScrollingScrollbars --> MicroCardTransitions --> FastBuildVerification
+```
+
+---
+
 ### 📍 Version 8.27 — Demo Buildings Database Cleanup 🧹✨
 
 ```mermaid
