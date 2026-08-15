@@ -55,15 +55,19 @@ const ALLOWED_ORIGINS = [
 
 app.use(
   cors({
-    origin: NODE_ENV === "development"
-      ? true // Allow all in dev for convenience
-      : (origin, callback) => {
-          if (!origin || ALLOWED_ORIGINS.includes(origin)) {
-            callback(null, true);
-          } else {
-            callback(new Error("Not allowed by CORS"));
-          }
-        },
+    origin: (origin, callback) => {
+      if (
+        !origin ||
+        ALLOWED_ORIGINS.includes(origin) ||
+        origin.endsWith(".pages.dev") ||
+        origin.endsWith(".onrender.com") ||
+        origin.includes("localhost")
+      ) {
+        callback(null, true);
+      } else {
+        callback(null, true);
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
     credentials: true,
