@@ -2,6 +2,19 @@
 
 ---
 
+### 📍 Version 8.19 — Enterprise CORS & Environment API Resolution 🌐🛡️
+
+```mermaid
+flowchart TD
+    DynamicApiResolver["Dynamic Enterprise API Resolver<br/>(Created apiConfig.ts helper to route non-localhost production environments directly to https://shripad-pg-backend.onrender.com)"]
+    RefactoredFetchCalls["Frontend API Call Refactoring<br/>(Updated all 40+ fetch calls across Admin, Staff, Customer, and Invoice components to use dynamic API_BASE_URL)"]
+    EnterpriseCorsHeaders["Backend Enterprise CORS Middleware<br/>(Updated backend index.ts CORS policy to accept all client origins, methods, and authorization headers)"]
+
+    DynamicApiResolver --> RefactoredFetchCalls --> EnterpriseCorsHeaders
+```
+
+---
+
 ### 📍 Version 8.18 — SripadPG PWA Web App & Mobile Installation Support 📱⚡
 
 ```mermaid

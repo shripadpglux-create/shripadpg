@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../../lib/apiConfig";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import jsPDF from "jspdf";
@@ -194,7 +195,7 @@ export function CustomerPortal() {
       }
 
       // Sync fresh resident profile and rent details from backend
-      fetch("http://localhost:5000/api/bookings")
+      fetch(`${API_BASE_URL}/api/bookings`)
         .then((res) => res.json())
         .then((data) => {
           if (data.success && Array.isArray(data.bookings)) {
@@ -210,7 +211,7 @@ export function CustomerPortal() {
         .catch((err) => console.warn("Failed to sync customer profile:", err));
 
       // Sync official real PG payment details & QR code from admin settings
-      fetch("http://localhost:5000/api/settings/payment")
+      fetch(`${API_BASE_URL}/api/settings/payment`)
         .then((res) => res.json())
         .then((data) => {
           if (data.success && data.settings) {
@@ -298,7 +299,7 @@ export function CustomerPortal() {
     setIsChangingPass(true);
 
     try {
-      const res = await fetch("http://localhost:5000/api/bookings/change-password", {
+      const res = await fetch(`${API_BASE_URL}/api/bookings/change-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -381,7 +382,7 @@ export function CustomerPortal() {
     };
 
     try {
-      const res = await fetch(`http://localhost:5000/api/bookings/${customer.id}/payments`, {
+      const res = await fetch(`${API_BASE_URL}/api/bookings/${customer.id}/payments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -452,7 +453,7 @@ export function CustomerPortal() {
     };
 
     try {
-      const res = await fetch(`http://localhost:5000/api/bookings/${customer.id}/complaints`, {
+      const res = await fetch(`${API_BASE_URL}/api/bookings/${customer.id}/complaints`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

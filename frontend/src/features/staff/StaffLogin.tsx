@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../../lib/apiConfig";
 import React, { useState } from "react";
 import { useNavigate, Link } from "@tanstack/react-router";
 import { ShieldCheck, Mail, Lock, Building2, UserCheck, AlertCircle, ArrowRight, Home, KeyRound, Eye, EyeOff } from "lucide-react";
@@ -22,7 +23,7 @@ export function StaffLogin() {
     setIsLoading(true);
 
     try {
-      const res = await fetch("http://localhost:5000/api/staff/login", {
+      const res = await fetch(`${API_BASE_URL}/api/staff/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), password: password.trim() }),

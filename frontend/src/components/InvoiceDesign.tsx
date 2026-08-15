@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../lib/apiConfig";
 import React, { useState, useEffect } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -223,7 +224,7 @@ export function InvoiceDesign({
   const fetchInvoices = async () => {
     setIsLoadingInvoices(true);
     try {
-      const res = await fetch("http://localhost:5000/api/invoices");
+      const res = await fetch(`${API_BASE_URL}/api/invoices`);
       const data = await res.json();
       if (data.success && Array.isArray(data.invoices)) {
         setInvoicesList(data.invoices);
@@ -295,7 +296,7 @@ export function InvoiceDesign({
     };
 
     try {
-      const res = await fetch("http://localhost:5000/api/invoices", {
+      const res = await fetch(`${API_BASE_URL}/api/invoices`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -345,7 +346,7 @@ export function InvoiceDesign({
   const handleDeleteInvoice = async (invId: string, invNo: string) => {
     if (confirm(`Are you sure you want to delete invoice record "${invNo}"?`)) {
       try {
-        const res = await fetch(`http://localhost:5000/api/invoices/${invId}`, {
+        const res = await fetch(`${API_BASE_URL}/api/invoices/${invId}`, {
           method: "DELETE",
         });
         const data = await res.json();

@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../../lib/apiConfig";
 import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
@@ -92,7 +93,7 @@ export default function StaffDashboard() {
     setLoginError("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/staff/login", {
+      const res = await fetch(`${API_BASE_URL}/api/staff/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: loginEmail, password: loginPassword }),
@@ -120,9 +121,9 @@ export default function StaffDashboard() {
   const fetchData = async () => {
     try {
       const [staffRes, bldRes, bookRes] = await Promise.all([
-        fetch("http://localhost:5000/api/staff"),
-        fetch("http://localhost:5000/api/buildings"),
-        fetch("http://localhost:5000/api/bookings"),
+        fetch(`${API_BASE_URL}/api/staff`),
+        fetch(`${API_BASE_URL}/api/buildings`),
+        fetch(`${API_BASE_URL}/api/bookings`),
       ]);
 
       const staffData = await staffRes.json();
@@ -203,7 +204,7 @@ export default function StaffDashboard() {
     if (!selectedResidentForPayment || payAmount <= 0) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/bookings/${selectedResidentForPayment.id}/payments`, {
+      const res = await fetch(`${API_BASE_URL}/api/bookings/${selectedResidentForPayment.id}/payments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

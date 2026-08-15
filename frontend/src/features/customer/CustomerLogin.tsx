@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../../lib/apiConfig";
 import React, { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { User, Lock, ArrowRight, ShieldCheck, AlertCircle, Sparkles, Eye, EyeOff } from "lucide-react";
@@ -27,7 +28,7 @@ export function CustomerLogin() {
     const cleanInputPass = password.trim();
 
     try {
-      const res = await fetch("http://localhost:5000/api/bookings/login", {
+      const res = await fetch(`${API_BASE_URL}/api/bookings/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ customerId: customerId.trim(), password: password.trim() }),

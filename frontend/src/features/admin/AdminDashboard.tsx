@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "../../lib/apiConfig";
 import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
@@ -287,7 +288,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
   const fetchPaymentSettings = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/settings/payment");
+      const res = await fetch(`${API_BASE_URL}/api/settings/payment`);
       const data = await res.json();
       if (data.success && data.settings) {
         setPaymentSettings(data.settings);
@@ -327,7 +328,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     e.preventDefault();
     setIsSavingPaymentSettings(true);
     try {
-      const res = await fetch("http://localhost:5000/api/settings/payment", {
+      const res = await fetch(`${API_BASE_URL}/api/settings/payment`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(paymentSettings),
@@ -370,7 +371,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     const finalTxnId = newPaymentTxnId.trim() || (newPaymentMethod === "cash" ? `CASH-${Date.now().toString().slice(-6)}` : `MANUAL-${Date.now().toString().slice(-6)}`);
 
     try {
-      const res = await fetch(`http://localhost:5000/api/bookings/${selectedHistoryResident.id}/payments`, {
+      const res = await fetch(`${API_BASE_URL}/api/bookings/${selectedHistoryResident.id}/payments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -404,7 +405,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   // Verify Payment Handler
   const handleVerifyPayment = async (bookingId: string, paymentId: string) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/bookings/${bookingId}/payments/${paymentId}/verify`, {
+      const res = await fetch(`${API_BASE_URL}/api/bookings/${bookingId}/payments/${paymentId}/verify`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ verifiedBy: "Admin" }),
@@ -422,7 +423,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   // Verify Payment & Raise Official Invoice Handler
   const handleVerifyAndRaiseInvoice = async (bookingId: string, paymentId: string) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/bookings/${bookingId}/payments/${paymentId}/verify`, {
+      const res = await fetch(`${API_BASE_URL}/api/bookings/${bookingId}/payments/${paymentId}/verify`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ verifiedBy: "Admin", raiseInvoice: true }),
@@ -442,7 +443,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const handleRejectPayment = async (bookingId: string, paymentId: string) => {
     const reason = prompt("Enter rejection reason (optional):", "Transaction details could not be verified") || "Rejected by admin";
     try {
-      const res = await fetch(`http://localhost:5000/api/bookings/${bookingId}/payments/${paymentId}/reject`, {
+      const res = await fetch(`${API_BASE_URL}/api/bookings/${bookingId}/payments/${paymentId}/reject`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rejectedReason: reason }),
@@ -461,7 +462,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const handleVerifyWithSms = async (bookingId: string, paymentId: string) => {
     if (!pasteSmsInput.trim()) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/bookings/${bookingId}/payments/${paymentId}/verify-sms`, {
+      const res = await fetch(`${API_BASE_URL}/api/bookings/${bookingId}/payments/${paymentId}/verify-sms`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bankSmsText: pasteSmsInput }),
@@ -498,7 +499,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
   const fetchBuildings = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/buildings");
+      const res = await fetch(`${API_BASE_URL}/api/buildings`);
       const data = await res.json();
       if (data.success && Array.isArray(data.buildings)) {
         setBuildingsList(data.buildings);
@@ -552,7 +553,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
   const fetchSettings = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/settings");
+      const res = await fetch(`${API_BASE_URL}/api/settings`);
       const data = await res.json();
       if (data.success && data.settings) {
         setManualBookingSheetUrl(data.settings.manualBookingSheetUrl || "");
@@ -568,7 +569,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     setIsSavingSettings(true);
     setSettingsSaveToast(null);
     try {
-      const res = await fetch("http://localhost:5000/api/settings", {
+      const res = await fetch(`${API_BASE_URL}/api/settings`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -608,7 +609,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     }
 
     try {
-      const res = await fetch("http://localhost:5000/api/settings/test-url", {
+      const res = await fetch(`${API_BASE_URL}/api/settings/test-url`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: url.trim() }),
@@ -631,7 +632,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
   const fetchStaff = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/staff");
+      const res = await fetch(`${API_BASE_URL}/api/staff`);
       const data = await res.json();
       if (data.success && Array.isArray(data.staff)) {
         setStaffList(data.staff);
@@ -678,7 +679,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
   const fetchExpenses = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/expenses");
+      const res = await fetch(`${API_BASE_URL}/api/expenses`);
       const data = await res.json();
       if (data.success && Array.isArray(data.expenses)) {
         setExpensesList(data.expenses);
@@ -708,7 +709,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
     try {
       if (editingExpId) {
-        const res = await fetch(`http://localhost:5000/api/expenses/${editingExpId}`, {
+        const res = await fetch(`${API_BASE_URL}/api/expenses/${editingExpId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -718,7 +719,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
           setExpensesList(data.expenses);
         }
       } else {
-        const res = await fetch("http://localhost:5000/api/expenses", {
+        const res = await fetch(`${API_BASE_URL}/api/expenses`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -738,7 +739,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const handleDeleteExpense = async (id: string, title: string) => {
     if (confirm(`Are you sure you want to delete expense record "${title}"?`)) {
       try {
-        const res = await fetch(`http://localhost:5000/api/expenses/${id}`, { method: "DELETE" });
+        const res = await fetch(`${API_BASE_URL}/api/expenses/${id}`, { method: "DELETE" });
         const data = await res.json();
         if (data.success && Array.isArray(data.expenses)) {
           setExpensesList(data.expenses);
@@ -869,7 +870,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
     try {
       if (editingStaffId) {
-        const res = await fetch(`http://localhost:5000/api/staff/${editingStaffId}`, {
+        const res = await fetch(`${API_BASE_URL}/api/staff/${editingStaffId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -879,7 +880,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
           setStaffList(data.staff);
         }
       } else {
-        const res = await fetch("http://localhost:5000/api/staff", {
+        const res = await fetch(`${API_BASE_URL}/api/staff`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -905,7 +906,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const handleDeleteStaffMember = async (id: string, name: string) => {
     if (confirm(`Are you sure you want to remove staff member "${name}"?`)) {
       try {
-        const res = await fetch(`http://localhost:5000/api/staff/${id}`, { method: "DELETE" });
+        const res = await fetch(`${API_BASE_URL}/api/staff/${id}`, { method: "DELETE" });
         const data = await res.json();
         if (data.success && Array.isArray(data.staff)) {
           setStaffList(data.staff);
@@ -988,7 +989,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       };
 
       try {
-        const res = await fetch("http://localhost:5000/api/buildings", {
+        const res = await fetch(`${API_BASE_URL}/api/buildings`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -1052,7 +1053,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const handleDeleteBuilding = async (buildingName: string) => {
     if (confirm(`Are you sure you want to delete building "${buildingName}"?`)) {
       try {
-        const res = await fetch(`http://localhost:5000/api/buildings/${encodeURIComponent(buildingName)}`, {
+        const res = await fetch(`${API_BASE_URL}/api/buildings/${encodeURIComponent(buildingName)}`, {
           method: "DELETE",
         });
         const data = await res.json();
@@ -1083,7 +1084,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       };
 
       try {
-        const res = await fetch(`http://localhost:5000/api/buildings/${encodeURIComponent(origName)}`, {
+        const res = await fetch(`${API_BASE_URL}/api/buildings/${encodeURIComponent(origName)}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(updatedPayload),
@@ -1112,7 +1113,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     e.stopPropagation();
     if (confirm(`Are you sure you want to delete customer "${name}"?`)) {
       try {
-        const res = await fetch(`http://localhost:5000/api/bookings/${id}`, { method: "DELETE" });
+        const res = await fetch(`${API_BASE_URL}/api/bookings/${id}`, { method: "DELETE" });
         const data = await res.json();
         if (data.success) {
           setBookings((prev) => prev.filter((b) => b.id !== id));
@@ -1128,7 +1129,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     e.preventDefault();
     if (!editingCustomer) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/bookings/${editingCustomer.id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/bookings/${editingCustomer.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(editingCustomer),
@@ -1148,7 +1149,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     e.stopPropagation();
     if (confirm(`Are you sure you want to remove room allocation for "${name}"?`)) {
       try {
-        const res = await fetch(`http://localhost:5000/api/bookings/${id}/deallocate`, { method: "POST" });
+        const res = await fetch(`${API_BASE_URL}/api/bookings/${id}/deallocate`, { method: "POST" });
         const data = await res.json();
         if (data.success && data.booking) {
           setBookings((prev) => prev.map((b) => (b.id === id ? data.booking : b)));
@@ -1459,7 +1460,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
   const fetchBookings = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/bookings");
+      const res = await fetch(`${API_BASE_URL}/api/bookings`);
       const data = await res.json();
       if (data.success) {
         setBookings(data.bookings);
@@ -1472,7 +1473,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const handleManualSync = async () => {
     setIsSyncing(true);
     try {
-      const res = await fetch("http://localhost:5000/api/bookings/sync", { method: "POST" });
+      const res = await fetch(`${API_BASE_URL}/api/bookings/sync`, { method: "POST" });
       const data = await res.json();
       if (data.success) {
         setBookings(data.bookings);
@@ -1489,7 +1490,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const handlePushAllToGoogleSheet = async () => {
     try {
       setIsSyncing(true);
-      const res = await fetch("http://localhost:5000/api/bookings/push-to-sheet", {
+      const res = await fetch(`${API_BASE_URL}/api/bookings/push-to-sheet`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ webhookUrl: googleSheetWebhookUrl }),
@@ -1515,7 +1516,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     // 5000ms background polling to fetch new online bookings automatically
     const interval = setInterval(async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/bookings/sync", { method: "POST" });
+        const res = await fetch(`${API_BASE_URL}/api/bookings/sync`, { method: "POST" });
         const data = await res.json();
         if (data.success && data.bookings) {
           setBookings(data.bookings);
@@ -4092,7 +4093,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   if (!newCustomerName || !newCustomerPhone) return;
 
                   try {
-                    const res = await fetch("http://localhost:5000/api/bookings", {
+                    const res = await fetch(`${API_BASE_URL}/api/bookings`, {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
@@ -4399,7 +4400,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
                     <button
                       type="button"
-                      onClick={() => window.open("http://localhost:5000/api/bookings/sheet-csv", "_blank")}
+                      onClick={() => window.open(`${API_BASE_URL}/api/bookings/sheet-csv`, "_blank")}
                       className="inline-flex items-center gap-2 rounded-2xl bg-slate-800 hover:bg-slate-900 text-white px-4 py-3 text-xs font-black shadow-md transition-all active:scale-95 cursor-pointer"
                     >
                       <Download className="h-4 w-4" />
@@ -5433,7 +5434,7 @@ function doPost(e) {
 
                     // 5. Send background API sync to backend
                     try {
-                      await fetch(`http://localhost:5000/api/bookings/${targetId}/allocate`, {
+                      await fetch(`${API_BASE_URL}/api/bookings/${targetId}/allocate`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
@@ -5668,7 +5669,7 @@ function doPost(e) {
                   const netRefund = Math.max(0, paidDep - checkoutDeductions);
 
                   try {
-                    const res = await fetch(`http://localhost:5000/api/bookings/${checkoutCustomer.id}/checkout-refund`, {
+                    const res = await fetch(`${API_BASE_URL}/api/bookings/${checkoutCustomer.id}/checkout-refund`, {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
@@ -5873,7 +5874,7 @@ function doPost(e) {
                   if (!rentSetupTarget || !rentSetupAmount || !rentSetupStartDate) return;
                   setIsRentSetupSubmitting(true);
                   try {
-                    const res = await fetch(`http://localhost:5000/api/bookings/${rentSetupTarget.id}/rent-setup`, {
+                    const res = await fetch(`${API_BASE_URL}/api/bookings/${rentSetupTarget.id}/rent-setup`, {
                       method: "PUT",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
