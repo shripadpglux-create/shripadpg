@@ -40,7 +40,18 @@ export default function StaffDashboard() {
   const navigate = useNavigate();
   const [staffList, setStaffList] = useState<any[]>([]);
   const [selectedStaffId, setSelectedStaffId] = useState<string>("");
-  const [buildingsList, setBuildingsList] = useState<any[]>([]);
+  const [buildingsList, setBuildingsList] = useState<any[]>(() => {
+    if (typeof window !== "undefined") {
+      const cached = localStorage.getItem("shripad_cached_buildings");
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed)) return parsed;
+        } catch {}
+      }
+    }
+    return [];
+  });
   const [bookings, setBookings] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"Overview" | "Residents" | "Allocation" | "Payments" | "Complaints">("Overview");
 

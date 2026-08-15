@@ -2,6 +2,19 @@
 
 ---
 
+### 📍 Version 8.24 — Instant Local Storage Cache & Zero Building Flash ⚡📱
+
+```mermaid
+flowchart TD
+    SynchronousCacheInit["Synchronous LocalStorage Cache Initialization<br/>(Updated useState in Admin and Staff dashboards to initialize buildings directly from shripad_cached_buildings)"]
+    ImmediateCacheSync["Immediate Deletion Cache Sync<br/>(Updated handleDeleteBuilding to immediately write updated building array to localStorage upon deletion)"]
+    ZeroFlashOnReload["Zero-Flash Instant Render<br/>(Eliminated the 1-2 second flash of deleted building cards on page reload before backend fetch finishes)"]
+
+    SynchronousCacheInit --> ImmediateCacheSync --> ZeroFlashOnReload
+```
+
+---
+
 ### 📍 Version 8.23 — Express 5 Path-To-Regexp Compatibility Fix 🛠️⚡
 
 ```mermaid

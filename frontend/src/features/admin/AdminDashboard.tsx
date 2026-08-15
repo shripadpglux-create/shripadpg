@@ -482,7 +482,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     }
   };
 
-  // Buildings state & Add Building feature (Backend JSON DB Persisted)
+  // Buildings state & Add Building feature (Backend JSON DB Persisted & Local Cache Synced)
   const [buildingsList, setBuildingsList] = useState<Array<{
     id?: string;
     name: string;
@@ -490,12 +490,23 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     roomsPerFloor: number;
     floorRoomCounts?: Record<number, number>;
     blockedRooms?: string[];
-  }>>([
-    { id: "bld_pga", name: "PG A", floors: 4, roomsPerFloor: 4, floorRoomCounts: { 0: 1, 1: 4, 2: 4, 3: 4 } },
-    { id: "bld_pgb", name: "PG B", floors: 4, roomsPerFloor: 4, floorRoomCounts: { 0: 1, 1: 4, 2: 4, 3: 4 } },
-    { id: "bld_pgc", name: "PG C", floors: 4, roomsPerFloor: 4, floorRoomCounts: { 0: 1, 1: 4, 2: 4, 3: 4 } },
-    { id: "bld_pgd", name: "PG D", floors: 4, roomsPerFloor: 4, floorRoomCounts: { 0: 1, 1: 4, 2: 4, 3: 4 } },
-  ]);
+  }>>(() => {
+    if (typeof window !== "undefined") {
+      const cached = localStorage.getItem("shripad_cached_buildings");
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed)) return parsed;
+        } catch {}
+      }
+    }
+    return [
+      { id: "bld_pga", name: "PG A", floors: 4, roomsPerFloor: 4, floorRoomCounts: { 0: 1, 1: 4, 2: 4, 3: 4 } },
+      { id: "bld_pgb", name: "PG B", floors: 4, roomsPerFloor: 4, floorRoomCounts: { 0: 1, 1: 4, 2: 4, 3: 4 } },
+      { id: "bld_pgc", name: "PG C", floors: 4, roomsPerFloor: 4, floorRoomCounts: { 0: 1, 1: 4, 2: 4, 3: 4 } },
+      { id: "bld_pgd", name: "PG D", floors: 4, roomsPerFloor: 4, floorRoomCounts: { 0: 1, 1: 4, 2: 4, 3: 4 } },
+    ];
+  });
 
   const fetchBuildings = async () => {
     try {
@@ -503,6 +514,9 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       const data = await res.json();
       if (data.success && Array.isArray(data.buildings)) {
         setBuildingsList(data.buildings);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("shripad_cached_buildings", JSON.stringify(data.buildings));
+        }
       }
     } catch (err) {
       console.error("Failed to fetch buildings from backend:", err);
@@ -1049,9 +1063,10 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     bed?: string;
   } | null>(null);
 
-  // Delete Building Handler (Backend Persisted with Client Fallback)
+  // Delete Building Handler (Backend Persisted with Client Fallback & Local Storage Sync)
   const handleDeleteBuilding = async (buildingName: string) => {
     if (confirm(`Are you sure you want to delete building "${buildingName}"?`)) {
+      let updated: any[] = [];
       try {
         const res = await fetch(`${API_BASE_URL}/api/buildings/${encodeURIComponent(buildingName)}`, {
           method: "DELETE",
@@ -1059,7 +1074,11 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
         if (res.ok) {
           const data = await res.json();
           if (data.success && Array.isArray(data.buildings)) {
-            setBuildingsList(data.buildings);
+            updated = data.buildings;
+            setBuildingsList(updated);
+            if (typeof window !== "undefined") {
+              localStorage.setItem("shripad_cached_buildings", JSON.stringify(updated));
+            }
             showToast(`Building "${buildingName}" deleted permanently!`, "success");
             return;
           }
@@ -1067,7 +1086,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       } catch (err: any) {
         console.warn("Backend API offline, deleting building in client state:", err);
       }
-      setBuildingsList((prev) => prev.filter((b) => b.name !== buildingName));
+      setBuildingsList((prev) => {
+        updated = prev.filter((b) => b.name !== buildingName);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("shripad_cached_buildings", JSON.stringify(updated));
+        }
+        return updated;
+      });
       showToast(`Building "${buildingName}" deleted successfully!`, "success");
     }
   };
