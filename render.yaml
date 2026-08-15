@@ -1,8 +1,10 @@
 services:
+  # ── Shripad PG Backend API ──────────────────────────────────────────
   - type: web
     name: shripad-pg-backend
     env: node
     region: singapore
+    plan: free
     buildCommand: cd backend && npm install && npm run build
     startCommand: cd backend && npm start
     envVars:
@@ -18,3 +20,53 @@ services:
         value: https://docs.google.com/spreadsheets/d/1CkVNLNy0XUh0hzWLb6-k0f6PtpY1SEQjcK9uD--AtAs/export?format=csv
       - key: GOOGLE_SHEET_WEBHOOK_URL
         value: https://script.google.com/macros/s/AKfycby7CIvVOQvktQtjAaKZmL7bBi1H6aL9o1QiaMO8J085PBEDqNeywMI2t6mIiGv5lFq2/exec
+      - key: OPENWA_API_URL
+        value: https://shripad-openwa-gateway.onrender.com
+      - key: OPENWA_SESSION_NAME
+        value: shripad_pg_main
+      - key: OPENWA_API_KEY
+        value: shripad_secure_wa_token_2026
+      - key: WHATSAPP_AUTO_NOTIFY
+        value: "true"
+
+  # ── OpenWA Baileys WhatsApp Gateway ─────────────────────────────────
+  - type: web
+    name: shripad-openwa-gateway
+    env: node
+    region: singapore
+    plan: free
+    buildCommand: cd openwa && npm install && npm run build
+    startCommand: cd openwa && npm run start:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: ENGINE_TYPE
+        value: baileys
+      - key: DATABASE_TYPE
+        value: sqlite
+      - key: DATABASE_NAME
+        value: ./data/openwa.sqlite
+      - key: DATABASE_SYNCHRONIZE
+        value: "true"
+      - key: DATABASE_LOGGING
+        value: "false"
+      - key: SESSION_DATA_PATH
+        value: ./data/sessions
+      - key: AUTO_START_SESSIONS
+        value: "true"
+      - key: API_MASTER_KEY
+        value: shripad_secure_wa_token_2026
+      - key: STORAGE_TYPE
+        value: local
+      - key: STORAGE_LOCAL_PATH
+        value: ./data/media
+      - key: REDIS_ENABLED
+        value: "false"
+      - key: QUEUE_ENABLED
+        value: "false"
+      - key: CACHE_ENABLED
+        value: "false"
+      - key: PUPPETEER_SKIP_DOWNLOAD
+        value: "true"

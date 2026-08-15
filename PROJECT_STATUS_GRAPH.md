@@ -2,6 +2,22 @@
 
 ---
 
+### 📍 Version 8.42 — Render Multi-Service OpenWA Baileys Deployment Blueprint 🚀☁️
+
+```mermaid
+flowchart TD
+    RenderBlueprint["render.yaml Infrastructure Blueprint<br/>(Declarative Multi-Service Spec on Singapore region)"]
+    Service1["Service 1: shripad-pg-backend<br/>(Express REST API + JWT + Rate Limiting + MongoDB Atlas)"]
+    Service2["Service 2: shripad-openwa-gateway<br/>(OpenWA NestJS + Baileys Engine + Multi-Device WebSockets)"]
+    InterServiceAuth["Inter-Service Secret Authentication<br/>(OPENWA_API_KEY + X-Api-Key Header Protection)"]
+
+    RenderBlueprint --> Service1
+    RenderBlueprint --> Service2
+    Service1 <-->|REST Dispatch & Webhooks| InterServiceAuth <--> Service2
+```
+
+---
+
 ### 📍 Version 8.41 — OpenWA Baileys WhatsApp Automation Gateway 📱⚡
 
 ```mermaid
