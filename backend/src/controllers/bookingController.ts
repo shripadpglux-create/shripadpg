@@ -449,7 +449,7 @@ export class BookingController {
           WhatsAppService.sendComplaintStatusUpdate({
             residentName: updated.name || "Resident",
             phone: updated.phone,
-            title: cRecord.title || cRecord.subject || "Service Request",
+            title: cRecord.title || "Service Request",
             category: cRecord.category || "General",
             status: status as any,
             adminComment: adminComment !== undefined ? adminComment : cRecord.adminComment,
