@@ -2,6 +2,19 @@
 
 ---
 
+### 📍 Version 8.39 — Dynamic Multi-Sharing Bed Matrix (1 to 6 Sharing per Room) 🛏️🔢
+
+```mermaid
+flowchart TD
+    SharingCapacitySwitcher["Room Sharing Switcher<br/>(Admins can switch any room between 1-Single, 2-Sharing, 3-Sharing, 4-Sharing, 5-Sharing, 6-Sharing)"]
+    DynamicBedGrid["Dynamic Bed Matrix<br/>(Interactive grid dynamically generates Bed A, Bed B, Bed C, Bed D, Bed E, Bed F with real-time occupancy status)"]
+    PersistentSharingConfig["Persistent Custom Sharing<br/>(Room capacities are saved and synced across Allocation Matrix, Room Details, and Resident Receipts)"]
+
+    SharingCapacitySwitcher --> DynamicBedGrid --> PersistentSharingConfig
+```
+
+---
+
 ### 📍 Version 8.38 — Zero-Building Allocation Guard & Mismatch Prevention 🛡️🏢
 
 ```mermaid

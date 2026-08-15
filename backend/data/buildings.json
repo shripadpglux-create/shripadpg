@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "id": "bld_1786813662376_330",
+    "name": "PG ShripadPG-A",
+    "floors": 5,
+    "roomsPerFloor": 8,
+    "floorRoomCounts": {
+      "0": 0
+    },
+    "blockedRooms": [],
+    "createdAt": "2026-08-15T17:07:42.376Z",
+    "updatedAt": "2026-08-15T17:07:42.376Z"
+  }
+]

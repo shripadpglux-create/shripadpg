@@ -211,6 +211,19 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const [selectedHistoryResident, setSelectedHistoryResident] = useState<any>(null);
   const [historyTab, setHistoryTab] = useState<"room" | "payment" | "complaint" | "documents">("room");
 
+  // Dynamic Room Sharing Configuration per Room (e.g. 1-Sharing, 2-Sharing, 3-Sharing, 4-Sharing, 5-Sharing, 6-Sharing)
+  const [customRoomSharing, setCustomRoomSharing] = useState<Record<string, number>>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("shripad_custom_room_sharing");
+        return saved ? JSON.parse(saved) : {};
+      } catch {
+        return {};
+      }
+    }
+    return {};
+  });
+
   // Deposit & Allocation Matrix States
   const [bmsRentAmount, setBmsRentAmount] = useState<number>(5000);
   const [bmsDepositAmount, setBmsDepositAmount] = useState<number>(5000);
@@ -1496,12 +1509,25 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     });
   };
 
-  // Centralized Room & Bed Occupancy Pipeline (Single source of truth for all components)
+  // Centralized Room & Bed Occupancy Pipeline (Supports 1-Sharing, 2-Sharing, 3-Sharing, 4-Sharing, 5-Sharing, 6-Sharing)
   const getRoomBedState = (buildingName: string, roomNo: string) => {
     const allocations = getAllocationsForRoom(buildingName, roomNo);
+    const cleanRoom = (roomNo || "").toString().replace(/^Room\s+/i, "").trim();
 
-    // Standard 2-Sharing PG Room Layout: Bed A and Bed B
-    const bedNames = ["Bed A", "Bed B"];
+    // Determine room sharing capacity: check custom setting, or infer from allocations, fallback to 2
+    let capacity = customRoomSharing[`${buildingName}_${cleanRoom}`] || 2;
+
+    // Expand capacity if there are existing bookings for Bed C, D, E, F, etc.
+    allocations.forEach((bk) => {
+      const bkBed = (bk.allocatedBed || bk.bed || "").toLowerCase();
+      if (bkBed.includes("c") || bkBed.includes("3")) capacity = Math.max(capacity, 3);
+      if (bkBed.includes("d") || bkBed.includes("4")) capacity = Math.max(capacity, 4);
+      if (bkBed.includes("e") || bkBed.includes("5")) capacity = Math.max(capacity, 5);
+      if (bkBed.includes("f") || bkBed.includes("6")) capacity = Math.max(capacity, 6);
+    });
+
+    const letterLabels = ["Bed A", "Bed B", "Bed C", "Bed D", "Bed E", "Bed F", "Bed G", "Bed H"];
+    const bedNames = letterLabels.slice(0, Math.max(1, capacity));
 
     // Track used booking IDs to guarantee 100% no duplicate resident assignment
     const assignedIds = new Set<string>();
@@ -1512,18 +1538,28 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       occupantName?: string;
       occupantPhone?: string;
       booking?: any;
-    }[] = bedNames.map((bedName) => {
-      const isBedA = bedName === "Bed A";
+    }[] = bedNames.map((bedName, bedIdx) => {
+      const letter = String.fromCharCode(65 + bedIdx).toLowerCase(); // 'a', 'b', 'c', ...
+      const numStr = (bedIdx + 1).toString(); // '1', '2', '3', ...
 
       // Match allocation for this bed
       const matchedAlloc = allocations.find((bk) => {
         if (assignedIds.has(bk.id)) return false;
-        const bkBed = (bk.allocatedBed || bk.bed || "").toLowerCase();
-        if (isBedA) {
-          return bkBed.includes("a") || bkBed.includes("1") || !bkBed;
-        } else {
-          return bkBed.includes("b") || bkBed.includes("2") || bkBed.includes("c") || bkBed.includes("3") || !bkBed;
+        const bkBed = (bk.allocatedBed || bk.bed || "").toLowerCase().trim();
+
+        // Exact match (e.g. "Bed A", "bed a", "a", "1", "Bed 1")
+        if (bkBed === `bed ${letter}` || bkBed === letter || bkBed === `bed ${numStr}` || bkBed === numStr) {
+          return true;
         }
+        // First bed fallback if bed string doesn't specify letter
+        if (bedIdx === 0 && (!bkBed || bkBed === "a" || bkBed.includes("a") || bkBed.includes("1"))) {
+          return true;
+        }
+        // Substring match
+        if (bkBed.includes(`bed ${letter}`) || bkBed.includes(`bed ${numStr}`) || bkBed.endsWith(letter) || bkBed.endsWith(numStr)) {
+          return true;
+        }
+        return false;
       });
 
       if (matchedAlloc) {
@@ -1539,19 +1575,18 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       };
     });
 
-    const capacity = 2;
     const occupiedCount = beds.filter((b) => b.isOccupied).length;
-    const freeCount = capacity - occupiedCount;
+    const freeCount = Math.max(0, capacity - occupiedCount);
     const isFull = freeCount === 0;
     const isVacant = occupiedCount === 0;
     const isPartiallyOccupied = occupiedCount > 0 && freeCount > 0;
 
     let freeBedsLabel = `${freeCount}/${capacity} Free`;
     if (isVacant) {
-      freeBedsLabel = "A & B Free 🟢";
+      freeBedsLabel = `${capacity}/${capacity} Free 🟢`;
     } else if (isPartiallyOccupied) {
-      const freeBeds = beds.filter((b) => !b.isOccupied).map((b) => b.bedName);
-      freeBedsLabel = `${freeBeds.join(" & ")} Free 🟢`;
+      const freeBeds = beds.filter((b) => !b.isOccupied).map((b) => b.bedName.replace("Bed ", ""));
+      freeBedsLabel = `${freeBeds.join(", ")} Free 🟢`;
     } else {
       freeBedsLabel = "Full 🔴";
     }
@@ -5442,43 +5477,89 @@ function doPost(e) {
 
             {/* STEP 3: Real Bed Layout Grid Inside Selected Room */}
             <div className="p-4 rounded-2xl bg-indigo-50/80 border border-indigo-200/80 space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                 <span className="text-xs font-black text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
                   <Bed className="h-4 w-4 text-indigo-600" /> 3. Select Bed in Room {bmsRoom}
                 </span>
-                <span className="text-[11px] font-bold text-indigo-700">2-Sharing Room Layout</span>
-              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {(() => {
-                  const rmState = getRoomBedState(bmsBuilding, bmsRoom);
-
-                  return rmState.beds.map((b) => {
-                    const isBedSelected = bmsBed === b.bedName;
+                {/* Dynamic Room Sharing / Bed Capacity Switcher */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[10px] font-black text-indigo-700 uppercase tracking-wider">Room Sharing:</span>
+                  {[1, 2, 3, 4, 5, 6].map((cap) => {
+                    const cleanRoom = (bmsRoom || "101").toString().replace(/^Room\s+/i, "").trim();
+                    const currentCap = customRoomSharing[`${bmsBuilding}_${cleanRoom}`] || 2;
+                    const isActive = currentCap === cap;
                     return (
                       <button
-                        key={b.bedName}
-                        disabled={b.isOccupied}
-                        onClick={() => setBmsBed(b.bedName)}
-                        className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 font-extrabold transition-all ${b.isOccupied
-                            ? "bg-rose-50 border-rose-300 text-rose-700 opacity-90 cursor-not-allowed"
-                            : isBedSelected
-                              ? "bg-indigo-600 text-white border-indigo-600 shadow-md scale-105"
-                              : "bg-emerald-50 border-emerald-300 text-emerald-900 hover:border-indigo-600 hover:bg-emerald-100"
-                          }`}
+                        key={cap}
+                        type="button"
+                        onClick={() => {
+                          const updated = {
+                            ...customRoomSharing,
+                            [`${bmsBuilding}_${cleanRoom}`]: cap,
+                          };
+                          setCustomRoomSharing(updated);
+                          if (typeof window !== "undefined") {
+                            localStorage.setItem("shripad_custom_room_sharing", JSON.stringify(updated));
+                          }
+                          const letterLabels = ["Bed A", "Bed B", "Bed C", "Bed D", "Bed E", "Bed F"];
+                          const maxBedIndex = letterLabels.indexOf(bmsBed);
+                          if (maxBedIndex >= cap) {
+                            setBmsBed("Bed A");
+                          }
+                        }}
+                        className={`px-2.5 py-1 rounded-xl text-[11px] font-black transition-all cursor-pointer ${
+                          isActive
+                            ? "bg-indigo-600 text-white shadow-md scale-105"
+                            : "bg-white text-indigo-900 border border-indigo-200 hover:bg-indigo-100"
+                        }`}
                       >
-                        <div className="flex items-center gap-1.5">
-                          {b.isOccupied ? <Lock className="h-3.5 w-3.5 text-rose-600" /> : <Bed className="h-3.5 w-3.5" />}
-                          <span className="text-xs font-black">{b.bedName}</span>
-                        </div>
-                        <span className={`text-[10px] mt-0.5 font-extrabold ${isBedSelected ? "text-white/90" : b.isOccupied ? "text-rose-700 font-bold" : "text-emerald-700"}`}>
-                          {b.isOccupied ? `Occupied (${b.occupantName})` : isBedSelected ? "Selected ✅" : "Available ⚡"}
-                        </span>
+                        {cap === 1 ? "1 (Single)" : `${cap}-Sharing`}
                       </button>
                     );
-                  });
-                })()}
+                  })}
+                </div>
               </div>
+
+              {(() => {
+                const rmState = getRoomBedState(bmsBuilding, bmsRoom);
+                const gridColsClass = rmState.beds.length === 1
+                  ? "grid-cols-1"
+                  : rmState.beds.length === 2
+                    ? "grid-cols-1 sm:grid-cols-2"
+                    : rmState.beds.length <= 4
+                      ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-4"
+                      : "grid-cols-2 sm:grid-cols-3 md:grid-cols-6";
+
+                return (
+                  <div className={`grid ${gridColsClass} gap-3`}>
+                    {rmState.beds.map((b) => {
+                      const isBedSelected = bmsBed === b.bedName;
+                      return (
+                        <button
+                          key={b.bedName}
+                          disabled={b.isOccupied}
+                          onClick={() => setBmsBed(b.bedName)}
+                          className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 font-extrabold transition-all cursor-pointer ${b.isOccupied
+                              ? "bg-rose-50 border-rose-300 text-rose-700 opacity-90 cursor-not-allowed"
+                              : isBedSelected
+                                ? "bg-indigo-600 text-white border-indigo-600 shadow-md scale-105"
+                                : "bg-emerald-50 border-emerald-300 text-emerald-900 hover:border-indigo-600 hover:bg-emerald-100"
+                            }`}
+                        >
+                          <div className="flex items-center gap-1.5">
+                            {b.isOccupied ? <Lock className="h-3.5 w-3.5 text-rose-600" /> : <Bed className="h-3.5 w-3.5" />}
+                            <span className="text-xs font-black">{b.bedName}</span>
+                          </div>
+                          <span className={`text-[10px] mt-0.5 font-extrabold ${isBedSelected ? "text-white/90" : b.isOccupied ? "text-rose-700 font-bold" : "text-emerald-700"}`}>
+                            {b.isOccupied ? `Occupied (${b.occupantName})` : isBedSelected ? "Selected ✅" : "Available ⚡"}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </div>
 
             {/* STEP 4: Financial & Security Deposit Configuration */}
@@ -5588,6 +5669,10 @@ function doPost(e) {
                     const creds = generateCustomerCredentials(targetName, targetPhone);
                     const paidDep = bmsDepositStatus === "paid" ? bmsDepositAmount : 0;
 
+                    const cleanRoom = (bmsRoom || "101").toString().replace(/^Room\s+/i, "").trim();
+                    const roomCap = customRoomSharing[`${bmsBuilding}_${cleanRoom}`] || 2;
+                    const allocatedRoomType = roomCap === 1 ? "Single Room" : `${roomCap}-Sharing`;
+
                     // 1. Update React state immediately
                     setBookings((prev) =>
                       prev.map((b) =>
@@ -5599,6 +5684,7 @@ function doPost(e) {
                               allocatedFloor: bmsFloor,
                               allocatedRoom: bmsRoom,
                               allocatedBed: bmsBed,
+                              roomType: allocatedRoomType,
                               customerId: creds.customerId,
                               customerPassword: creds.customerPassword,
                               rentAmount: bmsRentAmount,
@@ -5625,6 +5711,7 @@ function doPost(e) {
                                 allocatedFloor: bmsFloor,
                                 allocatedRoom: bmsRoom,
                                 allocatedBed: bmsBed,
+                                roomType: allocatedRoomType,
                                 customerId: creds.customerId,
                                 customerPassword: creds.customerPassword,
                                 rentAmount: bmsRentAmount,
@@ -5665,6 +5752,7 @@ function doPost(e) {
                           floor: bmsFloor,
                           room: bmsRoom,
                           bed: bmsBed,
+                          roomType: allocatedRoomType,
                           customerId: creds.customerId,
                           customerPassword: creds.customerPassword,
                           rentAmount: bmsRentAmount,
