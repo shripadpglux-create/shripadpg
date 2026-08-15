@@ -2,6 +2,19 @@
 
 ---
 
+### 📍 Version 8.33 — MongoDB Atlas Live Diagnostic Endpoint & Multi-Model Auto-Sync 🩺🍃
+
+```mermaid
+flowchart TD
+    MongoDiagnosticEndpoint["MongoDB Live Diagnostic Endpoint<br/>(Created GET /api/health/db returning connection status, error logs, and collection document counts)"]
+    MultiModelAutoSync["Multi-Model Auto-Sync<br/>(Enhanced buildingModel.ts, staffModel.ts, and bookingModel.ts with fallback auto-seeding to MongoDB Atlas)"]
+    LiveDatabaseVerification["Live Cluster Visibility<br/>(Enabled instant diagnostic endpoint to verify MongoDB Atlas connection health and live collection counts on Render)"]
+
+    MongoDiagnosticEndpoint --> MultiModelAutoSync --> LiveDatabaseVerification
+```
+
+---
+
 ### 📍 Version 8.32 — MongoDB Atlas Building Persistence & Cache Sync 🏢🍃
 
 ```mermaid

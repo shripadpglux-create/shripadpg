@@ -3,7 +3,16 @@ import { fileURLToPath } from "url";
 import express, { Request, Response } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import mongoose from "mongoose";
 import { connectDB } from "./config/db.js";
+import {
+  BookingMongoModel,
+  BuildingMongoModel,
+  StaffMongoModel,
+  ExpenseMongoModel,
+  InvoiceMongoModel,
+  SettingMongoModel,
+} from "./schemas/mongoSchemas.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import invoiceRoutes from "./routes/invoiceRoutes.js";
@@ -59,6 +68,40 @@ app.get("/api/health", (_req: Request, res: Response) => {
   res.json({
     status: "ok",
     service: "Shripad PG Backend API",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Database diagnostics health endpoint
+app.get("/api/health/db", async (_req: Request, res: Response) => {
+  const readyStateMap = ["disconnected", "connected", "connecting", "disconnecting"];
+  const stateStr = readyStateMap[mongoose.connection.readyState] || "unknown";
+
+  let counts = { bookings: 0, buildings: 0, staff: 0, expenses: 0, invoices: 0, settings: 0 };
+  let errorMsg = null;
+
+  if (mongoose.connection.readyState === 1) {
+    try {
+      counts = {
+        bookings: await BookingMongoModel.countDocuments(),
+        buildings: await BuildingMongoModel.countDocuments(),
+        staff: await StaffMongoModel.countDocuments(),
+        expenses: await ExpenseMongoModel.countDocuments(),
+        invoices: await InvoiceMongoModel.countDocuments(),
+        settings: await SettingMongoModel.countDocuments(),
+      };
+    } catch (e: any) {
+      errorMsg = e.message;
+    }
+  }
+
+  res.json({
+    status: mongoose.connection.readyState === 1 ? "ok" : "warning",
+    mongoConnectionState: mongoose.connection.readyState,
+    mongoConnectionStatus: stateStr,
+    database: mongoose.connection.name || "shripad_pg",
+    counts,
+    error: errorMsg,
     timestamp: new Date().toISOString(),
   });
 });
