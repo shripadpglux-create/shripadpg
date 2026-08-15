@@ -2,6 +2,19 @@
 
 ---
 
+### 📍 Version 8.36 — Dynamic Cloudflare Pages & Render CORS Resolution 🌐🔓
+
+```mermaid
+flowchart TD
+    CloudflareOrigin["Cloudflare Pages Origin Match<br/>(Allowed https://shripadpg.pages.dev and all .pages.dev preview domains)"]
+    SafeCorsCallback["Safe CORS Resolution<br/>(Graceful origin handling preventing Express uncaught errors on preflight OPTIONS)"]
+    AdminAuthWorking["Admin / Staff JWT Auth Verified<br/>(Admin & Staff logins function securely without network/CORS blockages)"]
+
+    CloudflareOrigin --> SafeCorsCallback --> AdminAuthWorking
+```
+
+---
+
 ### 📍 Version 8.35 — Phase 1 Security Hardening: JWT Auth, Bcrypt, Rate Limiting, Helmet 🛡️🔒
 
 ```mermaid
