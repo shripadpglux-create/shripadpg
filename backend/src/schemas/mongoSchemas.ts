@@ -1,17 +1,17 @@
 import mongoose, { Schema } from "mongoose";
 
-// Booking Mongoose Schema
+// 1. Booking Mongoose Schema
 const bookingSchema = new Schema(
   {
     id: { type: String, required: true, unique: true, index: true },
-    timestamp: { type: String, default: "" },
-    name: { type: String, required: true },
-    email: { type: String, default: "" },
-    phone: { type: String, default: "" },
-    building: { type: String, default: "" },
+    timestamp: { type: String, default: "", index: true },
+    name: { type: String, required: true, index: true },
+    email: { type: String, default: "", index: true },
+    phone: { type: String, default: "", index: true },
+    building: { type: String, default: "", index: true },
     roomType: { type: String, default: "" },
-    source: { type: String, default: "manual" },
-    status: { type: String, default: "pending" },
+    source: { type: String, default: "manual", index: true },
+    status: { type: String, default: "pending", index: true },
     createdById: { type: String, default: "" },
     createdBy: { type: String, default: "" },
     gender: { type: String, default: "" },
@@ -20,9 +20,9 @@ const bookingSchema = new Schema(
     monthlyRent: { type: Number, default: 0 },
     depositAmount: { type: Number, default: 0 },
     paidDepositAmount: { type: Number, default: 0 },
-    allocatedBuilding: { type: String, default: "" },
+    allocatedBuilding: { type: String, default: "", index: true },
     allocatedFloor: { type: Number, default: null },
-    allocatedRoom: { type: String, default: "" },
+    allocatedRoom: { type: String, default: "", index: true },
     allocatedBed: { type: String, default: "" },
     idProofType: { type: String, default: "" },
     idProofNumber: { type: String, default: "" },
@@ -34,78 +34,92 @@ const bookingSchema = new Schema(
     depositRefund: { type: Object, default: null },
     checkedOutAt: { type: String, default: "" },
   },
-  { timestamps: true, strict: false }
+  { timestamps: true, strict: false, versionKey: false, minimize: true }
 );
 
-// Building Mongoose Schema
+// Compound Production Indexes for Bookings
+bookingSchema.index({ building: 1, status: 1 });
+bookingSchema.index({ allocatedBuilding: 1, status: 1 });
+bookingSchema.index({ phone: 1, email: 1 });
+bookingSchema.index({ createdAt: -1 });
+
+// 2. Building Mongoose Schema
 const buildingSchema = new Schema(
   {
     id: { type: String, required: true, unique: true, index: true },
-    name: { type: String, required: true },
+    name: { type: String, required: true, index: true },
     floors: { type: Number, default: 4 },
     roomsPerFloor: { type: Number, default: 4 },
     floorRoomCounts: { type: Object, default: {} },
     blockedRooms: { type: Array, default: [] },
   },
-  { timestamps: true, strict: false }
+  { timestamps: true, strict: false, versionKey: false, minimize: true }
 );
 
-// Staff Mongoose Schema
+// 3. Staff Mongoose Schema
 const staffSchema = new Schema(
   {
     id: { type: String, required: true, unique: true, index: true },
     name: { type: String, required: true },
-    phone: { type: String, default: "" },
-    email: { type: String, default: "" },
+    phone: { type: String, default: "", index: true },
+    email: { type: String, default: "", index: true },
     password: { type: String, default: "" },
-    role: { type: String, default: "building_manager" },
+    role: { type: String, default: "building_manager", index: true },
     assignedBuildings: { type: Array, default: ["PG A"] },
-    status: { type: String, default: "active" },
+    status: { type: String, default: "active", index: true },
   },
-  { timestamps: true, strict: false }
+  { timestamps: true, strict: false, versionKey: false, minimize: true }
 );
 
-// Expense Mongoose Schema
+staffSchema.index({ email: 1, status: 1 });
+
+// 4. Expense Mongoose Schema
 const expenseSchema = new Schema(
   {
     id: { type: String, required: true, unique: true, index: true },
     title: { type: String, required: true },
-    category: { type: String, default: "other" },
+    category: { type: String, default: "other", index: true },
     amount: { type: Number, required: true },
-    date: { type: String, default: "" },
-    building: { type: String, default: "" },
+    date: { type: String, default: "", index: true },
+    building: { type: String, default: "", index: true },
     notes: { type: String, default: "" },
     createdBy: { type: String, default: "" },
   },
-  { timestamps: true, strict: false }
+  { timestamps: true, strict: false, versionKey: false, minimize: true }
 );
 
-// Invoice Mongoose Schema
+expenseSchema.index({ building: 1, date: -1 });
+expenseSchema.index({ category: 1, date: -1 });
+
+// 5. Invoice Mongoose Schema
 const invoiceSchema = new Schema(
   {
     id: { type: String, required: true, unique: true, index: true },
-    invoiceNo: { type: String, required: true },
-    residentName: { type: String, default: "" },
-    phone: { type: String, default: "" },
+    invoiceNo: { type: String, required: true, index: true },
+    residentName: { type: String, default: "", index: true },
+    phone: { type: String, default: "", index: true },
     email: { type: String, default: "" },
-    building: { type: String, default: "" },
+    building: { type: String, default: "", index: true },
     roomNo: { type: String, default: "" },
-    month: { type: String, default: "" },
-    year: { type: Number, default: 2026 },
+    month: { type: String, default: "", index: true },
+    year: { type: Number, default: 2026, index: true },
     amount: { type: Number, default: 0 },
     paymentMethod: { type: String, default: "cash" },
-    status: { type: String, default: "paid" },
+    status: { type: String, default: "paid", index: true },
     date: { type: String, default: "" },
     items: { type: Array, default: [] },
     notes: { type: String, default: "" },
   },
-  { timestamps: true, strict: false }
+  { timestamps: true, strict: false, versionKey: false, minimize: true }
 );
 
-// Settings Mongoose Schema
+invoiceSchema.index({ building: 1, year: -1, month: -1 });
+invoiceSchema.index({ residentName: 1, phone: 1 });
+
+// 6. Settings Mongoose Schema
 const settingSchema = new Schema(
   {
-    id: { type: String, default: "global_settings", unique: true },
+    id: { type: String, default: "global_settings", unique: true, index: true },
     manualBookingSheetUrl: { type: String, default: "" },
     onlineBookingSheetUrl: { type: String, default: "" },
     upiId: { type: String, default: "shripadpg@okaxis" },
@@ -115,7 +129,7 @@ const settingSchema = new Schema(
     ifscCode: { type: String, default: "UTIB0001824" },
     accountName: { type: String, default: "Shripad PG Services" },
   },
-  { timestamps: true, strict: false }
+  { timestamps: true, strict: false, versionKey: false, minimize: true }
 );
 
 export const BookingMongoModel = mongoose.models.Booking || mongoose.model("Booking", bookingSchema);

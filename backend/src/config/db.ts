@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { DBOptimizationService } from "../services/dbOptimizationService.js";
 
 export const connectDB = async () => {
   try {
@@ -20,6 +21,9 @@ export const connectDB = async () => {
 
     const conn = await mongoose.connect(finalUri);
     console.log(`🍃 MongoDB Connected to Atlas: ${conn.connection.host} / Database: ${conn.connection.name}`);
+
+    // Trigger Production Database Optimization & Compound Index Synchronization
+    await DBOptimizationService.runDatabaseOptimization();
   } catch (error) {
     console.error("❌ MongoDB Atlas connection error:", error);
   }

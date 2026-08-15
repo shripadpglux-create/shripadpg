@@ -2,6 +2,19 @@
 
 ---
 
+### 📍 Version 8.31 — Production Database Optimization, Compound Indexing & Storage Efficiency ⚡📊
+
+```mermaid
+flowchart TD
+    CompoundIndexing["MongoDB Compound Indexing<br/>(Added compound indexes for phone, email, building+status, and createdAt in mongoSchemas.ts for sub-ms queries)"]
+    StorageMinimization["Ultra-Compact Storage Rules<br/>(Enabled minimize: true, versionKey: false, and compactDocument helper in DBOptimizationService.ts)"]
+    LongTermQuotaSafety["512MB Free Tier Long-Term Efficiency<br/>(Integrated DB health check & index auto-sync on database startup to ensure multi-year free storage efficiency)"]
+
+    CompoundIndexing --> StorageMinimization --> LongTermQuotaSafety
+```
+
+---
+
 ### 📍 Version 8.30 — Google Sheet CSV HTML Garbage Purge & MongoDB Atlas Sanitization 🧹🍃
 
 ```mermaid
