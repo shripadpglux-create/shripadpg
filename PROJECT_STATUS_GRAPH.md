@@ -2,15 +2,15 @@
 
 ---
 
-### 📍 Version 8.29 — MongoDB Atlas Cloud Cluster Connection Sync ☁️🍃
+### 📍 Version 8.29 — MongoDB Atlas Direct Persistence Integration 🍃📦
 
 ```mermaid
 flowchart TD
-    AtlasCredentialsSync["MongoDB Atlas Credentials Integration<br/>(Extracted database user 'shripadpglux_db_user' and password credentials from Atlas setup)"]
-    EnvConnectionConfig["Environment URI Alignment<br/>(Updated frontend/.env, backend/.env, and render.yaml with mongodb+srv cluster connection string)"]
-    CloudDatabasePersistence["Cloud Database Persistence<br/>(Synchronized cluster connection string for seamless local dev and production cloud deployment)"]
+    MongoMongooseConnect["MongoDB Atlas Mongoose Connection<br/>(Created connectDB targeting shripad_pg database with auto-reconnect and error resilience)"]
+    MongoAtlasSchemas["Mongoose Collection Schemas<br/>(Created mongoSchemas.ts with schemas for bookings, buildings, staff, expenses, invoices, and settings)"]
+    DualSyncPersistence["Dual MongoDB Atlas & JSON Sync<br/>(Refactored all backend models to query and persist directly to MongoDB Atlas with local file backup)"]
 
-    AtlasCredentialsSync --> EnvConnectionConfig --> CloudDatabasePersistence
+    MongoMongooseConnect --> MongoAtlasSchemas --> DualSyncPersistence
 ```
 
 ---

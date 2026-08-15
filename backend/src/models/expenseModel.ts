@@ -1,6 +1,8 @@
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
+import mongoose from "mongoose";
+import { ExpenseMongoModel } from "../schemas/mongoSchemas.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -36,6 +38,20 @@ export class ExpenseModel {
 
   public static async getAll(): Promise<Expense[]> {
     await this.ensureDataDir();
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const mongoDocs = await ExpenseMongoModel.find({}).lean();
+        if (mongoDocs && mongoDocs.length > 0) {
+          const result = mongoDocs as any[];
+          await fs.writeFile(DATA_FILE, JSON.stringify(result, null, 2), "utf-8");
+          return result;
+        }
+      } catch (err) {
+        console.warn("MongoDB Atlas fetch warning for expenses:", err);
+      }
+    }
+
     try {
       const content = await fs.readFile(DATA_FILE, "utf-8");
       const parsed = JSON.parse(content);
@@ -48,7 +64,23 @@ export class ExpenseModel {
 
   public static async saveAll(expenses: Expense[]): Promise<void> {
     await this.ensureDataDir();
-    await fs.writeFile(DATA_FILE, JSON.stringify(expenses, null, 2), "utf-8");
+    try {
+      await fs.writeFile(DATA_FILE, JSON.stringify(expenses, null, 2), "utf-8");
+    } catch (err) {
+      console.error("Error saving expenses to file:", err);
+    }
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        await ExpenseMongoModel.deleteMany({});
+        if (expenses.length > 0) {
+          await ExpenseMongoModel.insertMany(expenses);
+        }
+        console.log(`🍃 Synced ${expenses.length} expenses to MongoDB Atlas.`);
+      } catch (err) {
+        console.error("Failed to sync expenses to MongoDB Atlas:", err);
+      }
+    }
   }
 
   public static async create(data: Omit<Expense, "id" | "createdAt">): Promise<Expense> {

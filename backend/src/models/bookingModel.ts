@@ -1,6 +1,8 @@
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
+import mongoose from "mongoose";
+import { BookingMongoModel } from "../schemas/mongoSchemas.js";
 
 // Get directory name in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -99,21 +101,33 @@ export class BookingModel {
     if (this.isInitialized) return;
 
     try {
-      // Ensure data directory exists
       await fs.mkdir(DATA_DIR, { recursive: true });
+
+      if (mongoose.connection.readyState === 1) {
+        try {
+          const mongoDocs = await BookingMongoModel.find({}).lean();
+          if (mongoDocs && mongoDocs.length > 0) {
+            this.cache = mongoDocs as any[];
+            this.isInitialized = true;
+            await fs.writeFile(DATA_FILE, JSON.stringify(this.cache, null, 2), "utf-8");
+            return;
+          }
+        } catch (err) {
+          console.warn("MongoDB Atlas booking fetch warning:", err);
+        }
+      }
 
       try {
         const fileContent = await fs.readFile(DATA_FILE, "utf-8");
         this.cache = JSON.parse(fileContent);
       } catch (err) {
-        // File doesn't exist, write initial seeds
         this.cache = [...SEED_BOOKINGS];
         await this.saveToFile();
       }
 
       this.isInitialized = true;
     } catch (error) {
-      console.error("Failed to initialize Booking database file:", error);
+      console.error("Failed to initialize Booking database:", error);
       this.cache = [...SEED_BOOKINGS];
     }
   }
@@ -123,6 +137,18 @@ export class BookingModel {
       await fs.writeFile(DATA_FILE, JSON.stringify(this.cache, null, 2), "utf-8");
     } catch (error) {
       console.error("Failed to save bookings to file:", error);
+    }
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        await BookingMongoModel.deleteMany({});
+        if (this.cache.length > 0) {
+          await BookingMongoModel.insertMany(this.cache);
+        }
+        console.log(`🍃 Synced ${this.cache.length} bookings to MongoDB Atlas.`);
+      } catch (err) {
+        console.error("Failed to sync bookings to MongoDB Atlas:", err);
+      }
     }
   }
 

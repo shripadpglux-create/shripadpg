@@ -1,6 +1,8 @@
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
+import mongoose from "mongoose";
+import { InvoiceMongoModel } from "../schemas/mongoSchemas.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -44,6 +46,20 @@ export class InvoiceModel {
 
   public static async getAll(): Promise<Invoice[]> {
     await this.ensureDataDir();
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const mongoDocs = await InvoiceMongoModel.find({}).lean();
+        if (mongoDocs && mongoDocs.length > 0) {
+          const result = mongoDocs as any[];
+          await fs.writeFile(DATA_FILE, JSON.stringify(result, null, 2), "utf-8");
+          return result;
+        }
+      } catch (err) {
+        console.warn("MongoDB Atlas fetch warning for invoices:", err);
+      }
+    }
+
     try {
       const data = await fs.readFile(DATA_FILE, "utf-8");
       return JSON.parse(data);
@@ -55,7 +71,23 @@ export class InvoiceModel {
 
   public static async saveAll(invoices: Invoice[]): Promise<void> {
     await this.ensureDataDir();
-    await fs.writeFile(DATA_FILE, JSON.stringify(invoices, null, 2), "utf-8");
+    try {
+      await fs.writeFile(DATA_FILE, JSON.stringify(invoices, null, 2), "utf-8");
+    } catch (err) {
+      console.error("Error saving invoices to file:", err);
+    }
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        await InvoiceMongoModel.deleteMany({});
+        if (invoices.length > 0) {
+          await InvoiceMongoModel.insertMany(invoices);
+        }
+        console.log(`🍃 Synced ${invoices.length} invoices to MongoDB Atlas.`);
+      } catch (err) {
+        console.error("Failed to sync invoices to MongoDB Atlas:", err);
+      }
+    }
   }
 
   public static async getById(id: string): Promise<Invoice | null> {

@@ -1,13 +1,15 @@
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
+import mongoose from "mongoose";
+import { SettingMongoModel } from "../schemas/mongoSchemas.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export interface PaymentSettings {
   upiId: string;
-  qrCodeUrl?: string; // Base64 data URL or external image URL
+  qrCodeUrl?: string;
   bankName: string;
   accountNo: string;
   ifscCode: string;
@@ -42,6 +44,20 @@ export class SettingsModel {
 
     try {
       await fs.mkdir(DATA_DIR, { recursive: true });
+
+      if (mongoose.connection.readyState === 1) {
+        try {
+          const doc = await SettingMongoModel.findOne({ id: "global_settings" }).lean();
+          if (doc) {
+            this.cache = { ...DEFAULT_PAYMENT_SETTINGS, ...doc as any };
+            await fs.writeFile(SETTINGS_FILE, JSON.stringify({ payment: this.cache }, null, 2), "utf-8");
+            return;
+          }
+        } catch (err) {
+          console.warn("MongoDB Atlas settings fetch warning:", err);
+        }
+      }
+
       try {
         const fileContent = await fs.readFile(SETTINGS_FILE, "utf-8");
         const parsed = JSON.parse(fileContent);
@@ -65,6 +81,19 @@ export class SettingsModel {
       );
     } catch (error) {
       console.error("Failed to save settings to file:", error);
+    }
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        await SettingMongoModel.findOneAndUpdate(
+          { id: "global_settings" },
+          { id: "global_settings", ...this.cache },
+          { upsert: true }
+        );
+        console.log("🍃 Synced settings to MongoDB Atlas.");
+      } catch (err) {
+        console.error("Failed to sync settings to MongoDB Atlas:", err);
+      }
     }
   }
 

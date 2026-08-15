@@ -1,6 +1,8 @@
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
+import mongoose from "mongoose";
+import { StaffMongoModel } from "../schemas/mongoSchemas.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,7 +14,7 @@ export interface StaffMember {
   email: string;
   password?: string;
   role: "super_admin" | "building_manager" | "caretaker";
-  assignedBuildings: string[]; // e.g. ["PG A"] or ["PG B", "PG C"] or ["ALL"]
+  assignedBuildings: string[];
   status: "active" | "inactive";
   createdAt: string;
   updatedAt?: string;
@@ -37,7 +39,6 @@ const SEED_STAFF: StaffMember[] = [
 
 export class StaffModel {
   private static cache: StaffMember[] = [];
-  private static isInitialized = false;
 
   private static async ensureDataFile() {
     try {
@@ -54,12 +55,25 @@ export class StaffModel {
 
   public static async getAll(): Promise<StaffMember[]> {
     await this.ensureDataFile();
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const mongoDocs = await StaffMongoModel.find({}).lean();
+        if (mongoDocs && mongoDocs.length > 0) {
+          this.cache = mongoDocs as any[];
+          await fs.writeFile(DATA_FILE, JSON.stringify(this.cache, null, 2), "utf-8");
+          return this.cache;
+        }
+      } catch (err) {
+        console.warn("MongoDB Atlas fetch warning for staff:", err);
+      }
+    }
+
     try {
       const data = await fs.readFile(DATA_FILE, "utf-8");
       const parsed = JSON.parse(data);
       if (Array.isArray(parsed) && parsed.length > 0) {
         this.cache = parsed;
-        this.isInitialized = true;
         return this.cache;
       }
     } catch (err) {
@@ -67,18 +81,29 @@ export class StaffModel {
     }
 
     this.cache = SEED_STAFF;
-    this.isInitialized = true;
     await this.save(SEED_STAFF);
     return this.cache;
   }
 
   public static async save(staff: StaffMember[]): Promise<void> {
     await this.ensureDataFile();
+    this.cache = staff;
     try {
       await fs.writeFile(DATA_FILE, JSON.stringify(staff, null, 2), "utf-8");
-      this.cache = staff;
     } catch (err) {
       console.error("Error saving staff data:", err);
+    }
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        await StaffMongoModel.deleteMany({});
+        if (staff.length > 0) {
+          await StaffMongoModel.insertMany(staff);
+        }
+        console.log(`🍃 Synced ${staff.length} staff members to MongoDB Atlas.`);
+      } catch (err) {
+        console.error("Failed to sync staff to MongoDB Atlas:", err);
+      }
     }
   }
 
