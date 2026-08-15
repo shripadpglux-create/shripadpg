@@ -11,6 +11,8 @@ export function AdminLogin() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
+  const API_BASE = import.meta.env.VITE_API_URL || (typeof window !== "undefined" && window.location.hostname !== "localhost" ? "https://shripadpg.onrender.com" : "http://localhost:5000");
+
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim() || !password.trim()) {
@@ -22,20 +24,33 @@ export function AdminLogin() {
     setErrorMsg("");
 
     try {
-      const cleanUser = username.trim().toLowerCase();
-      const cleanPass = password.trim();
+      const response = await fetch(`${API_BASE}/api/auth/admin-login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: username.trim(),
+          password: password.trim(),
+        }),
+      });
 
-      if (
-        (cleanUser === "shripadpglux@gmail.com" || cleanUser === "admin" || cleanUser === "9876543210") &&
-        (cleanPass === "shripad@7444" || cleanPass === "Shripad@7444" || cleanPass === "admin123" || cleanPass === "admin")
-      ) {
+      const data = await response.json();
+
+      if (data.success && data.token) {
+        // Store JWT token securely
+        localStorage.setItem("shripad_auth_token", data.token);
         localStorage.setItem(
           "shripad_admin_session",
-          JSON.stringify({ authenticated: true, user: username.trim(), email: "shripadpglux@gmail.com", timestamp: Date.now() })
+          JSON.stringify({
+            authenticated: true,
+            user: data.user.name,
+            email: data.user.email,
+            role: data.user.role,
+            timestamp: Date.now(),
+          })
         );
         navigate({ to: "/admin/dashboard" as any });
       } else {
-        setErrorMsg("Invalid Admin Email or Password. Please try again.");
+        setErrorMsg(data.message || "Invalid Admin Email or Password. Please try again.");
       }
     } catch (err) {
       setErrorMsg("Authentication error. Please check your network connection.");
@@ -43,6 +58,7 @@ export function AdminLogin() {
       setIsLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 text-slate-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">

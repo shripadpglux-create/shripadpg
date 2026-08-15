@@ -2,6 +2,25 @@
 
 ---
 
+### 📍 Version 8.35 — Phase 1 Security Hardening: JWT Auth, Bcrypt, Rate Limiting, Helmet 🛡️🔒
+
+```mermaid
+flowchart TD
+    JWTAuth["JWT Authentication<br/>(Server-side admin/staff login with signed JWT tokens)"]
+    BcryptHashing["Bcrypt Password Hashing<br/>(All passwords hashed with bcrypt, auto-migration from plaintext)"]
+    RateLimiting["Rate Limiting<br/>(10 login attempts/15min, 200 general requests/min)"]
+    HelmetHeaders["Helmet Security Headers<br/>(X-Content-Type-Options, X-Frame-Options, HSTS, etc.)"]
+    CORSRestriction["CORS Restriction<br/>(Restricted to known origins in production)"]
+    SchemaStrict["Mongoose strict:true<br/>(Rejects arbitrary field injection)"]
+    NoPlaintextPasswords["No Plaintext Passwords<br/>(Passwords stripped from all API responses)"]
+
+    JWTAuth --> BcryptHashing --> NoPlaintextPasswords
+    RateLimiting --> HelmetHeaders --> CORSRestriction
+    SchemaStrict --> NoPlaintextPasswords
+```
+
+---
+
 ### 📍 Version 8.34 — Direct Synchronous MongoDB Atlas Writes & Ephemeral Storage Fix ⚡🍃
 
 ```mermaid

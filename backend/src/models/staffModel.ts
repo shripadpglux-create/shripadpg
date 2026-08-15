@@ -2,6 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 import { StaffMongoModel } from "../schemas/mongoSchemas.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -23,19 +24,29 @@ export interface StaffMember {
 const DATA_DIR = path.join(__dirname, "..", "..", "data");
 const DATA_FILE = path.join(DATA_DIR, "staff.json");
 
+const BCRYPT_ROUNDS = 10;
+
 const SEED_STAFF: StaffMember[] = [
   {
     id: "staff_super",
     name: "Master Admin",
     phone: "9876543210",
     email: "admin@shripadpg.com",
-    password: "admin123",
+    password: bcrypt.hashSync("admin123", BCRYPT_ROUNDS),
     role: "super_admin",
     assignedBuildings: ["ALL"],
     status: "active",
     createdAt: new Date().toISOString(),
   },
 ];
+
+/**
+ * Strip password field from a staff member for safe API responses.
+ */
+export function sanitizeStaff(staff: StaffMember): Omit<StaffMember, "password"> {
+  const { password, ...safe } = staff;
+  return safe;
+}
 
 export class StaffModel {
   private static cache: StaffMember[] = [];
@@ -85,6 +96,14 @@ export class StaffModel {
     return this.cache;
   }
 
+  /**
+   * Return all staff without passwords — for API responses.
+   */
+  public static async getAllSafe(): Promise<Omit<StaffMember, "password">[]> {
+    const all = await this.getAll();
+    return all.map(sanitizeStaff);
+  }
+
   public static async save(staff: StaffMember[]): Promise<void> {
     await this.ensureDataFile();
     this.cache = staff;
@@ -109,12 +128,17 @@ export class StaffModel {
 
   public static async create(data: Partial<StaffMember>): Promise<StaffMember> {
     const staffList = await this.getAll();
+
+    // Hash password before storing
+    const rawPassword = data.password || "staff123";
+    const hashedPassword = await bcrypt.hash(rawPassword, BCRYPT_ROUNDS);
+
     const newStaff: StaffMember = {
       id: `staff_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
       name: data.name || "New Staff Member",
       phone: data.phone || "",
       email: data.email || `staff${Date.now()}@shripadpg.com`,
-      password: data.password || "staff123",
+      password: hashedPassword,
       role: data.role || "building_manager",
       assignedBuildings: Array.isArray(data.assignedBuildings) && data.assignedBuildings.length > 0 ? data.assignedBuildings : ["PG A"],
       status: data.status || "active",
@@ -134,12 +158,19 @@ export class StaffModel {
     if (index === -1) return null;
 
     const existing = staffList[index];
+
+    // Hash new password if provided, otherwise keep existing hash
+    let passwordValue = existing.password;
+    if (data.password !== undefined && data.password !== "") {
+      passwordValue = await bcrypt.hash(data.password, BCRYPT_ROUNDS);
+    }
+
     const updated: StaffMember = {
       ...existing,
       name: data.name !== undefined ? data.name : existing.name,
       phone: data.phone !== undefined ? data.phone : existing.phone,
       email: data.email !== undefined ? data.email : existing.email,
-      password: data.password !== undefined && data.password !== "" ? data.password : existing.password,
+      password: passwordValue,
       role: data.role !== undefined ? data.role : existing.role,
       assignedBuildings: data.assignedBuildings !== undefined ? data.assignedBuildings : existing.assignedBuildings,
       status: data.status !== undefined ? data.status : existing.status,
@@ -151,14 +182,49 @@ export class StaffModel {
     return updated;
   }
 
+  /**
+   * Legacy plaintext auth — kept for backward compatibility during migration.
+   * @deprecated Use authenticateSecure() instead.
+   */
   public static async authenticate(email: string, pass: string): Promise<StaffMember | null> {
+    return this.authenticateSecure(email, pass);
+  }
+
+  /**
+   * Secure authentication using bcrypt comparison.
+   */
+  public static async authenticateSecure(email: string, pass: string): Promise<StaffMember | null> {
     const staffList = await this.getAll();
     const cleanEmail = email.trim().toLowerCase();
-    const found = staffList.find(
-      (s) => s.email.trim().toLowerCase() === cleanEmail && (s.password || "staff123") === pass.trim()
-    );
+    const cleanPass = pass.trim();
 
-    return found || null;
+    for (const s of staffList) {
+      if (s.email.trim().toLowerCase() !== cleanEmail) continue;
+
+      const storedPass = s.password || "";
+
+      // Try bcrypt comparison first (new hashed passwords)
+      try {
+        if (storedPass.startsWith("$2a$") || storedPass.startsWith("$2b$")) {
+          const isMatch = await bcrypt.compare(cleanPass, storedPass);
+          if (isMatch) return s;
+        } else {
+          // Legacy plaintext comparison — auto-migrate to hash
+          if (storedPass === cleanPass) {
+            // Auto-upgrade: hash the plaintext password in-place
+            s.password = await bcrypt.hash(cleanPass, BCRYPT_ROUNDS);
+            await this.save(staffList);
+            console.log(`🔒 Auto-migrated password for staff: ${s.email}`);
+            return s;
+          }
+        }
+      } catch {
+        // If bcrypt comparison fails, try plaintext as last resort
+        if (storedPass === cleanPass) return s;
+      }
+    }
+
+    return null;
   }
 
   public static async delete(id: string): Promise<boolean> {

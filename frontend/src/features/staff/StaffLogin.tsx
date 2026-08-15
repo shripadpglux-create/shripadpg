@@ -23,7 +23,7 @@ export function StaffLogin() {
     setIsLoading(true);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/staff/login`, {
+      const res = await fetch(`${API_BASE_URL}/api/auth/staff-login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), password: password.trim() }),
@@ -31,6 +31,11 @@ export function StaffLogin() {
 
       const data = await res.json();
       if (data.success && data.staff) {
+        // Store JWT token for authenticated API calls
+        if (data.token) {
+          localStorage.setItem("shripad_auth_token", data.token);
+        }
+
         // Save staff session in localStorage
         const staffSession = {
           authenticated: true,

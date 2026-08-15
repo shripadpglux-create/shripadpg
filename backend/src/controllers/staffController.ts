@@ -1,14 +1,15 @@
 import { Request, Response } from "express";
-import { StaffModel } from "../models/staffModel.js";
+import { StaffModel, sanitizeStaff } from "../models/staffModel.js";
 
 export class StaffController {
   public static async getAll(req: Request, res: Response) {
     try {
-      const staff = await StaffModel.getAll();
+      // Return staff WITHOUT password fields
+      const staff = await StaffModel.getAllSafe();
       res.json({ success: true, staff });
     } catch (error: any) {
       console.error("Error fetching staff:", error);
-      res.status(500).json({ success: false, message: "Failed to fetch staff members", error: error.message });
+      res.status(500).json({ success: false, message: "Failed to fetch staff members" });
     }
   }
 
@@ -29,17 +30,18 @@ export class StaffController {
         status,
       });
 
-      const staff = await StaffModel.getAll();
+      // Return safe data (without password)
+      const staff = await StaffModel.getAllSafe();
 
       res.status(201).json({
         success: true,
         message: `Staff member '${member.name}' created with login email '${member.email}'.`,
-        member,
+        member: sanitizeStaff(member),
         staff,
       });
     } catch (error: any) {
       console.error("Error creating staff member:", error);
-      res.status(500).json({ success: false, message: "Failed to create staff member", error: error.message });
+      res.status(500).json({ success: false, message: "Failed to create staff member" });
     }
   }
 
@@ -62,17 +64,17 @@ export class StaffController {
         return res.status(404).json({ success: false, message: `Staff member '${id}' not found.` });
       }
 
-      const staff = await StaffModel.getAll();
+      const staff = await StaffModel.getAllSafe();
 
       res.json({
         success: true,
         message: `Staff member '${updated.name}' credentials updated successfully.`,
-        member: updated,
+        member: sanitizeStaff(updated),
         staff,
       });
     } catch (error: any) {
       console.error("Error updating staff member:", error);
-      res.status(500).json({ success: false, message: "Failed to update staff member", error: error.message });
+      res.status(500).json({ success: false, message: "Failed to update staff member" });
     }
   }
 
@@ -83,19 +85,20 @@ export class StaffController {
         return res.status(400).json({ success: false, message: "Email and password are required." });
       }
 
-      const staff = await StaffModel.authenticate(email, password);
+      const staff = await StaffModel.authenticateSecure(email, password);
       if (!staff) {
         return res.status(401).json({ success: false, message: "Invalid email or password. Please contact Super Admin." });
       }
 
+      // Return safe data (without password)
       res.json({
         success: true,
         message: `Welcome back, ${staff.name}!`,
-        staff,
+        staff: sanitizeStaff(staff),
       });
     } catch (error: any) {
       console.error("Error authenticating staff member:", error);
-      res.status(500).json({ success: false, message: "Login failed", error: error.message });
+      res.status(500).json({ success: false, message: "Login failed" });
     }
   }
 
@@ -108,7 +111,7 @@ export class StaffController {
         return res.status(404).json({ success: false, message: `Staff member '${id}' not found.` });
       }
 
-      const staff = await StaffModel.getAll();
+      const staff = await StaffModel.getAllSafe();
 
       res.json({
         success: true,
@@ -117,7 +120,7 @@ export class StaffController {
       });
     } catch (error: any) {
       console.error("Error deleting staff member:", error);
-      res.status(500).json({ success: false, message: "Failed to delete staff member", error: error.message });
+      res.status(500).json({ success: false, message: "Failed to delete staff member" });
     }
   }
 }

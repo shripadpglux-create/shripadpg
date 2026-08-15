@@ -34,7 +34,7 @@ const bookingSchema = new Schema(
     depositRefund: { type: Object, default: null },
     checkedOutAt: { type: String, default: "" },
   },
-  { timestamps: true, strict: false, versionKey: false, minimize: true }
+  { timestamps: true, strict: true, versionKey: false, minimize: true }
 );
 
 // Compound Production Indexes for Bookings
@@ -53,7 +53,7 @@ const buildingSchema = new Schema(
     floorRoomCounts: { type: Object, default: {} },
     blockedRooms: { type: Array, default: [] },
   },
-  { timestamps: true, strict: false, versionKey: false, minimize: true }
+  { timestamps: true, strict: true, versionKey: false, minimize: true }
 );
 
 // 3. Staff Mongoose Schema
@@ -68,7 +68,7 @@ const staffSchema = new Schema(
     assignedBuildings: { type: Array, default: ["PG A"] },
     status: { type: String, default: "active", index: true },
   },
-  { timestamps: true, strict: false, versionKey: false, minimize: true }
+  { timestamps: true, strict: true, versionKey: false, minimize: true }
 );
 
 staffSchema.index({ email: 1, status: 1 });
@@ -85,7 +85,7 @@ const expenseSchema = new Schema(
     notes: { type: String, default: "" },
     createdBy: { type: String, default: "" },
   },
-  { timestamps: true, strict: false, versionKey: false, minimize: true }
+  { timestamps: true, strict: true, versionKey: false, minimize: true }
 );
 
 expenseSchema.index({ building: 1, date: -1 });
@@ -110,7 +110,7 @@ const invoiceSchema = new Schema(
     items: { type: Array, default: [] },
     notes: { type: String, default: "" },
   },
-  { timestamps: true, strict: false, versionKey: false, minimize: true }
+  { timestamps: true, strict: true, versionKey: false, minimize: true }
 );
 
 invoiceSchema.index({ building: 1, year: -1, month: -1 });
@@ -129,7 +129,7 @@ const settingSchema = new Schema(
     ifscCode: { type: String, default: "UTIB0001824" },
     accountName: { type: String, default: "Shripad PG Services" },
   },
-  { timestamps: true, strict: false, versionKey: false, minimize: true }
+  { timestamps: true, strict: true, versionKey: false, minimize: true }
 );
 
 export const BookingMongoModel = mongoose.models.Booking || mongoose.model("Booking", bookingSchema);
