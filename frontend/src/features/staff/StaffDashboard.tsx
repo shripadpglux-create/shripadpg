@@ -38,7 +38,18 @@ import { InvoiceDesign } from "../../components/InvoiceDesign";
 
 export default function StaffDashboard() {
   const navigate = useNavigate();
-  const [staffList, setStaffList] = useState<any[]>([]);
+  const [staffList, setStaffList] = useState<any[]>(() => {
+    if (typeof window !== "undefined") {
+      const cached = localStorage.getItem("shripad_cached_staff");
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed)) return parsed;
+        } catch {}
+      }
+    }
+    return [];
+  });
   const [selectedStaffId, setSelectedStaffId] = useState<string>("");
   const [buildingsList, setBuildingsList] = useState<any[]>(() => {
     if (typeof window !== "undefined") {
@@ -52,7 +63,18 @@ export default function StaffDashboard() {
     }
     return [];
   });
-  const [bookings, setBookings] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<any[]>(() => {
+    if (typeof window !== "undefined") {
+      const cached = localStorage.getItem("shripad_cached_bookings");
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed)) return parsed;
+        } catch {}
+      }
+    }
+    return [];
+  });
   const [activeTab, setActiveTab] = useState<"Overview" | "Residents" | "Allocation" | "Payments" | "Complaints">("Overview");
 
   const [searchQuery, setSearchQuery] = useState("");

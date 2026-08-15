@@ -2,6 +2,19 @@
 
 ---
 
+### 📍 Version 8.25 — Global Zero-Flash LocalStorage Cache for All Dashboards ⚡🛡️
+
+```mermaid
+flowchart TD
+    GlobalCacheAudit["Global State Audit<br/>(Audited staffList, bookings, expensesList, and buildingsList state initializations across Admin and Staff portals)"]
+    LocalStorageStateSync["LocalStorage State Synchronization<br/>(Configured synchronous lazy initializers and fetch-cache handlers for shripad_cached_staff, shripad_cached_expenses, and shripad_cached_bookings)"]
+    ZeroFlashSystemWide["System-Wide Zero Flash Guarantee<br/>(Eliminated state flash on reload across Buildings, Staff, Expenses, and Residents tabs)"]
+
+    GlobalCacheAudit --> LocalStorageStateSync --> ZeroFlashSystemWide
+```
+
+---
+
 ### 📍 Version 8.24 — Instant Local Storage Cache & Zero Building Flash ⚡📱
 
 ```mermaid

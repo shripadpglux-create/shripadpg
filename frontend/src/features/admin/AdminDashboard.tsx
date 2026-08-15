@@ -527,7 +527,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     fetchBuildings();
   }, []);
 
-  // Staff Management & Building Scope State (Backend Persisted)
+  // Staff Management & Building Scope State (Backend Persisted & Local Cache Synced)
   const [staffList, setStaffList] = useState<Array<{
     id: string;
     name: string;
@@ -537,9 +537,20 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     role: string;
     assignedBuildings: string[];
     status: string;
-  }>>([
-    { id: "staff_super", name: "Master Admin", phone: "9876543210", email: "admin@shripadpg.com", password: "admin123", role: "super_admin", assignedBuildings: ["ALL"], status: "active" },
-  ]);
+  }>>(() => {
+    if (typeof window !== "undefined") {
+      const cached = localStorage.getItem("shripad_cached_staff");
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        } catch {}
+      }
+    }
+    return [
+      { id: "staff_super", name: "Master Admin", phone: "9876543210", email: "admin@shripadpg.com", password: "admin123", role: "super_admin", assignedBuildings: ["ALL"], status: "active" },
+    ];
+  });
 
   const [activeStaffScopeId, setActiveStaffScopeId] = useState<string>("staff_super");
   const [isStaffModalOpen, setIsStaffModalOpen] = useState<boolean>(false);
@@ -650,13 +661,16 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       const data = await res.json();
       if (data.success && Array.isArray(data.staff)) {
         setStaffList(data.staff);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("shripad_cached_staff", JSON.stringify(data.staff));
+        }
       }
     } catch (err) {
       console.error("Failed to fetch staff members from backend:", err);
     }
   };
 
-  // Expense & Spend Management State
+  // Expense & Spend Management State (Backend Persisted & Local Cache Synced)
   const [expensesList, setExpensesList] = useState<Array<{
     id: string;
     title: string;
@@ -667,7 +681,18 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     notes?: string;
     createdBy?: string;
     createdAt: string;
-  }>>([]);
+  }>>(() => {
+    if (typeof window !== "undefined") {
+      const cached = localStorage.getItem("shripad_cached_expenses");
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed)) return parsed;
+        } catch {}
+      }
+    }
+    return [];
+  });
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [expTitle, setExpTitle] = useState("");
   const [expCategory, setExpCategory] = useState<string>("maintenance");
@@ -697,6 +722,9 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       const data = await res.json();
       if (data.success && Array.isArray(data.expenses)) {
         setExpensesList(data.expenses);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("shripad_cached_expenses", JSON.stringify(data.expenses));
+        }
       }
     } catch (err) {
       console.error("Failed to fetch expenses:", err);
@@ -1208,8 +1236,19 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     }
   }, [bmsBuilding, buildingsList, bmsFloor]);
 
-  // Dynamic Full-stack Bookings state & Google Sheets synchronization
-  const [bookings, setBookings] = useState<any[]>([]);
+  // Dynamic Full-stack Bookings state & Local Cache Synced
+  const [bookings, setBookings] = useState<any[]>(() => {
+    if (typeof window !== "undefined") {
+      const cached = localStorage.getItem("shripad_cached_bookings");
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed)) return parsed;
+        } catch {}
+      }
+    }
+    return [];
+  });
   const [isSyncing, setIsSyncing] = useState(false);
   const [dashboardSourceFilter, setDashboardSourceFilter] = useState<"all" | "manual" | "online">("all");
 
@@ -1488,8 +1527,11 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     try {
       const res = await fetch(`${API_BASE_URL}/api/bookings`);
       const data = await res.json();
-      if (data.success) {
+      if (data.success && Array.isArray(data.bookings)) {
         setBookings(data.bookings);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("shripad_cached_bookings", JSON.stringify(data.bookings));
+        }
       }
     } catch (err) {
       console.error("Failed to fetch bookings:", err);
