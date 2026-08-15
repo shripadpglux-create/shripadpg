@@ -79,9 +79,19 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
         this.logger.warn('Could not save API key file', { error: String(err) });
       }
     } else {
+      // If API_MASTER_KEY is specified in env, ensure it exists in DB as an active Admin key
+      if (process.env.API_MASTER_KEY) {
+        const masterHash = this.hashKey(process.env.API_MASTER_KEY.trim());
+        const existingMaster = await this.apiKeyRepository.findOne({ where: { keyHash: masterHash } });
+        if (!existingMaster) {
+          await this.seedApiKey(process.env.API_MASTER_KEY.trim(), 'Master Admin Key', ApiKeyRole.ADMIN);
+          this.logger.log('Seeded master API key from API_MASTER_KEY environment variable');
+        }
+      }
+
       // Read the saved bootstrap key from the file — but only while it still resolves to a LIVE
       // key; a revoked/rotated/deleted key must not be advertised in the banner.
-      displayKey = (await this.readLiveBootstrapKey()) ?? '(check dashboard for keys)';
+      displayKey = process.env.API_MASTER_KEY || (await this.readLiveBootstrapKey()) ?? '(check dashboard for keys)';
     }
 
     // Always show the welcome banner on startup
@@ -430,7 +440,11 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     // literal string) — the dashboard then runs commands fine while never receiving events, and the
     // session looks permanently disconnected. Whitespace is never part of a key.
     const keyHash = this.hashKey(rawKey?.trim());
-    const apiKey = await this.apiKeyRepository.findOne({ where: { keyHash } });
+    let apiKey = await this.apiKeyRepository.findOne({ where: { keyHash } });
+
+    if (!apiKey && process.env.API_MASTER_KEY && rawKey?.trim() === process.env.API_MASTER_KEY.trim()) {
+      apiKey = await this.seedApiKey(process.env.API_MASTER_KEY.trim(), 'Master Admin Key', ApiKeyRole.ADMIN);
+    }
 
     if (!apiKey) {
       throw new UnauthorizedException('Invalid API key');
