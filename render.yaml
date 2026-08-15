@@ -35,13 +35,15 @@ services:
     env: node
     region: singapore
     plan: free
-    buildCommand: cd openwa && npm install && npm run build
+    buildCommand: cd openwa && npm install && cd dashboard && npm install && npm run build && cd .. && npm run build
     startCommand: cd openwa && npm run start:prod
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 10000
+      - key: SERVE_DASHBOARD
+        value: "true"
       - key: ENGINE_TYPE
         value: baileys
       - key: DATABASE_TYPE
