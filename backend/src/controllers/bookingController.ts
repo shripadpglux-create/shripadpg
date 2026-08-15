@@ -5,6 +5,7 @@ import { Request, Response } from "express";
 import { BookingModel } from "../models/bookingModel.js";
 import { GoogleSheetService } from "../services/googleSheetService.js";
 import { generateCustomerCredentials } from "../services/credentialService.js";
+import { WhatsAppService } from "../services/whatsappService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -216,6 +217,21 @@ export class BookingController {
         });
       }
 
+      // Automated WhatsApp Dispatch: Allotment Credentials & Welcome Info
+      if (process.env.WHATSAPP_AUTO_NOTIFY !== "false" && updatedBooking.phone) {
+        WhatsAppService.sendAllotmentMessage({
+          name: updatedBooking.name || "Resident",
+          phone: updatedBooking.phone,
+          building: updatedBooking.allocatedBuilding || building || "PG A",
+          room: updatedBooking.allocatedRoom || room || "Room 101",
+          bed: updatedBooking.allocatedBed || bed || "Bed A",
+          customerId: updatedBooking.customerId || customerId || "",
+          customerPassword: updatedBooking.customerPassword || customerPassword || "",
+          rentAmount: updatedBooking.rentAmount !== undefined ? updatedBooking.rentAmount : (rentAmount || 0),
+          depositAmount: updatedBooking.depositAmount,
+        }).catch((err) => console.warn("Background allotment WhatsApp dispatch notice:", err?.message));
+      }
+
       res.json({
         success: true,
         message: "Room and Bed allocated successfully.",
@@ -423,6 +439,22 @@ export class BookingController {
       const updated = await BookingModel.updateComplaintStatus(id as string, complaintId as string, status, adminComment);
       if (!updated) {
         return res.status(404).json({ success: false, message: "Complaint record not found." });
+      }
+
+      // Automated WhatsApp Dispatch: Complaint Status & Warden Note Update
+      if (process.env.WHATSAPP_AUTO_NOTIFY !== "false" && updated.phone) {
+        const history = updated.complaintHistory || [];
+        const cRecord = history.find((c: any) => c.id === complaintId);
+        if (cRecord) {
+          WhatsAppService.sendComplaintStatusUpdate({
+            residentName: updated.name || "Resident",
+            phone: updated.phone,
+            title: cRecord.title || cRecord.subject || "Service Request",
+            category: cRecord.category || "General",
+            status: status as any,
+            adminComment: adminComment !== undefined ? adminComment : cRecord.adminComment,
+          }).catch((err) => console.warn("Background complaint WhatsApp dispatch notice:", err?.message));
+        }
       }
 
       res.json({

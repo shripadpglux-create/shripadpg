@@ -24,6 +24,7 @@ import settingsRoutes from "./routes/settingsRoutes.js";
 import buildingRoutes from "./routes/buildingRoutes.js";
 import staffRoutes from "./routes/staffRoutes.js";
 import expenseRoutes from "./routes/expenseRoutes.js";
+import whatsappRoutes from "./routes/whatsappRoutes.js";
 
 dotenv.config();
 
@@ -129,6 +130,7 @@ app.use("/api/settings", settingsRoutes);
 app.use("/api", buildingRoutes);
 app.use("/api", staffRoutes);
 app.use("/api", expenseRoutes);
+app.use("/api/whatsapp", whatsappRoutes);
 
 // ── Health check endpoint ───────────────────────────────────────────
 app.get("/api/health", (_req: Request, res: Response) => {

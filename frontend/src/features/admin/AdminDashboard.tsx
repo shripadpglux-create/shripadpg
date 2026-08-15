@@ -262,6 +262,15 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const [complaintsHubSearch, setComplaintsHubSearch] = useState<string>("");
   const [complaintAdminReplies, setComplaintAdminReplies] = useState<Record<string, string>>({});
 
+  // WhatsApp Automation Center State
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+  const [whatsappStatus, setWhatsappStatus] = useState<{ connected: boolean; status: string } | null>(null);
+  const [whatsappQrCode, setWhatsappQrCode] = useState<string | null>(null);
+  const [isCheckingWhatsApp, setIsCheckingWhatsApp] = useState(false);
+  const [waTestPhone, setWaTestPhone] = useState("");
+  const [waTestMessage, setWaTestMessage] = useState("Hello from Shripad PG Automation! 🏠✨");
+  const [isSendingWaTest, setIsSendingWaTest] = useState(false);
+
   // PWA Install Prompt State & Handler
   const [deferredInstallPrompt, setDeferredInstallPrompt] = useState<any>(null);
 
@@ -1817,6 +1826,79 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     }
   };
 
+  // WhatsApp Automation Engine Helpers
+  const fetchWhatsAppStatus = async () => {
+    setIsCheckingWhatsApp(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/whatsapp/status`);
+      const data = await res.json();
+      if (data.success) {
+        setWhatsappStatus({ connected: data.connected, status: data.status });
+        if (!data.connected) {
+          fetchWhatsAppQr();
+        }
+      }
+    } catch (err) {
+      setWhatsappStatus({ connected: false, status: "OFFLINE" });
+    } finally {
+      setIsCheckingWhatsApp(false);
+    }
+  };
+
+  const fetchWhatsAppQr = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/whatsapp/qr`);
+      const data = await res.json();
+      if (data.success && data.qr) {
+        setWhatsappQrCode(data.qr);
+      }
+    } catch (err) {
+      console.warn("QR fetch notice:", err);
+    }
+  };
+
+  const handleStartWhatsAppSession = async () => {
+    try {
+      showToast("Starting WhatsApp Baileys session...", "info");
+      const res = await fetch(`${API_BASE_URL}/api/whatsapp/start`, { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        showToast("Session initialized. Fetching QR code...", "success");
+        setTimeout(fetchWhatsAppStatus, 1500);
+      } else {
+        showToast(data.message || "Failed to start session.", "error");
+      }
+    } catch (err: any) {
+      showToast("WhatsApp service currently offline. Run OpenWA locally or check connection.", "error");
+    }
+  };
+
+  const handleSendWhatsAppTest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!waTestPhone.trim() || !waTestMessage.trim()) {
+      showToast("Please enter a valid phone number and message.", "error");
+      return;
+    }
+    setIsSendingWaTest(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/whatsapp/send-text`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: waTestPhone.trim(), message: waTestMessage.trim() }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast("Test WhatsApp message dispatched successfully! 🚀", "success");
+      } else {
+        showToast(data.message || "Failed to send test message.", "error");
+      }
+    } catch (err: any) {
+      showToast("WhatsApp API error: " + err.message, "error");
+    } finally {
+      setIsSendingWaTest(false);
+    }
+  };
+
   const fetchBookings = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/bookings`);
@@ -2169,6 +2251,24 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                     {activeComplaintsCount}
                   </span>
                 )}
+              </button>
+
+              {/* WhatsApp Baileys Automation Center Button */}
+              <button
+                onClick={() => {
+                  setIsWhatsAppModalOpen(true);
+                  fetchWhatsAppStatus();
+                }}
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-black transition cursor-pointer shadow-md active:scale-95 border ${
+                  whatsappStatus?.connected
+                    ? "bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700"
+                    : "bg-emerald-50 text-emerald-900 border-emerald-200 hover:bg-emerald-100"
+                }`}
+                title="WhatsApp Baileys Automation Center (Auto-Credentials & Invoices)"
+              >
+                <span className="text-sm">💬</span>
+                <span className="hidden sm:inline">WhatsApp</span>
+                <span className={`h-2 w-2 rounded-full ${whatsappStatus?.connected ? "bg-white animate-pulse" : "bg-amber-500"}`} />
               </button>
 
               {/* Install SripadPG App Button */}
@@ -8553,6 +8653,191 @@ function doPost(e) {
                   );
                 });
               })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WHATSAPP BAILEYS AUTOMATION CENTER MODAL */}
+      {isWhatsAppModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md animate-in fade-in" onClick={() => setIsWhatsAppModalOpen(false)}>
+          <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white rounded-[2.5rem] shadow-2xl border border-slate-200 animate-in zoom-in-95 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-emerald-50/60 via-white to-slate-50">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 shadow-sm">
+                  <MessageSquare className="h-6 w-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
+                    WhatsApp Automation Center
+                    <span className={`text-xs px-2.5 py-0.5 rounded-full font-black ${
+                      whatsappStatus?.connected
+                        ? "bg-emerald-600 text-white"
+                        : "bg-amber-500 text-white"
+                    }`}>
+                      {whatsappStatus?.connected ? "🟢 Online" : isCheckingWhatsApp ? "⏳ Checking..." : "🟡 Offline / Scan QR"}
+                    </span>
+                  </h2>
+                  <p className="text-xs text-slate-500 font-medium">
+                    OpenWA Baileys Gateway for automated credentials, rent invoices & complaint alerts
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsWhatsAppModalOpen(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5">
+              {/* Connection Status Card */}
+              <div className={`p-4 sm:p-5 rounded-2xl border-2 space-y-3 ${
+                whatsappStatus?.connected
+                  ? "bg-emerald-50/70 border-emerald-300"
+                  : "bg-amber-50/70 border-amber-300"
+              }`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{whatsappStatus?.connected ? "🟢" : "📱"}</span>
+                    <div>
+                      <h4 className="text-sm font-black text-slate-900">
+                        {whatsappStatus?.connected
+                          ? "WhatsApp Multi-Device Engine Connected"
+                          : "WhatsApp Authentication Required"}
+                      </h4>
+                      <p className="text-xs text-slate-600 font-medium mt-0.5">
+                        {whatsappStatus?.connected
+                          ? "Auto-dispatch is ACTIVE for room allotments, rent receipts, and complaints."
+                          : "Start the session below or scan the QR code to link your PG Admin WhatsApp number."}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={fetchWhatsAppStatus}
+                    disabled={isCheckingWhatsApp}
+                    className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-xs font-black text-slate-700 transition cursor-pointer shadow-2xs"
+                  >
+                    {isCheckingWhatsApp ? "Checking..." : "🔄 Refresh"}
+                  </button>
+                </div>
+
+                {/* QR Code Container or Session Starter */}
+                {!whatsappStatus?.connected && (
+                  <div className="pt-3 border-t border-amber-200/80 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div className="text-xs font-semibold text-slate-700">
+                      <span>Engine Status: </span>
+                      <span className="font-mono font-black text-amber-900">{whatsappStatus?.status || "DISCONNECTED"}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleStartWhatsAppSession}
+                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition cursor-pointer shadow-sm active:scale-95"
+                      >
+                        ⚡ Start Session & Get QR
+                      </button>
+                      <a
+                        href="http://localhost:2886"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black transition cursor-pointer shadow-sm"
+                      >
+                        Open Dashboard (Port 2886) ↗
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Automated Workflows Enabled */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider">Automated WhatsApp Workflows</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-black text-slate-900">Room Allotment</p>
+                      <p className="text-[11px] text-slate-500">Auto-sends ID, Password, Wi-Fi to new resident</p>
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-black text-slate-900">Service Complaints</p>
+                      <p className="text-[11px] text-slate-500">Notifies resident on status update & warden notes</p>
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-black text-slate-900">Payment Receipts</p>
+                      <p className="text-[11px] text-slate-500">Dispatches instant confirmation with Txn ID</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Instant WhatsApp Test Message Box */}
+              <form onSubmit={handleSendWhatsAppTest} className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <span>🚀</span> Send Test / Custom WhatsApp Message
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Target Phone Number *</label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="e.g. 9876543210"
+                      value={waTestPhone}
+                      onChange={(e) => setWaTestPhone(e.target.value)}
+                      className="w-full rounded-xl bg-white border border-slate-200 p-2.5 text-xs font-bold text-slate-900 outline-none focus:border-emerald-600"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Message Text *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Message content..."
+                      value={waTestMessage}
+                      onChange={(e) => setWaTestMessage(e.target.value)}
+                      className="w-full rounded-xl bg-white border border-slate-200 p-2.5 text-xs font-medium text-slate-900 outline-none focus:border-emerald-600"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-1">
+                  <button
+                    type="submit"
+                    disabled={isSendingWaTest}
+                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-black text-xs transition cursor-pointer shadow-md active:scale-95 flex items-center gap-2"
+                  >
+                    <span>{isSendingWaTest ? "Sending..." : "Send Test WhatsApp"}</span>
+                    <span>📨</span>
+                  </button>
+                </div>
+              </form>
+
+              {/* Quick CLI Start Instructions */}
+              <div className="p-3.5 rounded-2xl bg-slate-900 text-slate-200 text-xs space-y-1.5 font-mono">
+                <p className="text-emerald-400 font-bold text-[11px]"># Run OpenWA Baileys engine locally:</p>
+                <p className="text-slate-300">cd openwa && npm run dev</p>
+                <p className="text-[10px] text-slate-400 font-sans mt-1">
+                  OpenWA Dashboard running at <a href="http://localhost:2886" target="_blank" rel="noopener noreferrer" className="text-emerald-400 underline">http://localhost:2886</a>
+                </p>
+              </div>
             </div>
           </div>
         </div>

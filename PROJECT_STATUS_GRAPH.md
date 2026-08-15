@@ -2,6 +2,21 @@
 
 ---
 
+### 📍 Version 8.41 — OpenWA Baileys WhatsApp Automation Gateway 📱⚡
+
+```mermaid
+flowchart TD
+    AdminTrigger["Admin Allocation & Action Triggers<br/>(Room Allocation, Complaint Updates, Verified Rent Receipts)"]
+    BackendWAService["Backend WhatsAppService & API<br/>(/api/whatsapp/status, /api/whatsapp/qr, /api/whatsapp/send-text)"]
+    OpenWABaileysEngine["OpenWA Baileys Gateway (Port 2886)<br/>(Multi-Device WebSocket Engine with automated credentials dispatch)"]
+    WhatsAppManagerUI["WhatsApp Automation Center UI<br/>(Connection Status, Start Session, QR Scanner, Test Messenger)"]
+
+    AdminTrigger --> BackendWAService --> OpenWABaileysEngine
+    WhatsAppManagerUI <--> BackendWAService
+```
+
+---
+
 ### 📍 Version 8.40 — Centralized Complaint Hub & Live Notification Ticketing 📢🚨
 
 ```mermaid
