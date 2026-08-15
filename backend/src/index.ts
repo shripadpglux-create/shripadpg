@@ -50,6 +50,7 @@ const ALLOWED_ORIGINS = [
   "http://localhost:5173",
   "https://shripadpg.onrender.com",
   "https://shripadpglux.onrender.com",
+  "https://shripadpg.pages.dev",
 ];
 
 app.use(
