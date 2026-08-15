@@ -2,6 +2,19 @@
 
 ---
 
+### 📍 Version 8.20 — Render Backend Deployment & Explicit CORS Preflight 🚀🌐
+
+```mermaid
+flowchart TD
+    RenderBlueprint["Render Blueprint Integration<br/>(Created render.yaml configuring automatic Node web service build and start commands for backend)"]
+    ExplicitPreflightCors["Explicit OPTIONS Preflight CORS Handler<br/>(Added app.options('*', cors()) and app.get('/', ...) root route handler for Render health checks)"]
+    ZeroCorsErrorState["0 CORS Errors & Clean Cloudflare Communication<br/>(Verified clean preflight resolution and backend route access)"]
+
+    RenderBlueprint --> ExplicitPreflightCors --> ZeroCorsErrorState
+```
+
+---
+
 ### 📍 Version 8.19 — Enterprise CORS & Environment API Resolution 🌐🛡️
 
 ```mermaid

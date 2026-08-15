@@ -26,10 +26,21 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   })
 );
+app.options("*", cors());
 app.use(express.json({ limit: "10mb" }));
 
 // Static uploads serving
 app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
+
+// Root route for Render service health checks
+app.get("/", (_req: Request, res: Response) => {
+  res.json({
+    status: "ok",
+    service: "Shripad PG Backend API",
+    version: "1.0.0",
+    timestamp: new Date().toISOString(),
+  });
+});
 
 // Routes
 app.use("/api/bookings", bookingRoutes);
