@@ -91,7 +91,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
 
       // Read the saved bootstrap key from the file — but only while it still resolves to a LIVE
       // key; a revoked/rotated/deleted key must not be advertised in the banner.
-      displayKey = process.env.API_MASTER_KEY || (await this.readLiveBootstrapKey()) ?? '(check dashboard for keys)';
+      displayKey = process.env.API_MASTER_KEY || (await this.readLiveBootstrapKey()) || '(check dashboard for keys)';
     }
 
     // Always show the welcome banner on startup
