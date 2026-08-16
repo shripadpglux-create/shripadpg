@@ -2,6 +2,32 @@
 
 ---
 
+### 📍 Version 8.66 — Universal Standalone Read-Only /invoice Route Enforcement 🔒📄🎯
+
+```mermaid
+flowchart TD
+    subgraph StandaloneRoute ["Standalone /invoice?invoiceNo=... Route"]
+        EntryTrigger["Opened via 'Full Page' button in receipt modal OR WhatsApp shared link"]
+        FixedProps["Explicitly rendered with readOnly={true} & hideHeaderTabs={true}"]
+        
+        EntryTrigger --> FixedProps
+    end
+
+    subgraph LockedExperience ["Guaranteed Locked Document View"]
+        NoTabs["No Admin Tabs or generators displayed"]
+        NoEditInputs["All sheet fields strictly disabled & rendered as clean official text"]
+        NoSaveBtn["No 'Save & Issue' or 'Resident' controls can render"]
+        PrintOnly["Top toolbar presents clean 'Print Receipt 🖨️' button only"]
+        
+        FixedProps --> NoTabs
+        FixedProps --> NoEditInputs
+        FixedProps --> NoSaveBtn
+        FixedProps --> PrintOnly
+    end
+```
+
+---
+
 ### 📍 Version 8.65 — TypeScript Date Split Type-Safety Hardening 🛡️⚡
 
 ```mermaid

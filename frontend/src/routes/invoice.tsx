@@ -18,27 +18,11 @@ export const Route = createFileRoute("/invoice")({
     ],
   }),
   component: () => {
-    // Determine whether current viewer is an authenticated admin/staff
-    const isAdminOrStaff =
-      typeof window !== "undefined" &&
-      !!(
-        localStorage.getItem("shripad_admin_session") ||
-        localStorage.getItem("shripad_staff_session") ||
-        localStorage.getItem("shripad_auth_token") ||
-        sessionStorage.getItem("shripad_admin_session") ||
-        sessionStorage.getItem("shripad_staff_session") ||
-        sessionStorage.getItem("shripad_auth_token") ||
-        sessionStorage.getItem("adminAuth") ||
-        localStorage.getItem("adminAuth") ||
-        sessionStorage.getItem("staffAuth") ||
-        localStorage.getItem("staffAuth")
-      );
-
     return (
       <div className="min-h-screen bg-slate-100 py-6 sm:py-8 px-3 sm:px-4">
         <InvoiceDesign
-          readOnly={!isAdminOrStaff}
-          hideHeaderTabs={!isAdminOrStaff}
+          readOnly={true}
+          hideHeaderTabs={true}
         />
       </div>
     );

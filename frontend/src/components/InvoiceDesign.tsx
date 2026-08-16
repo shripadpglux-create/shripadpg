@@ -668,7 +668,7 @@ export function InvoiceDesign({
 
               <div className="flex items-center gap-2.5 self-end sm:self-auto shrink-0 flex-wrap sm:flex-nowrap">
                 {/* ADMIN IN EDIT MODE: RESIDENT SELECTOR */}
-                {isAdminOrStaff && isEditing && residentsList.length > 0 && (
+                {!readOnly && isAdminOrStaff && isEditing && residentsList.length > 0 && (
                   <div className="flex items-center gap-1.5">
                     <span className="text-[11px] font-bold text-slate-600 shrink-0">Resident:</span>
                     <select
@@ -706,7 +706,7 @@ export function InvoiceDesign({
                 )}
 
                 {/* ADMIN IN EDIT MODE: SAVE & ISSUE BUTTON */}
-                {isAdminOrStaff && isEditing && (
+                {!readOnly && isAdminOrStaff && isEditing && (
                   <button
                     onClick={handleSaveInvoice}
                     disabled={isSaving}
@@ -718,7 +718,7 @@ export function InvoiceDesign({
                 )}
 
                 {/* ADMIN IN EDIT MODE: CANCEL EDIT BUTTON */}
-                {isAdminOrStaff && isEditing && (
+                {!readOnly && isAdminOrStaff && isEditing && (
                   <button
                     type="button"
                     onClick={() => setIsEditing(false)}
@@ -730,7 +730,7 @@ export function InvoiceDesign({
                 )}
 
                 {/* ADMIN IN VIEW-ONLY MODE: EDIT BUTTON */}
-                {isAdminOrStaff && !isEditing && (
+                {!readOnly && isAdminOrStaff && !isEditing && (
                   <button
                     type="button"
                     onClick={() => setIsEditing(true)}
@@ -742,7 +742,7 @@ export function InvoiceDesign({
                 )}
 
                 {/* ADMIN IN VIEW-ONLY MODE: NEW INVOICE BUTTON */}
-                {isAdminOrStaff && !isEditing && (
+                {!readOnly && isAdminOrStaff && !isEditing && (
                   <button
                     type="button"
                     onClick={handleStartNewInvoice}
