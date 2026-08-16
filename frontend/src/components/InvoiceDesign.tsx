@@ -686,20 +686,10 @@ export function InvoiceDesign({
                   onClick={() => {
                     if (typeof window !== "undefined") window.print();
                   }}
-                  className="flex items-center justify-center gap-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 px-3.5 py-1.5 text-xs font-bold text-slate-700 shadow-sm transition active:scale-95 cursor-pointer whitespace-nowrap"
+                  className="flex items-center justify-center gap-1.5 rounded-xl bg-[#0f1b3d] hover:bg-slate-800 px-4 py-1.5 text-xs font-bold text-white shadow-sm transition active:scale-95 cursor-pointer whitespace-nowrap"
                 >
-                  <Printer className="h-3.5 w-3.5" />
-                  <span>Print</span>
-                </button>
-
-                {/* DOWNLOAD PDF BUTTON */}
-                <button
-                  onClick={handleDownloadPdf}
-                  disabled={isDownloadingPdf}
-                  className="flex items-center justify-center gap-1.5 rounded-xl bg-[#0f1b3d] hover:bg-slate-800 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition active:scale-95 cursor-pointer whitespace-nowrap disabled:opacity-50"
-                >
-                  <Download className="h-3.5 w-3.5 text-emerald-400" />
-                  <span>{isDownloadingPdf ? "Downloading..." : "Download PDF"}</span>
+                  <Printer className="h-3.5 w-3.5 text-emerald-400" />
+                  <span>Print Receipt</span>
                 </button>
               </div>
             </div>

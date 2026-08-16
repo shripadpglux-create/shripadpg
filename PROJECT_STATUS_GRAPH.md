@@ -2,6 +2,29 @@
 
 ---
 
+### 📍 Version 8.62 — Streamlined Invoice Top Toolbar (Download PDF Removed, Print Promoted) 🖨️✨
+
+```mermaid
+flowchart TD
+    subgraph InvoiceToolbar ["Invoice Top Navigation Toolbar"]
+        VerifiedBadge["Official Rent Receipt & Tax Invoice • VERIFIED Badge"]
+        PrintReceiptBtn["Prominent 'Print Receipt' (Immediate Browser Native PDF / Print)"]
+        
+        VerifiedBadge --> CleanHeader
+        PrintReceiptBtn --> CleanHeader
+    end
+
+    subgraph CleanHeader ["Minimalist High-Clarity Header"]
+        NoDownloadBtn["Removed redundant 'Download PDF' button"]
+        DirectPrint["Single 1-click action triggers clean browser print preview & save"]
+        
+        CleanHeader --> NoDownloadBtn
+        CleanHeader --> DirectPrint
+    end
+```
+
+---
+
 ### 📍 Version 8.61 — Public Shared Invoice Access Control & Customer Read-Only Enforcement 🛡️📄🔒
 
 ```mermaid
