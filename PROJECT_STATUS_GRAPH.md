@@ -2,6 +2,39 @@
 
 ---
 
+### 📍 Version 8.60 — MongoDB Schema Strict-Mode Fix & Full-Stack Payment History Persistence 🗄️🛡️✨
+
+```mermaid
+flowchart TD
+    subgraph ClientAction ["Admin Customer & Payment Interface"]
+        SubmitPayment["Admin clicks 'Record Payment' / verifies bank SMS"]
+    end
+
+    subgraph BackendPersistence ["Backend Persistence Pipeline"]
+        BookingModelSave["BookingModel.addPayment() updates cache & data/bookings.json"]
+        MongooseSync["Mongoose sync with strict: false schema definition"]
+        
+        SubmitPayment --> BookingModelSave
+        BookingModelSave --> MongooseSync
+    end
+
+    subgraph MongoDBSchema ["Atlas Database Schema"]
+        FullFields["Preserves paymentHistory, complaintHistory, rentAmount, depositStatus"]
+        NoFieldStripping["0 fields stripped on insertMany / find lean"]
+        
+        MongooseSync --> FullFields
+        FullFields --> NoFieldStripping
+    end
+
+    subgraph PageReloadSafety ["Immortal Payment History Across Reloads"]
+        ReloadPage["Browser / Server Reload"]
+        NoFieldStripping --> ReloadPage
+        ReloadPage --> RenderHistory["Payment history remains permanently visible & intact 🌟"]
+    end
+```
+
+---
+
 ### 📍 Version 8.59 — WhatsApp Message Deduplication, Clean Template Interpolation & Zero-Rent Invoice Sanitization 🧹📱📄
 
 ```mermaid

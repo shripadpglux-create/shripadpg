@@ -8,33 +8,46 @@ const bookingSchema = new Schema(
     name: { type: String, required: true, index: true },
     email: { type: String, default: "", index: true },
     phone: { type: String, default: "", index: true },
+    guardianPhone: { type: String, default: "" },
     building: { type: String, default: "", index: true },
     roomType: { type: String, default: "" },
     source: { type: String, default: "manual", index: true },
     status: { type: String, default: "pending", index: true },
     createdById: { type: String, default: "" },
     createdBy: { type: String, default: "" },
+    createdByRole: { type: String, default: "admin" },
     gender: { type: String, default: "" },
     foodPreference: { type: String, default: "" },
     joiningDate: { type: String, default: "" },
+    rentAmount: { type: Number, default: 0 },
     monthlyRent: { type: Number, default: 0 },
     depositAmount: { type: Number, default: 0 },
     paidDepositAmount: { type: Number, default: 0 },
+    depositStatus: { type: String, default: "pending" },
+    depositRefundDetails: { type: Schema.Types.Mixed, default: null },
+    rentStartDate: { type: String, default: "" },
+    checkoutDate: { type: String, default: "" },
+    stayType: { type: String, default: "monthly" },
     allocatedBuilding: { type: String, default: "", index: true },
     allocatedFloor: { type: Number, default: null },
     allocatedRoom: { type: String, default: "", index: true },
     allocatedBed: { type: String, default: "" },
+    customerId: { type: String, default: "" },
+    customerPassword: { type: String, default: "" },
+    documents: { type: String, default: "" },
     idProofType: { type: String, default: "" },
     idProofNumber: { type: String, default: "" },
     idProofPhotoUrl: { type: String, default: "" },
     userPhotoUrl: { type: String, default: "" },
     notes: { type: String, default: "" },
+    paymentHistory: { type: Array, default: [] },
+    complaintHistory: { type: Array, default: [] },
     payments: { type: Array, default: [] },
     complaints: { type: Array, default: [] },
     depositRefund: { type: Object, default: null },
     checkedOutAt: { type: String, default: "" },
   },
-  { timestamps: true, strict: true, versionKey: false, minimize: true }
+  { timestamps: true, strict: false, versionKey: false }
 );
 
 // Compound Production Indexes for Bookings
@@ -53,7 +66,7 @@ const buildingSchema = new Schema(
     floorRoomCounts: { type: Object, default: {} },
     blockedRooms: { type: Array, default: [] },
   },
-  { timestamps: true, strict: true, versionKey: false, minimize: true }
+  { timestamps: true, strict: false, versionKey: false }
 );
 
 // 3. Staff Mongoose Schema
@@ -68,7 +81,7 @@ const staffSchema = new Schema(
     assignedBuildings: { type: Array, default: ["PG A"] },
     status: { type: String, default: "active", index: true },
   },
-  { timestamps: true, strict: true, versionKey: false, minimize: true }
+  { timestamps: true, strict: false, versionKey: false }
 );
 
 staffSchema.index({ email: 1, status: 1 });
@@ -85,7 +98,7 @@ const expenseSchema = new Schema(
     notes: { type: String, default: "" },
     createdBy: { type: String, default: "" },
   },
-  { timestamps: true, strict: true, versionKey: false, minimize: true }
+  { timestamps: true, strict: false, versionKey: false }
 );
 
 expenseSchema.index({ building: 1, date: -1 });
@@ -96,25 +109,31 @@ const invoiceSchema = new Schema(
   {
     id: { type: String, required: true, unique: true, index: true },
     invoiceNo: { type: String, required: true, index: true },
+    residentId: { type: String, default: "", index: true },
+    tenantName: { type: String, default: "", index: true },
     residentName: { type: String, default: "", index: true },
+    contact: { type: String, default: "", index: true },
     phone: { type: String, default: "", index: true },
     email: { type: String, default: "" },
     building: { type: String, default: "", index: true },
+    floor: { type: String, default: "" },
+    room: { type: String, default: "" },
     roomNo: { type: String, default: "" },
-    month: { type: String, default: "", index: true },
-    year: { type: Number, default: 2026, index: true },
-    amount: { type: Number, default: 0 },
-    paymentMethod: { type: String, default: "cash" },
-    status: { type: String, default: "paid", index: true },
+    bed: { type: String, default: "" },
     date: { type: String, default: "" },
-    items: { type: Array, default: [] },
+    dueDate: { type: String, default: "" },
+    rentAmount: { type: Number, default: 0 },
+    paidAmount: { type: Number, default: 0 },
+    balanceDue: { type: Number, default: 0 },
+    paymentModes: { type: Array, default: ["UPI"] },
     notes: { type: String, default: "" },
+    status: { type: String, default: "PAID", index: true },
   },
-  { timestamps: true, strict: true, versionKey: false, minimize: true }
+  { timestamps: true, strict: false, versionKey: false }
 );
 
-invoiceSchema.index({ building: 1, year: -1, month: -1 });
-invoiceSchema.index({ residentName: 1, phone: 1 });
+invoiceSchema.index({ building: 1, date: -1 });
+invoiceSchema.index({ tenantName: 1, contact: 1 });
 
 // 6. Settings Mongoose Schema
 const settingSchema = new Schema(
@@ -129,7 +148,7 @@ const settingSchema = new Schema(
     ifscCode: { type: String, default: "UTIB0001824" },
     accountName: { type: String, default: "Shripad PG Services" },
   },
-  { timestamps: true, strict: true, versionKey: false, minimize: true }
+  { timestamps: true, strict: false, versionKey: false }
 );
 
 // 7. WhatsApp Templates & Chatbot Mongoose Schema
@@ -145,7 +164,7 @@ const whatsAppTemplateSchema = new Schema(
     chatbotLocations: { type: Array, default: [] },
     chatbotDefaultReply: { type: String, default: "" },
   },
-  { timestamps: true, strict: true, versionKey: false, minimize: true }
+  { timestamps: true, strict: false, versionKey: false }
 );
 
 // 8. WhatsApp Baileys Multi-Device Persistent Auth State Backup Schema
