@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { ShieldCheck, Lock, User, ArrowRight, AlertCircle, KeyRound, Eye, EyeOff } from "lucide-react";
 import brandLogo from "@/assets/shripad-logo.png";
+import { API_BASE_URL } from "@/lib/apiConfig";
 
 export function AdminLogin() {
   const navigate = useNavigate();
@@ -11,7 +12,7 @@ export function AdminLogin() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const API_BASE = import.meta.env.VITE_API_URL || (typeof window !== "undefined" && window.location.hostname !== "localhost" ? "https://shripadpg.onrender.com" : "http://localhost:5000");
+  const API_BASE = API_BASE_URL;
 
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
