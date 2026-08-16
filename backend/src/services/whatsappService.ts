@@ -46,7 +46,7 @@ export class WhatsAppService {
   private static cachedSessionId: string | null = null;
 
   private static getApiBaseUrl(): string {
-    return (process.env.OPENWA_API_URL || "https://shripadpglux.onrender.com").replace(/\/$/, "");
+    return (process.env.OPENWA_API_URL || "https://shripad-openwa-gateway.onrender.com").replace(/\/$/, "");
   }
 
   private static getSessionName(): string {

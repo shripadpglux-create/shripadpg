@@ -2,6 +2,34 @@
 
 ---
 
+### 📍 Version 8.51 — Gateway URL Synchronization & Trust Proxy Reverse Proxy Fix 🌐🛡️⚡
+
+```mermaid
+flowchart TD
+    subgraph CloudflareFrontend ["Cloudflare Pages (Frontend)"]
+        LiveUI["https://shripadpg.pages.dev<br/>(Admin WhatsApp Modal)"]
+    end
+
+    subgraph RenderBackendExpress ["Render Express Backend (shripadpg.onrender.com)"]
+        TrustProxy["app.set('trust proxy', 1)<br/>(Clean X-Forwarded-For Rate Limiting)"]
+        GatewayURL["OPENWA_API_URL -> https://shripad-openwa-gateway.onrender.com"]
+        CORSOrigin["CORS Allowed: shripad-openwa-gateway.onrender.com"]
+        
+        TrustProxy --> GatewayURL
+    end
+
+    subgraph RenderOpenWAGateway ["Render OpenWA Gateway (shripad-openwa-gateway.onrender.com)"]
+        AutoSession["shripad-pg Session (Baileys Engine)"]
+        AutoWebhook["Webhook -> https://shripadpg.onrender.com/api/whatsapp/webhook"]
+        
+        GatewayURL --> AutoSession --> AutoWebhook
+    end
+
+    LiveUI -->|"GET /api/whatsapp/status"| RenderBackendExpress
+```
+
+---
+
 ### 📍 Version 8.50 — Dynamic Session UUID Resolution & Real-Time WhatsApp Status / Chatbot Reply Pipeline ⚡📱🤖
 
 ```mermaid

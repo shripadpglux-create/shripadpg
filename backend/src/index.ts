@@ -36,6 +36,9 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || "development";
 
+// Enable trust proxy for Render / Cloudflare reverse proxy headers
+app.set("trust proxy", 1);
+
 // Connect to MongoDB Atlas Database
 connectDB();
 
@@ -52,6 +55,7 @@ const ALLOWED_ORIGINS = [
   "http://localhost:5173",
   "https://shripadpg.onrender.com",
   "https://shripadpglux.onrender.com",
+  "https://shripad-openwa-gateway.onrender.com",
   "https://shripadpg.pages.dev",
 ];
 
