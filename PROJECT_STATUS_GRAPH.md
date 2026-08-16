@@ -2,6 +2,50 @@
 
 ---
 
+### 📍 Version 8.45 — Customizable WhatsApp Notification Templates & Interactive Multi-Branch AI Location Chatbot 🤖🏢💬
+
+```mermaid
+flowchart TD
+    subgraph AdminControlPlane ["Admin Dashboard & Template Customizer"]
+        AdminUI["Admin WhatsApp Automation Center<br/>(Tabs: Connection & QR | Message Templates | Location Chatbot)"]
+        TemplateEditor["Dynamic Template Customizer<br/>(Invoices, Complaints, Receipts, Resident Allotments with variable insertion pills)"]
+        BranchManager["Interactive Branch Location Manager<br/>(Add/Edit/Delete Branches: Name, Trigger Keyword, Rent, Rooms, Amenities, Map Link, Phone)"]
+        MongoPersistence["MongoDB Atlas & Local JSON Sync<br/>(WhatsAppTemplateMongoModel + Disk Fallback)"]
+    end
+
+    subgraph ResidentWebhookChatbot ["Inbound Webhook & Interactive Chatbot Engine"]
+        InboundMsg["Inbound Customer WhatsApp Text<br/>(e.g., 'hii', 'hello', 'wakad', 'chinchwad', '1', '2')"]
+        OpenWAWebhook["OpenWA Inbound Webhook<br/>(POST /api/whatsapp/webhook)"]
+        ChatbotRouter{"Chatbot Keyword Matcher"}
+        GreetingBranch["Greeting Auto-Reply<br/>(Sends greeting + numbered list of all active PG branches)"]
+        LocationBranchDetails["Branch Specific Auto-Reply<br/>(Sends Rent Range, Room Types, Amenities, Google Maps Link, Manager Phone)"]
+        FallbackReply["Help / Default Friendly Reply"]
+    end
+
+    subgraph OutboundAutomations ["Dynamic Outbound Notification Engine"]
+        InvoiceTrigger["Rent Invoice Created<br/>(Interpolates customerName, amount, invoiceLink, month, upiId)"]
+        ComplaintTrigger["Complaint Status Updated<br/>(Interpolates residentName, title, status, adminComment)"]
+        PaymentTrigger["Payment Verified<br/>(Interpolates customerName, amountPaid, invoiceNo, room)"]
+        AllotmentTrigger["Room Allotted<br/>(Interpolates login ID, password, room, bed, Wi-Fi)"]
+        OpenWADispatch["OpenWA Baileys WebSocket Dispatcher<br/>(Humanized Typing Presence + Smart Jitter Delay)"]
+    end
+
+    AdminUI --> TemplateEditor --> MongoPersistence
+    AdminUI --> BranchManager --> MongoPersistence
+
+    InboundMsg --> OpenWAWebhook --> ChatbotRouter
+    ChatbotRouter -- "Matches 'hii' / 'menu'" --> GreetingBranch --> OpenWADispatch
+    ChatbotRouter -- "Matches 'wakad' / '1' / 'chinchwad'" --> LocationBranchDetails --> OpenWADispatch
+    ChatbotRouter -- "Other / Unknown query" --> FallbackReply --> OpenWADispatch
+
+    MongoPersistence -.-> InvoiceTrigger --> OpenWADispatch
+    MongoPersistence -.-> ComplaintTrigger --> OpenWADispatch
+    MongoPersistence -.-> PaymentTrigger --> OpenWADispatch
+    MongoPersistence -.-> AllotmentTrigger --> OpenWADispatch
+```
+
+---
+
 ### 📍 Version 8.44 — Single Active Session Architecture & Automated DB Stale Session Pruning 🧹📦
 
 ```mermaid

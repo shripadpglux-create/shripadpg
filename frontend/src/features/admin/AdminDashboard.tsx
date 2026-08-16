@@ -66,6 +66,9 @@ import {
   Landmark,
   Save,
   RefreshCw,
+  Bot,
+  MapPin,
+  Send,
 } from "lucide-react";
 import { ShripadNameLogo } from "@/components/ShripadNameLogo";
 import { InvoiceDesign } from "@/components/InvoiceDesign";
@@ -270,6 +273,44 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const [waTestPhone, setWaTestPhone] = useState("");
   const [waTestMessage, setWaTestMessage] = useState("Hello from Shripad PG Automation! 🏠✨");
   const [isSendingWaTest, setIsSendingWaTest] = useState(false);
+
+  // WhatsApp Templates & Location Chatbot Management State
+  const [waModalTab, setWaModalTab] = useState<"overview" | "templates" | "chatbot">("overview");
+  const [waTemplates, setWaTemplates] = useState<{
+    invoiceMessage: string;
+    complaintUpdateMessage: string;
+    paymentConfirmationMessage: string;
+    welcomeAllotmentMessage: string;
+    chatbotEnabled: boolean;
+    chatbotGreetingMessage: string;
+    chatbotLocations: Array<{
+      id: string;
+      name: string;
+      keyword: string;
+      address: string;
+      rooms: string;
+      rentRange: string;
+      amenities: string;
+      mapLink: string;
+      contactPhone: string;
+    }>;
+    chatbotDefaultReply: string;
+  } | null>(null);
+  const [isLoadingWaTemplates, setIsLoadingWaTemplates] = useState(false);
+  const [isSavingWaTemplates, setIsSavingWaTemplates] = useState(false);
+  const [activeTemplateType, setActiveTemplateType] = useState<"invoice" | "complaint" | "payment" | "welcome">("invoice");
+  const [editingBranch, setEditingBranch] = useState<{
+    id: string;
+    name: string;
+    keyword: string;
+    address: string;
+    rooms: string;
+    rentRange: string;
+    amenities: string;
+    mapLink: string;
+    contactPhone: string;
+  } | null>(null);
+  const [isBranchModalOpen, setIsBranchModalOpen] = useState(false);
 
   // PWA Install Prompt State & Handler
   const [deferredInstallPrompt, setDeferredInstallPrompt] = useState<any>(null);
@@ -1897,6 +1938,80 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     } finally {
       setIsSendingWaTest(false);
     }
+  };
+
+  const fetchWhatsAppTemplates = async () => {
+    setIsLoadingWaTemplates(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/whatsapp/templates`);
+      const data = await res.json();
+      if (data.success && data.templates) {
+        setWaTemplates(data.templates);
+      }
+    } catch (err) {
+      console.warn("Failed to fetch WhatsApp templates:", err);
+    } finally {
+      setIsLoadingWaTemplates(false);
+    }
+  };
+
+  const handleSaveWhatsAppTemplates = async () => {
+    if (!waTemplates) return;
+    setIsSavingWaTemplates(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/whatsapp/templates`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(waTemplates),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setWaTemplates(data.templates);
+        showToast("WhatsApp templates & Chatbot saved successfully! ✨", "success");
+      } else {
+        showToast(data.message || "Failed to save templates.", "error");
+      }
+    } catch (err: any) {
+      showToast("Error saving templates: " + err.message, "error");
+    } finally {
+      setIsSavingWaTemplates(false);
+    }
+  };
+
+  const handleResetWhatsAppTemplates = async () => {
+    if (!confirm("Are you sure you want to reset all WhatsApp templates and chatbot locations to system defaults?")) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/whatsapp/templates/reset`, { method: "POST" });
+      const data = await res.json();
+      if (data.success && data.templates) {
+        setWaTemplates(data.templates);
+        showToast("Templates reset to system defaults! 🔄", "success");
+      }
+    } catch (err: any) {
+      showToast("Error resetting templates: " + err.message, "error");
+    }
+  };
+
+  const handleSaveBranch = (branchData: typeof editingBranch) => {
+    if (!branchData || !waTemplates) return;
+    let currentLocations = [...(waTemplates.chatbotLocations || [])];
+    const existingIndex = currentLocations.findIndex((b) => b.id === branchData.id);
+    if (existingIndex >= 0) {
+      currentLocations[existingIndex] = branchData;
+    } else {
+      currentLocations.push({ ...branchData, id: branchData.id || String(Date.now()) });
+    }
+    setWaTemplates({ ...waTemplates, chatbotLocations: currentLocations });
+    setIsBranchModalOpen(false);
+    setEditingBranch(null);
+    showToast(`Branch "${branchData.name}" updated in list. Click "Save All Changes" to sync.`, "info");
+  };
+
+  const handleDeleteBranch = (branchId: string) => {
+    if (!waTemplates) return;
+    const currentLocations = (waTemplates.chatbotLocations || []).filter((b) => b.id !== branchId);
+    setWaTemplates({ ...waTemplates, chatbotLocations: currentLocations });
+    showToast("Branch removed from list. Remember to save changes.", "info");
   };
 
   const fetchBookings = async () => {
@@ -8658,186 +8773,772 @@ function doPost(e) {
         </div>
       )}
 
-      {/* WHATSAPP BAILEYS AUTOMATION CENTER MODAL */}
+      {/* WHATSAPP BAILEYS AUTOMATION CENTER & CHATBOT MANAGER MODAL */}
       {isWhatsAppModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md animate-in fade-in" onClick={() => setIsWhatsAppModalOpen(false)}>
-          <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white rounded-[2.5rem] shadow-2xl border border-slate-200 animate-in zoom-in-95 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-900/75 backdrop-blur-md animate-in fade-in" onClick={() => setIsWhatsAppModalOpen(false)}>
+          <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col bg-white rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl border border-slate-200 animate-in zoom-in-95 overflow-hidden" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
-            <div className="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-emerald-50/60 via-white to-slate-50">
+            <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-emerald-50/70 via-white to-slate-50">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 shadow-sm">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 shadow-sm shrink-0">
                   <MessageSquare className="h-6 w-6" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
-                    WhatsApp Automation Center
+                  <h2 className="text-lg sm:text-xl font-black text-slate-900 flex items-center gap-2 flex-wrap">
+                    WhatsApp Automation & Chatbot
                     <span className={`text-xs px-2.5 py-0.5 rounded-full font-black ${
-                      whatsappStatus?.connected
-                        ? "bg-emerald-600 text-white"
-                        : "bg-amber-500 text-white"
+                      whatsappStatus?.connected ? "bg-emerald-600 text-white" : "bg-amber-500 text-white"
                     }`}>
                       {whatsappStatus?.connected ? "🟢 Online" : isCheckingWhatsApp ? "⏳ Checking..." : "🟡 Offline / Scan QR"}
                     </span>
                   </h2>
                   <p className="text-xs text-slate-500 font-medium">
-                    OpenWA Baileys Gateway for automated credentials, rent invoices & complaint alerts
+                    Auto-send invoices, complaints, receipts & interactive location inquiry chatbot
                   </p>
                 </div>
               </div>
+              <div className="flex items-center gap-2 self-end sm:self-center">
+                <button
+                  type="button"
+                  onClick={fetchWhatsAppStatus}
+                  disabled={isCheckingWhatsApp}
+                  className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-xs font-black text-slate-700 transition cursor-pointer shadow-2xs"
+                >
+                  {isCheckingWhatsApp ? "Checking..." : "🔄 Refresh"}
+                </button>
+                <button
+                  onClick={() => setIsWhatsAppModalOpen(false)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition cursor-pointer"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Navigation Sub-Tabs */}
+            <div className="px-4 sm:px-6 pt-3 border-b border-slate-100 bg-slate-50/70 flex items-center gap-2 overflow-x-auto scrollbar-none">
               <button
-                onClick={() => setIsWhatsAppModalOpen(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition cursor-pointer"
+                type="button"
+                onClick={() => setWaModalTab("overview")}
+                className={`px-4 py-2.5 rounded-t-xl text-xs font-black transition cursor-pointer flex items-center gap-2 border-b-2 ${
+                  waModalTab === "overview"
+                    ? "bg-white text-emerald-700 border-emerald-600 shadow-2xs"
+                    : "text-slate-600 border-transparent hover:text-slate-900"
+                }`}
+              >
+                <span>📊 Connection & QR</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setWaModalTab("templates");
+                  if (!waTemplates) fetchWhatsAppTemplates();
+                }}
+                className={`px-4 py-2.5 rounded-t-xl text-xs font-black transition cursor-pointer flex items-center gap-2 border-b-2 ${
+                  waModalTab === "templates"
+                    ? "bg-white text-emerald-700 border-emerald-600 shadow-2xs"
+                    : "text-slate-600 border-transparent hover:text-slate-900"
+                }`}
+              >
+                <span>📝 Message Templates</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setWaModalTab("chatbot");
+                  if (!waTemplates) fetchWhatsAppTemplates();
+                }}
+                className={`px-4 py-2.5 rounded-t-xl text-xs font-black transition cursor-pointer flex items-center gap-2 border-b-2 ${
+                  waModalTab === "chatbot"
+                    ? "bg-white text-emerald-700 border-emerald-600 shadow-2xs"
+                    : "text-slate-600 border-transparent hover:text-slate-900"
+                }`}
+              >
+                <Bot className="h-3.5 w-3.5" />
+                <span>🤖 Location Chatbot (Auto-Reply)</span>
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
+              {/* TAB 1: OVERVIEW & CONNECTION */}
+              {waModalTab === "overview" && (
+                <div className="space-y-5">
+                  {/* Connection Status Card */}
+                  <div className={`p-4 sm:p-5 rounded-2xl border-2 space-y-3 ${
+                    whatsappStatus?.connected ? "bg-emerald-50/70 border-emerald-300" : "bg-amber-50/70 border-amber-300"
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{whatsappStatus?.connected ? "🟢" : "📱"}</span>
+                        <div>
+                          <h4 className="text-sm font-black text-slate-900">
+                            {whatsappStatus?.connected
+                              ? "WhatsApp Multi-Device Baileys Connected"
+                              : "WhatsApp Authentication Required"}
+                          </h4>
+                          <p className="text-xs text-slate-600 font-medium mt-0.5">
+                            {whatsappStatus?.connected
+                              ? "Auto-dispatch is ACTIVE for room allotments, rent receipts, invoices, and chatbot auto-replies."
+                              : "Start the session below or scan the QR code to link your PG Admin WhatsApp number."}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* QR Code Container or Session Starter */}
+                    {!whatsappStatus?.connected && (
+                      <div className="pt-3 border-t border-amber-200/80 flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <div className="text-xs font-semibold text-slate-700">
+                          <span>Engine Status: </span>
+                          <span className="font-mono font-black text-amber-900">{whatsappStatus?.status || "DISCONNECTED"}</span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={handleStartWhatsAppSession}
+                            className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition cursor-pointer shadow-sm active:scale-95"
+                          >
+                            ⚡ Start Session & Get QR
+                          </button>
+                          <a
+                            href="https://shripad-openwa-gateway.onrender.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black transition cursor-pointer shadow-sm"
+                          >
+                            Open OpenWA Gateway ↗
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Automated Workflows Enabled */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider">Automated WhatsApp Workflows</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
+                      <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-xs font-black text-slate-900">Room Allotment</p>
+                          <p className="text-[11px] text-slate-500">Auto-sends ID, Password, Wi-Fi to new resident</p>
+                        </div>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-xs font-black text-slate-900">Invoices & Dues</p>
+                          <p className="text-[11px] text-slate-500">Sends PDF invoice link & UPI payment QR</p>
+                        </div>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-xs font-black text-slate-900">Service Complaints</p>
+                          <p className="text-[11px] text-slate-500">Notifies resident on status update & warden notes</p>
+                        </div>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-xs font-black text-slate-900">Location Chatbot</p>
+                          <p className="text-[11px] text-slate-500">Auto-replies with Wakad, Chinchwad, Hinjewadi details</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Instant WhatsApp Test Message Box */}
+                  <form onSubmit={handleSendWhatsAppTest} className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                    <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                      <span>🚀</span> Send Test WhatsApp Message
+                    </h4>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Target Phone Number *</label>
+                        <input
+                          type="tel"
+                          required
+                          placeholder="e.g. 9876543210"
+                          value={waTestPhone}
+                          onChange={(e) => setWaTestPhone(e.target.value)}
+                          className="w-full rounded-xl bg-white border border-slate-200 p-2.5 text-xs font-bold text-slate-900 outline-none focus:border-emerald-600"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Message Text *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Message content..."
+                          value={waTestMessage}
+                          onChange={(e) => setWaTestMessage(e.target.value)}
+                          className="w-full rounded-xl bg-white border border-slate-200 p-2.5 text-xs font-medium text-slate-900 outline-none focus:border-emerald-600"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end pt-1">
+                      <button
+                        type="submit"
+                        disabled={isSendingWaTest}
+                        className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-black text-xs transition cursor-pointer shadow-md active:scale-95 flex items-center gap-2"
+                      >
+                        <span>{isSendingWaTest ? "Sending..." : "Send Test WhatsApp"}</span>
+                        <span>📨</span>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {/* TAB 2: MESSAGE TEMPLATES */}
+              {waModalTab === "templates" && (
+                <div className="space-y-4">
+                  {isLoadingWaTemplates ? (
+                    <div className="p-12 text-center text-slate-500 font-bold text-sm">
+                      <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-emerald-600" />
+                      Loading customizable templates...
+                    </div>
+                  ) : waTemplates ? (
+                    <div className="space-y-4">
+                      {/* Template Selector Bar */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setActiveTemplateType("invoice")}
+                          className={`p-2.5 rounded-xl text-xs font-black transition cursor-pointer border flex flex-col items-center gap-1 ${
+                            activeTemplateType === "invoice"
+                              ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                              : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                          }`}
+                        >
+                          <span>🧾 Invoice Notice</span>
+                          <span className="text-[10px] opacity-80 font-normal">PDF Link & UPI</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setActiveTemplateType("complaint")}
+                          className={`p-2.5 rounded-xl text-xs font-black transition cursor-pointer border flex flex-col items-center gap-1 ${
+                            activeTemplateType === "complaint"
+                              ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                              : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                          }`}
+                        >
+                          <span>📢 Complaint Update</span>
+                          <span className="text-[10px] opacity-80 font-normal">Ticket Resolution</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setActiveTemplateType("payment")}
+                          className={`p-2.5 rounded-xl text-xs font-black transition cursor-pointer border flex flex-col items-center gap-1 ${
+                            activeTemplateType === "payment"
+                              ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                              : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                          }`}
+                        >
+                          <span>💳 Payment Receipt</span>
+                          <span className="text-[10px] opacity-80 font-normal">Rent Confirmation</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setActiveTemplateType("welcome")}
+                          className={`p-2.5 rounded-xl text-xs font-black transition cursor-pointer border flex flex-col items-center gap-1 ${
+                            activeTemplateType === "welcome"
+                              ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                              : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                          }`}
+                        >
+                          <span>🏠 Resident Allotment</span>
+                          <span className="text-[10px] opacity-80 font-normal">Credentials & Wi-Fi</span>
+                        </button>
+                      </div>
+
+                      {/* Variable Insert Helper Bar */}
+                      <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5">
+                        <p className="text-[11px] font-black text-slate-600 uppercase tracking-wider flex items-center gap-1">
+                          <Sparkles className="h-3.5 w-3.5 text-amber-500" /> Click any tag to insert into message template:
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {[
+                            "{customerName}",
+                            "{amount}",
+                            "{invoiceLink}",
+                            "{month}",
+                            "{room}",
+                            "{bed}",
+                            "{building}",
+                            "{upiId}",
+                            "{accountName}",
+                            "{complaintTitle}",
+                            "{status}",
+                            "{adminComment}",
+                            "{amountPaid}",
+                            "{invoiceNo}",
+                            "{paymentDate}",
+                            "{customerId}",
+                            "{customerPassword}",
+                            "{adminPhone}",
+                            "{wardenPhone}",
+                          ].map((tag) => (
+                            <button
+                              key={tag}
+                              type="button"
+                              onClick={() => {
+                                const currentKey =
+                                  activeTemplateType === "invoice"
+                                    ? "invoiceMessage"
+                                    : activeTemplateType === "complaint"
+                                      ? "complaintUpdateMessage"
+                                      : activeTemplateType === "payment"
+                                        ? "paymentConfirmationMessage"
+                                        : "welcomeAllotmentMessage";
+                                setWaTemplates({
+                                  ...waTemplates,
+                                  [currentKey]: (waTemplates[currentKey] || "") + " " + tag,
+                                });
+                                showToast(`Inserted ${tag}`, "info");
+                              }}
+                              className="px-2 py-1 rounded-lg bg-white border border-slate-300 hover:border-emerald-500 hover:bg-emerald-50 text-[11px] font-mono font-bold text-slate-700 transition cursor-pointer active:scale-95"
+                            >
+                              + {tag}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Template Editor Grid (Editor + Live Phone Preview) */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {/* Editor Box */}
+                        <div className="space-y-2">
+                          <label className="block text-xs font-black text-slate-800 uppercase tracking-wider">
+                            Template Text (Supports *bold*, _italics_, `code`)
+                          </label>
+                          <textarea
+                            rows={12}
+                            value={
+                              activeTemplateType === "invoice"
+                                ? waTemplates.invoiceMessage
+                                : activeTemplateType === "complaint"
+                                  ? waTemplates.complaintUpdateMessage
+                                  : activeTemplateType === "payment"
+                                    ? waTemplates.paymentConfirmationMessage
+                                    : waTemplates.welcomeAllotmentMessage
+                            }
+                            onChange={(e) => {
+                              const currentKey =
+                                activeTemplateType === "invoice"
+                                  ? "invoiceMessage"
+                                  : activeTemplateType === "complaint"
+                                    ? "complaintUpdateMessage"
+                                    : activeTemplateType === "payment"
+                                      ? "paymentConfirmationMessage"
+                                      : "welcomeAllotmentMessage";
+                              setWaTemplates({
+                                ...waTemplates,
+                                [currentKey]: e.target.value,
+                              });
+                            }}
+                            className="w-full rounded-2xl bg-white border border-slate-300 p-3.5 text-xs font-mono text-slate-900 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 leading-relaxed resize-y"
+                          />
+                        </div>
+
+                        {/* Live Phone Preview */}
+                        <div className="space-y-2">
+                          <label className="block text-xs font-black text-slate-800 uppercase tracking-wider flex items-center justify-between">
+                            <span>📱 Resident Live WhatsApp Preview</span>
+                            <span className="text-[10px] text-slate-400 lowercase">sample view</span>
+                          </label>
+                          <div className="rounded-2xl bg-[#EFEAE2] p-4 border border-slate-300 min-h-[260px] flex flex-col justify-start">
+                            <div className="max-w-[95%] bg-white rounded-2xl rounded-tl-xs p-3.5 shadow-sm text-xs text-slate-800 space-y-1 whitespace-pre-wrap font-sans leading-relaxed border border-slate-200/60">
+                              {(() => {
+                                const raw =
+                                  activeTemplateType === "invoice"
+                                    ? waTemplates.invoiceMessage
+                                    : activeTemplateType === "complaint"
+                                      ? waTemplates.complaintUpdateMessage
+                                      : activeTemplateType === "payment"
+                                        ? waTemplates.paymentConfirmationMessage
+                                        : waTemplates.welcomeAllotmentMessage;
+                                return (raw || "")
+                                  .replace(/\{customerName\}/g, "Rahul Sharma")
+                                  .replace(/\{residentName\}/g, "Rahul Sharma")
+                                  .replace(/\{amount\}/g, "8,500")
+                                  .replace(/\{amountPaid\}/g, "8,500")
+                                  .replace(/\{rentAmount\}/g, "8,500")
+                                  .replace(/\{month\}/g, "August 2026")
+                                  .replace(/\{room\}/g, "204")
+                                  .replace(/\{bed\}/g, "Bed B")
+                                  .replace(/\{building\}/g, "Wakad Luxury Branch")
+                                  .replace(/\{invoiceLink\}/g, "https://shripadpg.pages.dev/my-rooms")
+                                  .replace(/\{upiId\}/g, "shripadpg@okaxis")
+                                  .replace(/\{accountName\}/g, "Shripad PG Services")
+                                  .replace(/\{complaintTitle\}/g, "Wi-Fi Speed Low in Room 204")
+                                  .replace(/\{category\}/g, "WI-FI")
+                                  .replace(/\{status\}/g, "IN PROGRESS")
+                                  .replace(/\{adminComment\}/g, "Technician scheduled for visit at 4 PM.")
+                                  .replace(/\{invoiceNo\}/g, "REC-948210")
+                                  .replace(/\{paymentDate\}/g, "16/08/2026")
+                                  .replace(/\{paymentMode\}/g, "ONLINE UPI")
+                                  .replace(/\{customerId\}/g, "CUST-987654")
+                                  .replace(/\{phone\}/g, "9876543210")
+                                  .replace(/\{customerPassword\}/g, "shripad@2026")
+                                  .replace(/\{adminPhone\}/g, "+91 98765 43210")
+                                  .replace(/\{wardenPhone\}/g, "+91 98765 00000");
+                              })()}
+                            </div>
+                            <span className="text-[10px] text-slate-500 self-end mt-1 font-mono">12:30 PM ✓✓</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center justify-between pt-3 border-t border-slate-200">
+                        <button
+                          type="button"
+                          onClick={handleResetWhatsAppTemplates}
+                          className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
+                        >
+                          🔄 Reset to System Defaults
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleSaveWhatsAppTemplates}
+                          disabled={isSavingWaTemplates}
+                          className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-black text-xs transition cursor-pointer shadow-md active:scale-95 flex items-center gap-2"
+                        >
+                          <Save className="h-4 w-4" />
+                          <span>{isSavingWaTemplates ? "Saving Changes..." : "Save All Templates"}</span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              )}
+
+              {/* TAB 3: INTERACTIVE LOCATION CHATBOT */}
+              {waModalTab === "chatbot" && (
+                <div className="space-y-5">
+                  {isLoadingWaTemplates ? (
+                    <div className="p-12 text-center text-slate-500 font-bold text-sm">
+                      <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-emerald-600" />
+                      Loading chatbot configuration...
+                    </div>
+                  ) : waTemplates ? (
+                    <div className="space-y-5">
+                      {/* Chatbot Master Switch */}
+                      <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-xs">
+                            <Bot className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-black text-slate-900">Interactive Location-Based WhatsApp Chatbot</h4>
+                            <p className="text-xs text-slate-600 font-medium">
+                              Auto-replies when customers message "hii", "wakad", "chinchwad", "hinjewadi", etc. with branch details.
+                            </p>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => setWaTemplates({ ...waTemplates, chatbotEnabled: !waTemplates.chatbotEnabled })}
+                          className={`px-4 py-2 rounded-full text-xs font-black transition cursor-pointer shadow-xs ${
+                            waTemplates.chatbotEnabled
+                              ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                              : "bg-slate-300 text-slate-700 hover:bg-slate-400"
+                          }`}
+                        >
+                          {waTemplates.chatbotEnabled ? "🟢 Chatbot ACTIVE" : "⏸️ Chatbot DISABLED"}
+                        </button>
+                      </div>
+
+                      {/* 1. Greeting Auto-Reply Message */}
+                      <div className="space-y-2 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                        <label className="block text-xs font-black text-slate-900 uppercase tracking-wider flex items-center justify-between">
+                          <span>1. Greeting & Welcome Message (Triggered on "hii", "hello", "pg")</span>
+                          <span className="text-[11px] text-emerald-700 font-mono">Use tag: &#123;locationsList&#125;</span>
+                        </label>
+                        <textarea
+                          rows={4}
+                          value={waTemplates.chatbotGreetingMessage}
+                          onChange={(e) => setWaTemplates({ ...waTemplates, chatbotGreetingMessage: e.target.value })}
+                          className="w-full rounded-xl bg-white border border-slate-300 p-3 text-xs font-mono text-slate-900 outline-none focus:border-emerald-600 leading-relaxed"
+                          placeholder="Greeting message..."
+                        />
+                      </div>
+
+                      {/* 2. PG Location Branches Manager */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                              <MapPin className="h-4 w-4 text-emerald-600" />
+                              2. Configured PG Branches & Auto-Reply Locations ({waTemplates.chatbotLocations?.length || 0})
+                            </h4>
+                            <p className="text-[11px] text-slate-500">
+                              When customer texts the area name or number, bot automatically replies with these details.
+                            </p>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingBranch({
+                                id: String(Date.now()),
+                                name: "",
+                                keyword: "",
+                                address: "",
+                                rooms: "1, 2, 3 Sharing",
+                                rentRange: "₹7,000 - ₹12,000 / month",
+                                amenities: "Food (3 Times), WiFi, Washing Machine, Geyser, Cleaning",
+                                mapLink: "https://maps.google.com",
+                                contactPhone: "+91 98765 43210",
+                              });
+                              setIsBranchModalOpen(true);
+                            }}
+                            className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition cursor-pointer shadow-sm flex items-center gap-1.5"
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                            <span>Add New Location</span>
+                          </button>
+                        </div>
+
+                        {/* Location Cards Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {waTemplates.chatbotLocations?.map((branch, idx) => (
+                            <div key={branch.id || idx} className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-2 relative group hover:border-emerald-400 transition">
+                              <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-2">
+                                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800 text-xs font-black">
+                                    {idx + 1}
+                                  </span>
+                                  <div>
+                                    <h5 className="text-xs font-black text-slate-900">{branch.name}</h5>
+                                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold">
+                                      Trigger: "{branch.keyword}"
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setEditingBranch({ ...branch });
+                                      setIsBranchModalOpen(true);
+                                    }}
+                                    className="p-1.5 text-slate-400 hover:text-blue-600 rounded-lg transition cursor-pointer"
+                                    title="Edit Branch Details"
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteBranch(branch.id)}
+                                    className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg transition cursor-pointer"
+                                    title="Delete Branch"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div className="text-[11px] text-slate-600 space-y-1 pt-1 border-t border-slate-100">
+                                <p><strong className="text-slate-800">📍 Address:</strong> {branch.address}</p>
+                                <p><strong className="text-slate-800">🛏️ Rooms:</strong> {branch.rooms}</p>
+                                <p><strong className="text-slate-800">💰 Rent:</strong> {branch.rentRange}</p>
+                                <p><strong className="text-slate-800">✨ Amenities:</strong> {branch.amenities}</p>
+                                <p><strong className="text-slate-800">📞 Phone:</strong> {branch.contactPhone}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* 3. Fallback / Default Reply */}
+                      <div className="space-y-2 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                        <label className="block text-xs font-black text-slate-900 uppercase tracking-wider">
+                          3. Default / General Help Reply (When user asks unlisted question)
+                        </label>
+                        <textarea
+                          rows={3}
+                          value={waTemplates.chatbotDefaultReply}
+                          onChange={(e) => setWaTemplates({ ...waTemplates, chatbotDefaultReply: e.target.value })}
+                          className="w-full rounded-xl bg-white border border-slate-300 p-3 text-xs font-mono text-slate-900 outline-none focus:border-emerald-600 leading-relaxed"
+                          placeholder="Default auto-reply..."
+                        />
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center justify-between pt-3 border-t border-slate-200">
+                        <button
+                          type="button"
+                          onClick={handleResetWhatsAppTemplates}
+                          className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
+                        >
+                          🔄 Reset to System Defaults
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleSaveWhatsAppTemplates}
+                          disabled={isSavingWaTemplates}
+                          className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-black text-xs transition cursor-pointer shadow-md active:scale-95 flex items-center gap-2"
+                        >
+                          <Save className="h-4 w-4" />
+                          <span>{isSavingWaTemplates ? "Saving Changes..." : "Save Chatbot Settings"}</span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* LOCATION BRANCH EDIT / CREATE SUB-MODAL */}
+      {isBranchModalOpen && editingBranch && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in" onClick={() => setIsBranchModalOpen(false)}>
+          <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200 p-5 sm:p-6 space-y-4 animate-in zoom-in-95" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-emerald-600" />
+                <span>{editingBranch.name ? "Edit Branch Location" : "Add New PG Location"}</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsBranchModalOpen(false)}
+                className="p-1 rounded-full text-slate-400 hover:bg-slate-100 transition"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Modal Body */}
-            <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5">
-              {/* Connection Status Card */}
-              <div className={`p-4 sm:p-5 rounded-2xl border-2 space-y-3 ${
-                whatsappStatus?.connected
-                  ? "bg-emerald-50/70 border-emerald-300"
-                  : "bg-amber-50/70 border-amber-300"
-              }`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{whatsappStatus?.connected ? "🟢" : "📱"}</span>
-                    <div>
-                      <h4 className="text-sm font-black text-slate-900">
-                        {whatsappStatus?.connected
-                          ? "WhatsApp Multi-Device Engine Connected"
-                          : "WhatsApp Authentication Required"}
-                      </h4>
-                      <p className="text-xs text-slate-600 font-medium mt-0.5">
-                        {whatsappStatus?.connected
-                          ? "Auto-dispatch is ACTIVE for room allotments, rent receipts, and complaints."
-                          : "Start the session below or scan the QR code to link your PG Admin WhatsApp number."}
-                      </p>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={fetchWhatsAppStatus}
-                    disabled={isCheckingWhatsApp}
-                    className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-xs font-black text-slate-700 transition cursor-pointer shadow-2xs"
-                  >
-                    {isCheckingWhatsApp ? "Checking..." : "🔄 Refresh"}
-                  </button>
+            <div className="space-y-3 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Branch Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Wakad Luxury Branch"
+                    value={editingBranch.name}
+                    onChange={(e) => setEditingBranch({ ...editingBranch, name: e.target.value })}
+                    className="w-full rounded-xl bg-slate-50 border border-slate-200 p-2.5 font-bold text-slate-900 outline-none focus:border-emerald-600"
+                  />
                 </div>
-
-                {/* QR Code Container or Session Starter */}
-                {!whatsappStatus?.connected && (
-                  <div className="pt-3 border-t border-amber-200/80 flex flex-col sm:flex-row items-center justify-between gap-3">
-                    <div className="text-xs font-semibold text-slate-700">
-                      <span>Engine Status: </span>
-                      <span className="font-mono font-black text-amber-900">{whatsappStatus?.status || "DISCONNECTED"}</span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={handleStartWhatsAppSession}
-                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition cursor-pointer shadow-sm active:scale-95"
-                      >
-                        ⚡ Start Session & Get QR
-                      </button>
-                      <a
-                        href="http://localhost:2886"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black transition cursor-pointer shadow-sm"
-                      >
-                        Open Dashboard (Port 2886) ↗
-                      </a>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Automated Workflows Enabled */}
-              <div className="space-y-2">
-                <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider">Automated WhatsApp Workflows</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-xs font-black text-slate-900">Room Allotment</p>
-                      <p className="text-[11px] text-slate-500">Auto-sends ID, Password, Wi-Fi to new resident</p>
-                    </div>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-xs font-black text-slate-900">Service Complaints</p>
-                      <p className="text-[11px] text-slate-500">Notifies resident on status update & warden notes</p>
-                    </div>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-xs font-black text-slate-900">Payment Receipts</p>
-                      <p className="text-[11px] text-slate-500">Dispatches instant confirmation with Txn ID</p>
-                    </div>
-                  </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Trigger Keyword *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. wakad"
+                    value={editingBranch.keyword}
+                    onChange={(e) => setEditingBranch({ ...editingBranch, keyword: e.target.value.toLowerCase().trim() })}
+                    className="w-full rounded-xl bg-slate-50 border border-slate-200 p-2.5 font-mono font-bold text-slate-900 outline-none focus:border-emerald-600"
+                  />
                 </div>
               </div>
 
-              {/* Instant WhatsApp Test Message Box */}
-              <form onSubmit={handleSendWhatsAppTest} className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
-                <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                  <span>🚀</span> Send Test / Custom WhatsApp Message
-                </h4>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Target Phone Number *</label>
-                    <input
-                      type="tel"
-                      required
-                      placeholder="e.g. 9876543210"
-                      value={waTestPhone}
-                      onChange={(e) => setWaTestPhone(e.target.value)}
-                      className="w-full rounded-xl bg-white border border-slate-200 p-2.5 text-xs font-bold text-slate-900 outline-none focus:border-emerald-600"
-                    />
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Message Text *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Message content..."
-                      value={waTestMessage}
-                      onChange={(e) => setWaTestMessage(e.target.value)}
-                      className="w-full rounded-xl bg-white border border-slate-200 p-2.5 text-xs font-medium text-slate-900 outline-none focus:border-emerald-600"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end pt-1">
-                  <button
-                    type="submit"
-                    disabled={isSendingWaTest}
-                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-black text-xs transition cursor-pointer shadow-md active:scale-95 flex items-center gap-2"
-                  >
-                    <span>{isSendingWaTest ? "Sending..." : "Send Test WhatsApp"}</span>
-                    <span>📨</span>
-                  </button>
-                </div>
-              </form>
-
-              {/* Quick CLI Start Instructions */}
-              <div className="p-3.5 rounded-2xl bg-slate-900 text-slate-200 text-xs space-y-1.5 font-mono">
-                <p className="text-emerald-400 font-bold text-[11px]"># Run OpenWA Baileys engine locally:</p>
-                <p className="text-slate-300">cd openwa && npm run dev</p>
-                <p className="text-[10px] text-slate-400 font-sans mt-1">
-                  OpenWA Dashboard running at <a href="http://localhost:2886" target="_blank" rel="noopener noreferrer" className="text-emerald-400 underline">http://localhost:2886</a>
-                </p>
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Full Address / Landmark *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Near Dutta Mandir & Phoenix Mall, Wakad, Pune"
+                  value={editingBranch.address}
+                  onChange={(e) => setEditingBranch({ ...editingBranch, address: e.target.value })}
+                  className="w-full rounded-xl bg-slate-50 border border-slate-200 p-2.5 font-medium text-slate-900 outline-none focus:border-emerald-600"
+                />
               </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Room Sharing Types *</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 1, 2, 3 Sharing AC & Non-AC"
+                    value={editingBranch.rooms}
+                    onChange={(e) => setEditingBranch({ ...editingBranch, rooms: e.target.value })}
+                    className="w-full rounded-xl bg-slate-50 border border-slate-200 p-2.5 font-medium text-slate-900 outline-none focus:border-emerald-600"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Monthly Rent Range *</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. ₹7,000 - ₹12,500 / month"
+                    value={editingBranch.rentRange}
+                    onChange={(e) => setEditingBranch({ ...editingBranch, rentRange: e.target.value })}
+                    className="w-full rounded-xl bg-slate-50 border border-slate-200 p-2.5 font-medium text-slate-900 outline-none focus:border-emerald-600"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Included Amenities</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 3-Time Food, 200Mbps Wi-Fi, RO Water, Auto Washing Machine, Daily Cleaning"
+                  value={editingBranch.amenities}
+                  onChange={(e) => setEditingBranch({ ...editingBranch, amenities: e.target.value })}
+                  className="w-full rounded-xl bg-slate-50 border border-slate-200 p-2.5 font-medium text-slate-900 outline-none focus:border-emerald-600"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Google Maps Link</label>
+                  <input
+                    type="url"
+                    placeholder="https://maps.google.com/?q=..."
+                    value={editingBranch.mapLink}
+                    onChange={(e) => setEditingBranch({ ...editingBranch, mapLink: e.target.value })}
+                    className="w-full rounded-xl bg-slate-50 border border-slate-200 p-2.5 font-mono text-[11px] text-slate-900 outline-none focus:border-emerald-600"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Manager Phone *</label>
+                  <input
+                    type="tel"
+                    placeholder="e.g. +91 98765 43210"
+                    value={editingBranch.contactPhone}
+                    onChange={(e) => setEditingBranch({ ...editingBranch, contactPhone: e.target.value })}
+                    className="w-full rounded-xl bg-slate-50 border border-slate-200 p-2.5 font-bold text-slate-900 outline-none focus:border-emerald-600"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setIsBranchModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSaveBranch(editingBranch)}
+                className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition cursor-pointer shadow-md active:scale-95"
+              >
+                Save Branch
+              </button>
             </div>
           </div>
         </div>

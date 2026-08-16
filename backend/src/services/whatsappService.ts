@@ -1,4 +1,6 @@
 import axios from "axios";
+import { WhatsAppTemplateModel, LocationBranch } from "../models/whatsappTemplateModel.js";
+import { SettingsModel } from "../models/settingsModel.js";
 
 export interface SendWhatsAppTextOptions {
   phone: string;
@@ -24,6 +26,20 @@ export interface ComplaintUpdateDetails {
   category: string;
   status: "pending" | "in_progress" | "resolved";
   adminComment?: string;
+  building?: string;
+  room?: string;
+}
+
+export interface InvoiceNotificationDetails {
+  customerName: string;
+  phone: string;
+  invoiceNo: string;
+  amount: number;
+  month: string;
+  room: string;
+  bed?: string;
+  building?: string;
+  invoiceLink?: string;
 }
 
 export class WhatsAppService {
@@ -175,65 +191,69 @@ export class WhatsAppService {
   }
 
   /**
-   * Automated Trigger: Send Room Allotment Welcome Message & Credentials
+   * Automated Trigger: Send Room Allotment Welcome Message & Credentials using Customizable Template
    */
   public static async sendAllotmentMessage(details: ResidentAllotmentDetails): Promise<{ success: boolean; error?: string }> {
-    const message = `🏠 *Welcome to Shripad PG!* 🎉
-Dear *${details.name}*, your room has been successfully allocated!
+    try {
+      const templates = await WhatsAppTemplateModel.getTemplates();
+      const settings = await SettingsModel.getPaymentSettings();
 
-🏢 *Building:* ${details.building}
-🚪 *Room Number:* ${details.room}
-🛏️ *Bed:* ${details.bed}
-💰 *Monthly Rent:* ₹${details.rentAmount?.toLocaleString("en-IN") || "0"}
+      const message = WhatsAppTemplateModel.interpolate(templates.welcomeAllotmentMessage, {
+        customerName: details.name,
+        phone: details.phone,
+        building: details.building,
+        room: details.room,
+        bed: details.bed,
+        rentAmount: details.rentAmount?.toLocaleString("en-IN") || "0",
+        depositAmount: details.depositAmount?.toLocaleString("en-IN") || "0",
+        customerId: details.customerId,
+        customerPassword: details.customerPassword,
+        adminPhone: settings.adminPhone || "+91 98765 43210",
+        wardenPhone: settings.wardenPhone || "+91 98765 00000",
+      });
 
-🔐 *Your Resident Login Credentials:*
-• *Customer ID / Phone:* \`${details.customerId}\` or \`${details.phone}\`
-• *Password:* \`${details.customerPassword}\`
-
-📶 *High-Speed PG Wi-Fi:*
-• *SSID:* ShripadPG_HighSpeed
-• *Password:* pgwifi@2026
-
-📲 *Resident Portal:*
-https://shripadpg.pages.dev/login
-Login to view invoices, download payment receipts, and submit service requests.
-
-_Need assistance? Contact our PG Warden / Office directly._`;
-
-    return this.sendTextMessage(details.phone, message);
+      return this.sendTextMessage(details.phone, message);
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
   }
 
   /**
-   * Automated Trigger: Send Complaint Status Update Notification
+   * Automated Trigger: Send Complaint Status Update Notification using Customizable Template
    */
   public static async sendComplaintStatusUpdate(details: ComplaintUpdateDetails): Promise<{ success: boolean; error?: string }> {
-    const statusEmoji =
-      details.status === "resolved"
-        ? "✅ *RESOLVED*"
-        : details.status === "in_progress"
-          ? "🔄 *IN PROGRESS (BEING WORKED ON)*"
-          : "⏳ *PENDING REVIEW*";
+    try {
+      const templates = await WhatsAppTemplateModel.getTemplates();
+      const settings = await SettingsModel.getPaymentSettings();
 
-    const noteText = details.adminComment?.trim() ? `\n\n💬 *Warden / Admin Response:*\n_"${details.adminComment}"_` : "";
+      const statusEmoji =
+        details.status === "resolved"
+          ? "✅ RESOLVED"
+          : details.status === "in_progress"
+            ? "🔄 IN PROGRESS"
+            : "⏳ PENDING REVIEW";
 
-    const message = `📢 *Shripad PG — Service Request Update*
-Dear *${details.residentName}*,
+      const message = WhatsAppTemplateModel.interpolate(templates.complaintUpdateMessage, {
+        residentName: details.residentName,
+        phone: details.phone,
+        complaintTitle: details.title,
+        category: (details.category || "General").toUpperCase(),
+        status: statusEmoji,
+        adminComment: details.adminComment?.trim() || "Your request is under review.",
+        building: details.building || "Assigned PG",
+        room: details.room || "Room Unit",
+        wardenPhone: settings.wardenPhone || "+91 98765 00000",
+        adminPhone: settings.adminPhone || "+91 98765 43210",
+      });
 
-Regarding your registered service request:
-📌 *Issue:* *${details.title}*
-🏷️ *Category:* ${details.category.toUpperCase()}
-📊 *Current Status:* ${statusEmoji}${noteText}
-
-Track your complaint in real-time on your resident portal:
-https://shripadpg.pages.dev/login
-
-_Thank you for your patience!_`;
-
-    return this.sendTextMessage(details.phone, message);
+      return this.sendTextMessage(details.phone, message);
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
   }
 
   /**
-   * Automated Trigger: Send Rent Payment Verification Receipt
+   * Automated Trigger: Send Rent Payment Verification Receipt using Customizable Template
    */
   public static async sendPaymentReceiptNotification(payload: {
     residentName: string;
@@ -242,22 +262,147 @@ _Thank you for your patience!_`;
     txnId?: string;
     month?: string;
     date?: string;
+    room?: string;
+    bed?: string;
+    building?: string;
+    paymentMode?: string;
   }): Promise<{ success: boolean; error?: string }> {
-    const message = `🧾 *Shripad PG — Rent Payment Confirmation*
-Dear *${payload.residentName}*,
+    try {
+      const templates = await WhatsAppTemplateModel.getTemplates();
 
-We have successfully verified your rent payment! 🎉
+      const message = WhatsAppTemplateModel.interpolate(templates.paymentConfirmationMessage, {
+        customerName: payload.residentName,
+        phone: payload.phone,
+        amountPaid: payload.amount.toLocaleString("en-IN"),
+        invoiceNo: payload.txnId || "REC-" + Date.now().toString().slice(-6),
+        building: payload.building || "Shripad PG",
+        room: payload.room || "-",
+        bed: payload.bed || "-",
+        paymentDate: payload.date || new Date().toLocaleDateString("en-IN"),
+        paymentMode: (payload.paymentMode || "Online UPI / Verified").toUpperCase(),
+      });
 
-💰 *Amount Received:* ₹${payload.amount.toLocaleString("en-IN")}
-🔢 *Transaction ID:* ${payload.txnId || "Cash / Verified"}
-📅 *Payment Date:* ${payload.date || new Date().toLocaleDateString("en-IN")}
-📊 *Status:* Official Receipt Generated ✅
+      return this.sendTextMessage(payload.phone, message);
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  }
 
-You can download your complete PDF tax receipt from your resident portal:
-https://shripadpg.pages.dev/login
+  /**
+   * Automated Trigger: Send Official PDF Invoice Notification with Link
+   */
+  public static async sendInvoiceNotification(details: InvoiceNotificationDetails): Promise<{ success: boolean; error?: string }> {
+    try {
+      const templates = await WhatsAppTemplateModel.getTemplates();
+      const settings = await SettingsModel.getPaymentSettings();
 
-_Thank you for paying your rent on time!_`;
+      const fallbackLink = `https://shripadpg.pages.dev/my-rooms`;
+      const invoiceLink = details.invoiceLink || fallbackLink;
 
-    return this.sendTextMessage(payload.phone, message);
+      const message = WhatsAppTemplateModel.interpolate(templates.invoiceMessage, {
+        customerName: details.customerName,
+        phone: details.phone,
+        invoiceNo: details.invoiceNo,
+        amount: details.amount.toLocaleString("en-IN"),
+        month: details.month || "Current Month",
+        room: details.room || "-",
+        bed: details.bed || "A",
+        building: details.building || "Shripad PG",
+        invoiceLink: invoiceLink,
+        upiId: settings.upiId || "shripadpg@okaxis",
+        accountName: settings.accountName || "Shripad PG Services",
+        bankName: settings.bankName || "Axis Bank Ltd",
+        accountNo: settings.accountNo || "924020058192041",
+        ifscCode: settings.ifscCode || "UTIB0001824",
+      });
+
+      return this.sendTextMessage(details.phone, message);
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  }
+
+  /**
+   * 🤖 Inbound Webhook Chatbot Engine:
+   * Process customer incoming WhatsApp text ("hii", "wakad", "chinchwad", etc.) and auto-reply!
+   */
+  public static async handleInboundChatbot(senderJid: string, messageBody: string): Promise<void> {
+    try {
+      const templates = await WhatsAppTemplateModel.getTemplates();
+      if (!templates.chatbotEnabled) return;
+
+      const cleanPhone = senderJid.replace(/@.*$/, "");
+      const text = (messageBody || "").trim().toLowerCase();
+      if (!text) return;
+
+      const locations = templates.chatbotLocations || [];
+
+      // 1. Check for Greeting Keywords
+      const greetingKeywords = ["hi", "hii", "hiii", "hello", "hey", "namaste", "start", "menu", "help", "pg", "rooms", "branch", "branches", "info"];
+      const isGreeting = greetingKeywords.some(g => text === g || text.startsWith(g + " "));
+
+      if (isGreeting) {
+        // Construct Numbered Locations List
+        const locationsList = locations
+          .map((loc, idx) => `${idx + 1}️⃣ *${loc.name}* (${loc.keyword.toUpperCase()})\n   📍 _${loc.address}_`)
+          .join("\n\n");
+
+        const reply = WhatsAppTemplateModel.interpolate(templates.chatbotGreetingMessage, {
+          locationsList: locationsList || "1️⃣ Wakad Branch\n2️⃣ Chinchwad Branch\n3️⃣ Hinjewadi Branch\n4️⃣ Baner Branch",
+        });
+
+        await this.sendTextMessage(cleanPhone, reply);
+        return;
+      }
+
+      // 2. Check for Specific Location Match (by number or keyword)
+      let matchedBranch: LocationBranch | undefined;
+
+      // Match by number (e.g. "1", "2")
+      const num = parseInt(text, 10);
+      if (!isNaN(num) && num >= 1 && num <= locations.length) {
+        matchedBranch = locations[num - 1];
+      }
+
+      // Match by keyword in text (e.g. "wakad", "chinchwad", "hinjewadi", "baner")
+      if (!matchedBranch) {
+        matchedBranch = locations.find(loc => {
+          const kw = (loc.keyword || "").toLowerCase();
+          const nm = (loc.name || "").toLowerCase();
+          return text.includes(kw) || text.includes(nm);
+        });
+      }
+
+      if (matchedBranch) {
+        const branchReply = `🏢 *${matchedBranch.name}* 📍
+📌 *Address:* ${matchedBranch.address}
+
+🛏️ *Available Room Sharing:*
+${matchedBranch.rooms}
+
+💰 *Monthly Rent Range:*
+*${matchedBranch.rentRange}*
+
+✨ *Included Amenities:*
+${matchedBranch.amenities}
+
+🗺️ *Google Maps Location Link:*
+${matchedBranch.mapLink}
+
+📞 *Branch Manager Contact for Visits:*
+*${matchedBranch.contactPhone}*
+
+_To view another location, reply with *HII* or the Area Name._`;
+
+        await this.sendTextMessage(cleanPhone, branchReply);
+        return;
+      }
+
+      // 3. Fallback Reply for general queries
+      const defaultReply = templates.chatbotDefaultReply || `👋 Thank you for reaching out to *Shripad Luxury PG*! 🏢\n\nReply with *HII* to view all PG branches and pricing, or call *+91 98765 43210*.`;
+      await this.sendTextMessage(cleanPhone, defaultReply);
+    } catch (err: any) {
+      console.warn("Chatbot auto-reply notice:", err.message);
+    }
   }
 }

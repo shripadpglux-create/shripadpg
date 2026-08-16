@@ -9,4 +9,9 @@ router.post("/start", WhatsAppController.startSession);
 router.post("/send-text", WhatsAppController.sendTextMessage);
 router.post("/webhook", WhatsAppController.handleWebhook);
 
+// Template & Location Chatbot Routes
+router.get("/templates", WhatsAppController.getTemplates);
+router.put("/templates", WhatsAppController.updateTemplates);
+router.post("/templates/reset", WhatsAppController.resetTemplates);
+
 export default router;

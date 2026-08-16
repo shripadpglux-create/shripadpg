@@ -132,9 +132,26 @@ const settingSchema = new Schema(
   { timestamps: true, strict: true, versionKey: false, minimize: true }
 );
 
+// 7. WhatsApp Templates & Chatbot Mongoose Schema
+const whatsAppTemplateSchema = new Schema(
+  {
+    id: { type: String, default: "global_whatsapp_templates", unique: true, index: true },
+    invoiceMessage: { type: String, default: "" },
+    complaintUpdateMessage: { type: String, default: "" },
+    paymentConfirmationMessage: { type: String, default: "" },
+    welcomeAllotmentMessage: { type: String, default: "" },
+    chatbotEnabled: { type: Boolean, default: true },
+    chatbotGreetingMessage: { type: String, default: "" },
+    chatbotLocations: { type: Array, default: [] },
+    chatbotDefaultReply: { type: String, default: "" },
+  },
+  { timestamps: true, strict: true, versionKey: false, minimize: true }
+);
+
 export const BookingMongoModel = mongoose.models.Booking || mongoose.model("Booking", bookingSchema);
 export const BuildingMongoModel = mongoose.models.Building || mongoose.model("Building", buildingSchema);
 export const StaffMongoModel = mongoose.models.Staff || mongoose.model("Staff", staffSchema);
 export const ExpenseMongoModel = mongoose.models.Expense || mongoose.model("Expense", expenseSchema);
 export const InvoiceMongoModel = mongoose.models.Invoice || mongoose.model("Invoice", invoiceSchema);
 export const SettingMongoModel = mongoose.models.Setting || mongoose.model("Setting", settingSchema);
+export const WhatsAppTemplateMongoModel = mongoose.models.WhatsAppTemplate || mongoose.model("WhatsAppTemplate", whatsAppTemplateSchema);

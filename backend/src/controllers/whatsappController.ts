@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { WhatsAppService } from "../services/whatsappService.js";
+import { WhatsAppTemplateModel } from "../models/whatsappTemplateModel.js";
 
 export class WhatsAppController {
   /**
@@ -60,18 +61,78 @@ export class WhatsAppController {
   }
 
   /**
+   * GET /api/whatsapp/templates
+   * Fetch all editable WhatsApp notification templates & chatbot configuration
+   */
+  public static async getTemplates(req: Request, res: Response) {
+    try {
+      const templates = await WhatsAppTemplateModel.getTemplates();
+      res.json({ success: true, templates });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: "Failed to get templates", error: error.message });
+    }
+  }
+
+  /**
+   * PUT /api/whatsapp/templates
+   * Update WhatsApp notification templates & chatbot branch configurations
+   */
+  public static async updateTemplates(req: Request, res: Response) {
+    try {
+      const updated = req.body;
+      const saved = await WhatsAppTemplateModel.saveTemplates(updated);
+      res.json({ success: true, message: "WhatsApp templates saved successfully.", templates: saved });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: "Failed to update templates", error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/whatsapp/templates/reset
+   * Reset all templates to system defaults
+   */
+  public static async resetTemplates(req: Request, res: Response) {
+    try {
+      const reset = await WhatsAppTemplateModel.resetTemplates();
+      res.json({ success: true, message: "Templates reset to defaults.", templates: reset });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: "Failed to reset templates", error: error.message });
+    }
+  }
+
+  /**
    * POST /api/whatsapp/webhook
-   * Inbound webhook receiver for incoming resident messages / status changes
+   * Inbound webhook receiver for incoming resident messages / location chatbot queries
    */
   public static async handleWebhook(req: Request, res: Response) {
     try {
       const payload = req.body;
-      console.log("Inbound WhatsApp Webhook payload:", JSON.stringify(payload).substring(0, 200));
-
-      // Acknowledge webhook immediately
+      // Immediate 200 OK acknowledgement to OpenWA
       res.status(200).json({ success: true, received: true });
+
+      // Check event and message payload
+      const event = payload?.event || payload?.type;
+      const data = payload?.data || payload?.payload || payload;
+
+      // Extract message attributes
+      const fromMe = data?.fromMe || data?.key?.fromMe || false;
+      if (fromMe) return; // Don't reply to bot's own outbound messages
+
+      const sender = data?.from || data?.sender || data?.key?.remoteJid || "";
+      const messageBody =
+        data?.body ||
+        data?.text ||
+        data?.message?.conversation ||
+        data?.message?.extendedTextMessage?.text ||
+        "";
+
+      if (sender && messageBody && typeof messageBody === "string") {
+        console.log(`[Chatbot Inbound] From: ${sender} | Message: "${messageBody}"`);
+        // Process interactive chatbot menu & location branch details
+        void WhatsAppService.handleInboundChatbot(sender, messageBody);
+      }
     } catch (error: any) {
-      res.status(200).json({ success: true });
+      console.warn("Webhook processing notice:", error.message);
     }
   }
 }
