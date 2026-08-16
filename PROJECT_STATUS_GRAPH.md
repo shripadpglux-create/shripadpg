@@ -2,6 +2,32 @@
 
 ---
 
+### 📍 Version 8.59 — WhatsApp Message Deduplication, Clean Template Interpolation & Zero-Rent Invoice Sanitization 🧹📱📄
+
+```mermaid
+flowchart TD
+    subgraph PaymentEvent ["Payment Recording & Verification"]
+        PayRecord["Admin logs payment or auto-verified payment"]
+    end
+
+    subgraph SingleReceiptTrigger ["Single Dedicated Payment Receipt Dispatch"]
+        SanitizedRoomBed["Strip redundant 'Room ' & 'Bed ' prefixes<br/>(e.g., 'Room 102 (Bed B)' instead of 'Room Room 102')"]
+        SingleSend["Send ONLY sendPaymentReceiptNotification<br/>(Eliminates duplicate 4-message spam)"]
+        
+        PayRecord --> SanitizedRoomBed --> SingleSend
+    end
+
+    subgraph InvoiceDataClean ["Invoice Data Integrity & Lookup Fallback"]
+        PurgeZero["Purge / Reject zero-rent and blank tenant invoices"]
+        LookupBooking["Auto-populate from Booking record when invoiceNo matches txnId"]
+        
+        PurgeZero --> LiveInvoiceUI["Clean populated invoice editor and table 🌟"]
+        LookupBooking --> LiveInvoiceUI
+    end
+```
+
+---
+
 ### 📍 Version 8.58 — Admin Payment Receipt Modal Component Import & Full Page Link Resolution 🖨️📄⚡
 
 ```mermaid

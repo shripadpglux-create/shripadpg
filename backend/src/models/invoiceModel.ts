@@ -47,26 +47,43 @@ export class InvoiceModel {
   public static async getAll(): Promise<Invoice[]> {
     await this.ensureDataDir();
 
+    let rawInvoices: Invoice[] = [];
+
     if (mongoose.connection.readyState === 1) {
       try {
         const mongoDocs = await InvoiceMongoModel.find({}).lean();
         if (mongoDocs && mongoDocs.length > 0) {
-          const result = mongoDocs as any[];
-          await fs.writeFile(DATA_FILE, JSON.stringify(result, null, 2), "utf-8");
-          return result;
+          rawInvoices = mongoDocs as any[];
         }
       } catch (err) {
         console.warn("MongoDB Atlas fetch warning for invoices:", err);
       }
     }
 
-    try {
-      const data = await fs.readFile(DATA_FILE, "utf-8");
-      return JSON.parse(data);
-    } catch (error) {
-      await this.saveAll(SEED_INVOICES);
-      return SEED_INVOICES;
+    if (rawInvoices.length === 0) {
+      try {
+        const data = await fs.readFile(DATA_FILE, "utf-8");
+        rawInvoices = JSON.parse(data);
+      } catch (error) {
+        rawInvoices = SEED_INVOICES;
+      }
     }
+
+    // Filter out corrupted / blank invoices (e.g. 0 rent and missing tenant name)
+    const validInvoices = rawInvoices.filter(
+      (inv) =>
+        inv.tenantName &&
+        inv.tenantName.trim() !== "" &&
+        inv.tenantName !== "Resident Name" &&
+        ((Number(inv.rentAmount) || 0) > 0 || (Number(inv.paidAmount) || 0) > 0)
+    );
+
+    // If cleaned list is different from raw list, sync back
+    if (validInvoices.length !== rawInvoices.length) {
+      void this.saveAll(validInvoices).catch(() => {});
+    }
+
+    return validInvoices;
   }
 
   public static async saveAll(invoices: Invoice[]): Promise<void> {

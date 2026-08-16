@@ -298,10 +298,43 @@ export function InvoiceDesign({
               if (apiMatch.paidAmount !== undefined) setPaidAmount(apiMatch.paidAmount);
               if (apiMatch.paymentModes) setSelectedModes(apiMatch.paymentModes);
               if (apiMatch.notes) setNotes(apiMatch.notes);
+              return;
             }
           }
+
+          // Fallback: Check resident bookings if invoiceNo is a payment Txn ID
+          return fetch(`${API_BASE_URL}/api/bookings`)
+            .then((r) => r.json())
+            .then((bData) => {
+              if (bData.success && Array.isArray(bData.bookings)) {
+                const bMatch = bData.bookings.find((b: any) => {
+                  if (b.id === targetNo) return true;
+                  return (b.paymentHistory || []).some(
+                    (p: any) => p.transactionId?.toLowerCase() === targetNo.toLowerCase()
+                  );
+                });
+
+                if (bMatch) {
+                  const payMatch = (bMatch.paymentHistory || []).find(
+                    (p: any) => p.transactionId?.toLowerCase() === targetNo.toLowerCase()
+                  );
+                  setTenantName(bMatch.name || "");
+                  setContact(bMatch.phone || "");
+                  if (bMatch.email) setEmail(bMatch.email);
+                  setBuilding(bMatch.allocatedBuilding || bMatch.building || "PG A");
+                  setFloor(bMatch.allocatedFloor !== undefined ? `Floor ${bMatch.allocatedFloor}` : "1st Floor");
+                  setRoom(bMatch.allocatedRoom ? `Room ${bMatch.allocatedRoom}` : "Room 101");
+                  setBed(bMatch.allocatedBed || "Bed A");
+                  const amt = payMatch?.amount || bMatch.rentAmount || 5000;
+                  setRentAmount(amt);
+                  setPaidAmount(amt);
+                  if (payMatch?.paymentDate) setDate(payMatch.paymentDate);
+                  if (payMatch?.paymentMethod) setSelectedModes([payMatch.paymentMethod.toUpperCase()]);
+                }
+              }
+            });
         })
-        .catch((err) => console.warn("Failed fetching specific invoice:", err));
+        .catch((err) => console.warn("Failed fetching specific invoice or booking:", err));
     }
   }, [invoicesList]);
 

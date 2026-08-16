@@ -336,14 +336,17 @@ export class WhatsAppService {
     try {
       const templates = await WhatsAppTemplateModel.getTemplates();
 
+      const cleanRoom = String(payload.room || "-").replace(/^Room\s+/i, "");
+      const cleanBed = String(payload.bed || "-").replace(/^Bed\s+/i, "");
+
       const message = WhatsAppTemplateModel.interpolate(templates.paymentConfirmationMessage, {
         customerName: payload.residentName,
         phone: payload.phone,
         amountPaid: payload.amount.toLocaleString("en-IN"),
         invoiceNo: payload.txnId || "REC-" + Date.now().toString().slice(-6),
         building: payload.building || "Shripad PG",
-        room: payload.room || "-",
-        bed: payload.bed || "-",
+        room: cleanRoom,
+        bed: cleanBed,
         paymentDate: payload.date || new Date().toLocaleDateString("en-IN"),
         paymentMode: (payload.paymentMode || "Online UPI / Verified").toUpperCase(),
       });
@@ -364,6 +367,8 @@ export class WhatsAppService {
 
       const fallbackLink = `https://shripadpg.pages.dev/my-rooms`;
       const invoiceLink = details.invoiceLink || fallbackLink;
+      const cleanRoom = String(details.room || "-").replace(/^Room\s+/i, "");
+      const cleanBed = String(details.bed || "A").replace(/^Bed\s+/i, "");
 
       const message = WhatsAppTemplateModel.interpolate(templates.invoiceMessage, {
         customerName: details.customerName,
@@ -371,8 +376,8 @@ export class WhatsAppService {
         invoiceNo: details.invoiceNo,
         amount: details.amount.toLocaleString("en-IN"),
         month: details.month || "Current Month",
-        room: details.room || "-",
-        bed: details.bed || "A",
+        room: cleanRoom,
+        bed: cleanBed,
         building: details.building || "Shripad PG",
         invoiceLink: invoiceLink,
         upiId: settings.upiId || "shripadpg@okaxis",

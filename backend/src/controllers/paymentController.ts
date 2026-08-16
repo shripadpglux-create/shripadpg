@@ -75,7 +75,7 @@ export class PaymentController {
         });
       }
 
-      // Automated WhatsApp dispatch for rent receipt / invoice notification
+      // Automated WhatsApp dispatch for rent receipt notification
       const residentPhone = result.booking.phone || "";
       if (residentPhone) {
         const mName = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][(result.payment.month || 1) - 1];
@@ -91,18 +91,6 @@ export class PaymentController {
           building: result.booking.allocatedBuilding || result.booking.building || "Shripad PG",
           paymentMode: result.payment.paymentMethod,
         }).catch((err) => console.warn("[WhatsApp Auto-Receipt Notice]:", err.message));
-
-        void WhatsAppService.sendInvoiceNotification({
-          customerName: result.booking.name || payerName || "Resident",
-          phone: residentPhone,
-          invoiceNo: result.payment.transactionId,
-          amount: result.payment.amount,
-          month: `${mName} ${result.payment.year}`,
-          room: result.booking.allocatedRoom ? `Room ${result.booking.allocatedRoom}` : "Room 101",
-          bed: result.booking.allocatedBed || "Bed A",
-          building: result.booking.allocatedBuilding || result.booking.building || "Shripad PG",
-          invoiceLink: `https://shripadpg.pages.dev/invoice?invoiceNo=${result.payment.transactionId}`,
-        }).catch((err) => console.warn("[WhatsApp Auto-Invoice Notice]:", err.message));
       }
 
       res.status(201).json({
@@ -193,18 +181,6 @@ export class PaymentController {
           building: updatedBooking.allocatedBuilding || updatedBooking.building || "Shripad PG",
           paymentMode: paymentRecord.paymentMethod,
         }).catch((err) => console.warn("[WhatsApp Auto-Receipt Notice]:", err.message));
-
-        void WhatsAppService.sendInvoiceNotification({
-          customerName: updatedBooking.name || paymentRecord.payerName || "Resident",
-          phone: updatedBooking.phone,
-          invoiceNo: createdInvoice?.invoiceNo || paymentRecord.transactionId,
-          amount: paymentRecord.amount,
-          month: `${mName} ${paymentRecord.year}`,
-          room: updatedBooking.allocatedRoom ? `Room ${updatedBooking.allocatedRoom}` : "Room 101",
-          bed: updatedBooking.allocatedBed || "Bed A",
-          building: updatedBooking.allocatedBuilding || updatedBooking.building || "Shripad PG",
-          invoiceLink: `https://shripadpg.pages.dev/invoice?invoiceNo=${createdInvoice?.invoiceNo || paymentRecord.transactionId}`,
-        }).catch((err) => console.warn("[WhatsApp Auto-Invoice Notice]:", err.message));
       }
 
       res.json({
