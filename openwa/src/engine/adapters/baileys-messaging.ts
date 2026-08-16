@@ -190,7 +190,19 @@ export class BaileysMessaging {
           }
         : {}),
     };
-    const sent = await this.sock().sendMessage(jid, content, options);
+      // Anti-Ban Humanized Flow: Presence update + human-like typing jitter
+      try {
+        await this.sock().presenceSubscribe(jid).catch(() => {});
+        await this.sock().sendPresenceUpdate('composing', jid).catch(() => {});
+        // Human typing simulation delay: 300ms - 1100ms based on length
+        const typingDelay = Math.min(1100, Math.max(300, (text?.length || 10) * 12)) + Math.floor(Math.random() * 200);
+        await new Promise(resolve => setTimeout(resolve, typingDelay));
+        await this.sock().sendPresenceUpdate('paused', jid).catch(() => {});
+      } catch {
+        // Non-blocking: continue if presence fails
+      }
+
+      const sent = await this.sock().sendMessage(jid, content, options);
     if (sent) {
       void this.host.putStoredMessage(sent)?.catch(err =>
         this.host.logger.warn('Failed to persist sent message to store', {

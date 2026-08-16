@@ -2,6 +2,22 @@
 
 ---
 
+### 📍 Version 8.43 — Baileys Anti-Ban Algorithm & Permanent Session/Webhook Auto-Provisioning 🛡️🔄
+
+```mermaid
+flowchart TD
+    RenderStartup["Render Server Boots / Container Restart<br/>(Ephemeral disk wipe handled gracefully)"]
+    SessionAutoSeed["Session & Webhook Auto-Seeding<br/>(Auto-provisions 'shripad-pg' session and Webhook to https://shripadpg.onrender.com)"]
+    WebhookEvents["Event Subscriptions<br/>(message.received, message.sent, session.status, session.qr)"]
+    AntiBanEngine["Anti-Ban Humanized Algorithm<br/>(presenceSubscribe + sendPresenceUpdate('composing') + dynamic 300-1100ms typing jitter + sendPresenceUpdate('paused'))"]
+    WhatsAppCloud["WhatsApp Network Delivery<br/>(Human-like natural cadence prevents automated spam-flagging)"]
+
+    RenderStartup --> SessionAutoSeed --> WebhookEvents
+    SessionAutoSeed --> AntiBanEngine --> WhatsAppCloud
+```
+
+---
+
 ### 📍 Version 8.42 — Render Multi-Service OpenWA Baileys Deployment Blueprint 🚀☁️
 
 ```mermaid

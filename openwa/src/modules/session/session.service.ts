@@ -28,6 +28,7 @@ import { resolveFeatureFlags } from '../../config/feature-flags';
 import { IWhatsAppEngine, ChatSummary, ChatState } from '../../engine/interfaces/whatsapp-engine.interface';
 import { createLogger } from '../../common/services/logger.service';
 import { HookManager } from '../../core/hooks';
+import { Webhook } from '../webhook/entities/webhook.entity';
 
 /** Pause between sequential auto-start launches so a burst of Chromium boots does not spike the host. */
 export const AUTOSTART_THROTTLE_MS = 2_000;
@@ -59,6 +60,8 @@ export class SessionService implements OnModuleDestroy, OnModuleInit, OnApplicat
   constructor(
     @InjectRepository(Session, 'data')
     private readonly sessionRepository: Repository<Session>,
+    @InjectRepository(Webhook, 'data')
+    private readonly webhookRepository: Repository<Webhook>,
     @InjectDataSource('data')
     private readonly dataSource: DataSource,
     private readonly engineRegistry: EngineRegistry,
@@ -106,6 +109,45 @@ export class SessionService implements OnModuleDestroy, OnModuleInit, OnApplicat
         action: 'startup_reset',
         affected: result.affected,
         nodeId: this.ownership?.nodeId,
+      });
+    }
+
+    // Auto-seed permanent default session: shripad-pg
+    try {
+      let defaultSession = await this.sessionRepository.findOne({
+        where: [{ name: 'shripad-pg' }, { name: 'shripad_pg_main' }],
+      });
+
+      if (!defaultSession) {
+        defaultSession = this.sessionRepository.create({
+          name: 'shripad-pg',
+          status: SessionStatus.CREATED,
+          config: {},
+        });
+        defaultSession = await this.sessionRepository.save(defaultSession);
+        this.logger.log('Created permanent default session: shripad-pg');
+      }
+
+      // Auto-provision default Webhook for Render synchronization
+      const targetWebhookUrl = process.env.WEBHOOK_URL || 'https://shripadpg.onrender.com';
+      const existingWebhook = await this.webhookRepository.findOne({
+        where: { sessionId: defaultSession.id },
+      });
+
+      if (!existingWebhook) {
+        const webhook = this.webhookRepository.create({
+          sessionId: defaultSession.id,
+          url: targetWebhookUrl,
+          events: ['message.received', 'message.sent', 'session.status', 'session.qr'],
+          active: true,
+          retryCount: 3,
+        });
+        await this.webhookRepository.save(webhook);
+        this.logger.log(`Auto-configured webhook for session ${defaultSession.name} -> ${targetWebhookUrl}`);
+      }
+    } catch (seedErr) {
+      this.logger.warn('Default session/webhook seeding completed with note', {
+        error: seedErr instanceof Error ? seedErr.message : String(seedErr),
       });
     }
   }

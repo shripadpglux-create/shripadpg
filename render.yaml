@@ -23,7 +23,7 @@ services:
       - key: OPENWA_API_URL
         value: https://shripad-openwa-gateway.onrender.com
       - key: OPENWA_SESSION_NAME
-        value: shripad_pg_main
+        value: shripad-pg
       - key: OPENWA_API_KEY
         value: shripad_secure_wa_token_2026
       - key: WHATSAPP_AUTO_NOTIFY
@@ -56,6 +56,10 @@ services:
         value: "false"
       - key: SESSION_DATA_PATH
         value: ./data/sessions
+      - key: DEFAULT_SESSION_NAME
+        value: shripad-pg
+      - key: WEBHOOK_URL
+        value: https://shripadpg.onrender.com
       - key: AUTO_START_SESSIONS
         value: "true"
       - key: API_MASTER_KEY

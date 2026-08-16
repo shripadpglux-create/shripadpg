@@ -32,7 +32,7 @@ export class WhatsAppService {
   }
 
   private static getSessionName(): string {
-    return process.env.OPENWA_SESSION_NAME || "shripad_pg_main";
+    return process.env.OPENWA_SESSION_NAME || "shripad-pg";
   }
 
   private static getApiKey(): string {
