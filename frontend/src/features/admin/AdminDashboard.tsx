@@ -69,6 +69,7 @@ import {
   Bot,
   MapPin,
   Send,
+  Printer,
 } from "lucide-react";
 import { ShripadNameLogo } from "@/components/ShripadNameLogo";
 import { InvoiceDesign } from "@/components/InvoiceDesign";
@@ -9617,6 +9618,16 @@ function doPost(e) {
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                <a
+                  href={`/invoice?invoiceNo=${viewingAdminInvoiceData.invoiceNo}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer text-xs font-bold flex items-center gap-1.5"
+                  title="Open Full Page Invoice"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  <span className="hidden sm:inline">Full Page</span>
+                </a>
                 <button
                   type="button"
                   onClick={() => {

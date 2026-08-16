@@ -2,6 +2,36 @@
 
 ---
 
+### 📍 Version 8.58 — Admin Payment Receipt Modal Component Import & Full Page Link Resolution 🖨️📄⚡
+
+```mermaid
+flowchart TD
+    subgraph PaymentAction ["Customer Profile Modal Payment Row"]
+        ClickReceipt["Click 'View & Download PDF' on payment entry"]
+    end
+
+    subgraph ReceiptModalScope ["Admin Dashboard Modal Scope"]
+        ImportPrinter["lucide-react Printer component import fix"]
+        FullPageAction["'Full Page' button routes to /invoice?invoiceNo=..."]
+        PrintAction["'Print' button calls window.print()"]
+        WhatsAppAction["'Send on WhatsApp' generates wa.me direct receipt link"]
+        
+        ClickReceipt --> ImportPrinter
+        ImportPrinter --> FullPageAction
+        ImportPrinter --> PrintAction
+        ImportPrinter --> WhatsAppAction
+    end
+
+    subgraph CleanRendering ["Flawless Modal Presentation"]
+        ReceiptPopup["Official A4 Receipt Popup opens instantly with 0 errors 🌟"]
+        FullPageAction --> ReceiptPopup
+        PrintAction --> ReceiptPopup
+        WhatsAppAction --> ReceiptPopup
+    end
+```
+
+---
+
 ### 📍 Version 8.57 — Robust Safe Number Formatting & Null-Safe Invoice Calculations 🛡️🧾✨
 
 ```mermaid
