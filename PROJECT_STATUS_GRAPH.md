@@ -2,6 +2,21 @@
 
 ---
 
+### 📍 Version 8.44 — Single Active Session Architecture & Automated DB Stale Session Pruning 🧹📦
+
+```mermaid
+flowchart TD
+    UserAction["Create or Start New Session Trigger<br/>(User manually starts or creates new session via Admin Dashboard or API)"]
+    AutoPruneWorker["Automated Session Pruning Engine<br/>(Scans for older, stopped, disconnected, failed or same-name sessions)"]
+    SafeTeardown["Engine Teardown & File Purge<br/>(Destroys old socket connections and purges ./data/baileys/ and ./data/sessions/ auth folders)"]
+    DBRowCleanup["Database Row Clean<br/>(Deletes stale session rows, ensuring DB never bloats)"]
+    SingleActiveSession["Single Latest Working Session<br/>(Only 1 verified active session is preserved and persisted in DB)"]
+
+    UserAction --> AutoPruneWorker --> SafeTeardown --> DBRowCleanup --> SingleActiveSession
+```
+
+---
+
 ### 📍 Version 8.43 — Baileys Anti-Ban Algorithm & Permanent Session/Webhook Auto-Provisioning 🛡️🔄
 
 ```mermaid

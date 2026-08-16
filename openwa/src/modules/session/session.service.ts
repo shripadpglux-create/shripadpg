@@ -261,13 +261,28 @@ export class SessionService implements OnModuleDestroy, OnModuleInit, OnApplicat
   }
 
   async create(dto: CreateSessionDto): Promise<Session> {
-    // Check if session with same name exists
-    const existing = await this.sessionRepository.findOne({
-      where: { name: dto.name },
-    });
-
-    if (existing) {
-      throw new ConflictException(`Session with name '${dto.name}' already exists`);
+    // Auto-prune older stale or same-name sessions so only 1 single latest active session is stored in DB
+    try {
+      const allSessions = await this.sessionRepository.find();
+      for (const s of allSessions) {
+        if (
+          s.name === dto.name ||
+          s.status === SessionStatus.DISCONNECTED ||
+          s.status === SessionStatus.FAILED ||
+          s.status === SessionStatus.CREATED
+        ) {
+          try {
+            await this.delete(s.id);
+            this.logger.log(`Auto-pruned older session '${s.name}' (${s.id}) to preserve single active session`);
+          } catch {
+            // Ignore error if already deleted
+          }
+        }
+      }
+    } catch (cleanErr) {
+      this.logger.warn('Session auto-prune check ran with note', {
+        error: cleanErr instanceof Error ? cleanErr.message : String(cleanErr),
+      });
     }
 
     const session = this.sessionRepository.create({
@@ -278,9 +293,6 @@ export class SessionService implements OnModuleDestroy, OnModuleInit, OnApplicat
       status: SessionStatus.CREATED,
     });
 
-    // The findOne pre-check above is a fast path for the common case, but it's a check-then-insert
-    // TOCTOU: two concurrent same-name creates both pass it, then one hits the name UNIQUE constraint.
-    // Translate that violation to a 409 (matching the pre-check) instead of leaking a raw 500.
     let saved: Session;
     try {
       saved = await this.dataSource.transaction(async manager => {
@@ -288,9 +300,16 @@ export class SessionService implements OnModuleDestroy, OnModuleInit, OnApplicat
       });
     } catch (err) {
       if (isUniqueConstraintError(err)) {
-        throw new ConflictException(`Session with name '${dto.name}' already exists`);
+        const existing = await this.sessionRepository.findOne({ where: { name: dto.name } });
+        if (existing) {
+          await this.delete(existing.id);
+          saved = await this.sessionRepository.save(session);
+        } else {
+          throw err;
+        }
+      } else {
+        throw err;
       }
-      throw err;
     }
     this.logger.log(`Session created: ${saved.name}`, {
       sessionId: saved.id,
