@@ -26,6 +26,9 @@ import {
   Eye,
   Download,
   ShieldCheck,
+  Plus,
+  ArrowLeft,
+  RotateCcw,
 } from "lucide-react";
 import brandLogo from "@/assets/shripad-logo.png";
 
@@ -111,6 +114,9 @@ export function InvoiceDesign({
     pendingRequests.length > 0 ? "pending" : "editor"
   );
 
+  // Track whether we are in active edit/create mode or view-only mode
+  const [isEditing, setIsEditing] = useState<boolean>(!initialInvoiceData);
+
   // Authentication check: Detect if viewer is an admin or customer
   const isAdminOrStaff = React.useMemo(() => {
     if (typeof window === "undefined") return false;
@@ -122,7 +128,7 @@ export function InvoiceDesign({
     );
   }, []);
 
-  const isEffectiveReadOnly = readOnly || !isAdminOrStaff;
+  const isEffectiveReadOnly = readOnly || !isAdminOrStaff || !isEditing;
   const isEffectiveHideTabs = hideHeaderTabs || !isAdminOrStaff;
 
   // Form State
@@ -434,8 +440,8 @@ export function InvoiceDesign({
     }
   };
 
-  // Load a saved invoice into the editor sheet
-  const handleLoadInvoice = (inv: SavedInvoice) => {
+  // Load a saved invoice into the sheet (view-only by default)
+  const handleLoadInvoice = (inv: SavedInvoice, editMode = false) => {
     setSelectedResidentId(inv.residentId || "");
     setInvoiceNo(inv.invoiceNo);
     setTenantName(inv.tenantName);
@@ -451,6 +457,29 @@ export function InvoiceDesign({
     setPaidAmount(inv.paidAmount);
     setSelectedModes(inv.paymentModes || ["UPI"]);
     setNotes(inv.notes);
+    setIsEditing(editMode); // Locks into read-only view when viewing!
+    setActiveSubTab("editor");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Reset and start creating a fresh new invoice
+  const handleStartNewInvoice = () => {
+    setSelectedResidentId("");
+    setInvoiceNo(`INV-${Math.floor(100000 + Math.random() * 900000)}`);
+    setTenantName("");
+    setContact("");
+    setEmail("");
+    setBuilding("PG A - Main Branch");
+    setFloor("1st Floor");
+    setRoom("Room 101");
+    setBed("Bed A");
+    setDate(new Date().toISOString().split("T")[0]);
+    setDueDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]);
+    setRentAmount(0);
+    setPaidAmount(0);
+    setSelectedModes(["UPI"]);
+    setNotes("Monthly PG rent payment for comfortable living space including Wi-Fi, 3-time meals, and maintenance charges.");
+    setIsEditing(true); // Active creation mode
     setActiveSubTab("editor");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -614,7 +643,9 @@ export function InvoiceDesign({
                         Verified
                       </span>
                     </div>
-                    <p className="text-[10px] sm:text-xs font-medium text-slate-500">Shripad PG Co-Living Accommodations • Pune</p>
+                    <p className="text-[10px] sm:text-xs font-medium text-slate-500">
+                      {invoiceNo} • Shripad PG Pune
+                    </p>
                   </div>
                 </div>
               ) : (
@@ -623,15 +654,15 @@ export function InvoiceDesign({
                     <Sparkles className="h-4 w-4" />
                   </div>
                   <div>
-                    <h2 className="text-xs sm:text-sm font-black text-slate-900">Shripad PG Rent Invoice</h2>
-                    <p className="text-[10px] sm:text-xs font-medium text-slate-500">Edit fields below and issue or save PDF</p>
+                    <h2 className="text-xs sm:text-sm font-black text-slate-900">Invoice Editor & Generator</h2>
+                    <p className="text-[10px] sm:text-xs font-medium text-slate-500">Edit fields and click Save & Issue</p>
                   </div>
                 </div>
               )}
 
               <div className="flex items-center gap-2.5 self-end sm:self-auto shrink-0 flex-wrap sm:flex-nowrap">
-                {/* RESIDENT SELECTOR (Admin Only) */}
-                {!isEffectiveReadOnly && residentsList.length > 0 && (
+                {/* ADMIN IN EDIT MODE: RESIDENT SELECTOR */}
+                {isAdminOrStaff && isEditing && residentsList.length > 0 && (
                   <div className="flex items-center gap-1.5">
                     <span className="text-[11px] font-bold text-slate-600 shrink-0">Resident:</span>
                     <select
@@ -668,8 +699,8 @@ export function InvoiceDesign({
                   </div>
                 )}
 
-                {/* SAVE & ISSUE INVOICE BUTTON (Admin Only) */}
-                {!isEffectiveReadOnly && (
+                {/* ADMIN IN EDIT MODE: SAVE & ISSUE BUTTON */}
+                {isAdminOrStaff && isEditing && (
                   <button
                     onClick={handleSaveInvoice}
                     disabled={isSaving}
@@ -677,6 +708,42 @@ export function InvoiceDesign({
                   >
                     <Save className="h-3.5 w-3.5" />
                     <span>{isSaving ? "Saving..." : "Save & Issue"}</span>
+                  </button>
+                )}
+
+                {/* ADMIN IN EDIT MODE: CANCEL EDIT BUTTON */}
+                {isAdminOrStaff && isEditing && (
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    className="flex items-center justify-center gap-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm transition active:scale-95 cursor-pointer whitespace-nowrap"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    <span>Cancel</span>
+                  </button>
+                )}
+
+                {/* ADMIN IN VIEW-ONLY MODE: EDIT BUTTON */}
+                {isAdminOrStaff && !isEditing && (
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(true)}
+                    className="flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition active:scale-95 cursor-pointer whitespace-nowrap"
+                  >
+                    <Edit className="h-3.5 w-3.5" />
+                    <span>Edit Invoice</span>
+                  </button>
+                )}
+
+                {/* ADMIN IN VIEW-ONLY MODE: NEW INVOICE BUTTON */}
+                {isAdminOrStaff && !isEditing && (
+                  <button
+                    type="button"
+                    onClick={handleStartNewInvoice}
+                    className="flex items-center justify-center gap-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm transition active:scale-95 cursor-pointer whitespace-nowrap"
+                  >
+                    <Plus className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>New</span>
                   </button>
                 )}
 
@@ -1073,7 +1140,7 @@ export function InvoiceDesign({
             </div>
           </div>
 
-          {/* Search & Filter Bar */}
+          {/* Search, Filter & Actions Bar */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="relative w-full sm:w-80">
               <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -1086,24 +1153,36 @@ export function InvoiceDesign({
               />
             </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-              <Filter className="h-4 w-4 text-slate-500" />
-              <span className="text-xs font-bold text-slate-600">Status:</span>
-              <div className="flex items-center gap-1 rounded-xl bg-slate-100 p-1">
-                {(["ALL", "PAID", "PARTIAL", "UNPAID"] as const).map((st) => (
-                  <button
-                    key={st}
-                    onClick={() => setStatusFilter(st)}
-                    className={`rounded-lg px-3 py-1 text-[11px] font-extrabold transition cursor-pointer ${
-                      statusFilter === st
-                        ? "bg-white text-slate-900 shadow-2xs"
-                        : "text-slate-500 hover:text-slate-800"
-                    }`}
-                  >
-                    {st}
-                  </button>
-                ))}
+            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-slate-500" />
+                <span className="text-xs font-bold text-slate-600">Status:</span>
+                <div className="flex items-center gap-1 rounded-xl bg-slate-100 p-1">
+                  {(["ALL", "PAID", "PARTIAL", "UNPAID"] as const).map((st) => (
+                    <button
+                      key={st}
+                      onClick={() => setStatusFilter(st)}
+                      className={`rounded-lg px-3 py-1 text-[11px] font-extrabold transition cursor-pointer ${
+                        statusFilter === st
+                          ? "bg-white text-slate-900 shadow-2xs"
+                          : "text-slate-500 hover:text-slate-800"
+                      }`}
+                    >
+                      {st}
+                    </button>
+                  ))}
+                </div>
               </div>
+
+              {/* CREATE NEW INVOICE BUTTON */}
+              <button
+                type="button"
+                onClick={handleStartNewInvoice}
+                className="flex items-center gap-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 px-3.5 py-2 text-xs font-black text-white shadow-sm transition active:scale-95 cursor-pointer whitespace-nowrap"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Create Invoice</span>
+              </button>
             </div>
           </div>
 
@@ -1171,25 +1250,40 @@ export function InvoiceDesign({
                         </td>
                         <td className="px-4 py-3.5 text-right">
                           <div className="flex items-center justify-end gap-1.5">
+                            {/* VIEW (READ-ONLY LOCKED) */}
                             <button
-                              onClick={() => handleLoadInvoice(inv)}
-                              title="View Invoice"
+                              onClick={() => handleLoadInvoice(inv, false)}
+                              title="View Official Invoice (Read Only)"
                               className="flex items-center gap-1.5 rounded-lg bg-emerald-50 border border-emerald-200 px-2.5 py-1 text-[11px] font-black text-emerald-800 hover:bg-emerald-100 transition cursor-pointer"
                             >
                               <Eye className="h-3.5 w-3.5" />
-                              <span>View Invoice</span>
+                              <span>View</span>
                             </button>
+
+                            {/* EDIT (EXPLICIT EDIT MODE) */}
+                            <button
+                              onClick={() => handleLoadInvoice(inv, true)}
+                              title="Edit & Update Invoice"
+                              className="flex items-center gap-1.5 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-1 text-[11px] font-black text-amber-800 hover:bg-amber-100 transition cursor-pointer"
+                            >
+                              <Edit className="h-3.5 w-3.5" />
+                              <span>Edit</span>
+                            </button>
+
+                            {/* PRINT / PDF */}
                             <button
                               onClick={() => {
-                                handleLoadInvoice(inv);
-                                setTimeout(() => window.print(), 200);
+                                handleLoadInvoice(inv, false);
+                                setTimeout(() => window.print(), 250);
                               }}
-                              title="Download PDF Invoice"
+                              title="Print Receipt / Save as PDF"
                               className="flex items-center gap-1.5 rounded-lg bg-[#0f1b3d] px-2.5 py-1 text-[11px] font-black text-white hover:bg-slate-800 transition cursor-pointer"
                             >
-                              <Printer className="h-3.5 w-3.5" />
-                              <span>Download PDF</span>
+                              <Printer className="h-3.5 w-3.5 text-emerald-400" />
+                              <span>Print</span>
                             </button>
+
+                            {/* DELETE */}
                             <button
                               onClick={() => handleDeleteInvoice(inv.id, inv.invoiceNo)}
                               title="Delete Record"

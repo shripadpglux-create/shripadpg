@@ -2,6 +2,37 @@
 
 ---
 
+### 📍 Version 8.63 — Two-State Invoice Lifecycle: Locked View vs. Explicit Edit Mode 🔒✏️🧾
+
+```mermaid
+flowchart TD
+    subgraph HistoryActions ["Invoices History Table Actions"]
+        ViewBtn["'View' Button: Opens locked, clean read-only invoice receipt"]
+        EditBtn["'Edit' Button: Enters active editing session with Save & Issue button"]
+        PrintBtn["'Print' Button: Triggers immediate native print preview"]
+    end
+
+    subgraph ViewOnlyMode ["View-Only Mode (isEditing = false)"]
+        LockedInputs["All fields strictly locked & disabled (no accidental changes)"]
+        ViewToolbar["Top bar shows 'Print Receipt', 'Edit Invoice ✏️', & 'New Invoice +'"]
+        
+        ViewBtn --> LockedInputs
+        ViewBtn --> ViewToolbar
+    end
+
+    subgraph ActiveEditMode ["Active Edit / Create Mode (isEditing = true)"]
+        EditableFields["Input fields enabled for modifying resident/rent info"]
+        EditToolbar["Shows 'Resident' selector, 'Save & Issue', and 'Cancel' buttons"]
+        
+        EditBtn --> EditableFields
+        EditBtn --> EditToolbar
+        ViewToolbar -->|Click 'Edit Invoice'| ActiveEditMode
+        EditToolbar -->|Click 'Cancel'| ViewOnlyMode
+    end
+```
+
+---
+
 ### 📍 Version 8.62 — Streamlined Invoice Top Toolbar (Download PDF Removed, Print Promoted) 🖨️✨
 
 ```mermaid
