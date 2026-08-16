@@ -479,8 +479,8 @@ export function InvoiceDesign({
     setFloor("1st Floor");
     setRoom("Room 101");
     setBed("Bed A");
-    setDate(new Date().toISOString().split("T")[0]);
-    setDueDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]);
+    setDate(new Date().toISOString().split("T")[0] || "");
+    setDueDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0] || "");
     setRentAmount(0);
     setPaidAmount(0);
     setSelectedModes(["UPI"]);

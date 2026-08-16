@@ -2,6 +2,21 @@
 
 ---
 
+### 📍 Version 8.65 — TypeScript Date Split Type-Safety Hardening 🛡️⚡
+
+```mermaid
+flowchart TD
+    subgraph DateSafety ["Invoice Date Type Assertion"]
+        ISOString["new Date().toISOString().split('T')[0]"]
+        TypeFallback["Fallback empty string: || ''"]
+        
+        ISOString --> TypeFallback
+        TypeFallback --> StateSetter["setDate() & setDueDate()"]
+    end
+```
+
+---
+
 ### 📍 Version 8.64 — Full Admin Storage Token Authentication & Tab Visibility Fix 🔑🖥️✨
 
 ```mermaid
