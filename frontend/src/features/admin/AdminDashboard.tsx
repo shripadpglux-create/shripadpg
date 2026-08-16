@@ -1502,6 +1502,12 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
   const totalGrossRevenue = useMemo(() => {
     return scopedBookings.reduce((sum, b) => {
+      if (Array.isArray(b.paymentHistory) && b.paymentHistory.length > 0) {
+        const historySum = b.paymentHistory
+          .filter((p: any) => p.status === "verified" || p.status === "completed" || !p.status)
+          .reduce((pSum: number, p: any) => pSum + Number(p.amount || 0), 0);
+        if (historySum > 0) return sum + historySum;
+      }
       const p = Number(b.paidAmount || b.tokenAmount || b.advanceAmount || 0);
       return sum + p;
     }, 0);

@@ -2,6 +2,34 @@
 
 ---
 
+### 📍 Version 8.67 — Multi-Month Payment History Revenue Aggregation & System-Wide Flow Hardening 💰📊✨
+
+```mermaid
+flowchart TD
+    subgraph RevenueAggregation ["True Multi-Month Financial Calculation"]
+        Bookings["Scoped Bookings Collection"]
+        PaymentHistory["Check booking.paymentHistory Array"]
+        SumHistory["Sum verified & completed transactions across all months"]
+        Fallback["Fallback to paidAmount if paymentHistory empty"]
+        
+        Bookings --> PaymentHistory
+        PaymentHistory -->|Has History| SumHistory
+        PaymentHistory -->|No History| Fallback
+        SumHistory --> TotalGrossRevenue["totalGrossRevenue KPI"]
+        Fallback --> TotalGrossRevenue
+    end
+
+    subgraph SystemHardening ["End-to-End Flow Polish"]
+        InvGuards["Invoice toolbar guards with !readOnly"]
+        ChatbotStrict["Strict whole-word regex matching for WhatsApp bot commands"]
+        AutoStartCheck["openwa autoStartSessions claimable node filter"]
+        
+        TotalGrossRevenue --> SystemHardening
+    end
+```
+
+---
+
 ### 📍 Version 8.66 — Universal Standalone Read-Only /invoice Route Enforcement 🔒📄🎯
 
 ```mermaid
