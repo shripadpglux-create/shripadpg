@@ -2,6 +2,34 @@
 
 ---
 
+### 📍 Version 8.52 — EngineRegistry Single-Session Fallback & Strict SendTextMessageDto Compliance 🚀💬⚡
+
+```mermaid
+flowchart TD
+    subgraph AdminDashboardFrontend ["Admin WhatsApp Modal (Frontend)"]
+        TestForm["Send Test Message (Phone: 9359570497)"]
+        InboundChat["Resident / Customer texts 'hii'"]
+    end
+
+    subgraph BackendDispatch ["Express Backend (shripadpg.onrender.com)"]
+        StrictDTO["sendTextMessage({ chatId: '919359570497@c.us', text })<br/>(Strict DTO without forbidden extra keys)"]
+        ChatbotRouter["handleInboundChatbot() -> sendTextMessage()"]
+    end
+
+    subgraph OpenWAEngineRegistry ["OpenWA Engine Architecture (shripad-openwa-gateway.onrender.com)"]
+        RegistryRequire["EngineRegistry.require()<br/>(Auto-resolves by UUID or single-session fallback)"]
+        BaileysSend["Baileys sock.sendMessage(chatId, { text })"]
+        
+        StrictDTO --> RegistryRequire --> BaileysSend
+        ChatbotRouter --> StrictDTO
+    end
+
+    TestForm --> StrictDTO
+    InboundChat --> ChatbotRouter
+```
+
+---
+
 ### 📍 Version 8.51 — Gateway URL Synchronization & Trust Proxy Reverse Proxy Fix 🌐🛡️⚡
 
 ```mermaid

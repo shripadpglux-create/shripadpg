@@ -232,7 +232,6 @@ export class WhatsAppService {
         url,
         {
           chatId: toJid,
-          to: toJid,
           text: text,
         },
         {

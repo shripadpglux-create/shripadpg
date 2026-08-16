@@ -35,7 +35,12 @@ export class EngineRegistry {
   // ── Map-compatible surface (used by the lifecycle owner) ──────────────
 
   get(id: string): IWhatsAppEngine | undefined {
-    return this.engines.get(id);
+    const direct = this.engines.get(id);
+    if (direct) return direct;
+    if (this.engines.size === 1) {
+      return [...this.engines.values()][0];
+    }
+    return undefined;
   }
 
   set(id: string, engine: IWhatsAppEngine): void {
@@ -43,7 +48,8 @@ export class EngineRegistry {
   }
 
   has(id: string): boolean {
-    return this.engines.has(id);
+    if (this.engines.has(id)) return true;
+    return this.engines.size === 1;
   }
 
   delete(id: string): boolean {
@@ -82,7 +88,7 @@ export class EngineRegistry {
    * presence check does not cover.
    */
   isLive(id: string, engine: IWhatsAppEngine): boolean {
-    return this.engines.get(id) === engine;
+    return this.get(id) === engine;
   }
 
   /**
@@ -108,7 +114,7 @@ export class EngineRegistry {
     id: string,
     onMissing: () => Error = () => new BadRequestException('Session is not started'),
   ): IWhatsAppEngine {
-    const engine = this.engines.get(id);
+    const engine = this.get(id);
     if (!engine) {
       throw onMissing();
     }
