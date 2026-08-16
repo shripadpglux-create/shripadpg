@@ -188,7 +188,7 @@ export class WhatsAppTemplateModel {
               ...DEFAULT_WHATSAPP_CONFIG,
               ...doc,
               chatbotLocations:
-                Array.isArray(doc.chatbotLocations) && doc.chatbotLocations.length > 0
+                Array.isArray(doc.chatbotLocations)
                   ? doc.chatbotLocations
                   : DEFAULT_WHATSAPP_CONFIG.chatbotLocations,
             };
@@ -203,7 +203,13 @@ export class WhatsAppTemplateModel {
       try {
         const fileData = await fs.readFile(TEMPLATES_FILE, "utf-8");
         const parsed = JSON.parse(fileData);
-        this.cache = { ...DEFAULT_WHATSAPP_CONFIG, ...parsed };
+        this.cache = {
+          ...DEFAULT_WHATSAPP_CONFIG,
+          ...parsed,
+          chatbotLocations: Array.isArray(parsed.chatbotLocations)
+            ? parsed.chatbotLocations
+            : DEFAULT_WHATSAPP_CONFIG.chatbotLocations,
+        };
         return this.cache as WhatsAppTemplatesConfig;
       } catch {
         this.cache = { ...DEFAULT_WHATSAPP_CONFIG };
@@ -225,7 +231,10 @@ export class WhatsAppTemplateModel {
     const newConfig: WhatsAppTemplatesConfig = {
       ...current,
       ...updated,
-      chatbotLocations: updated.chatbotLocations || current.chatbotLocations || DEFAULT_WHATSAPP_CONFIG.chatbotLocations,
+      chatbotLocations:
+        Array.isArray(updated.chatbotLocations)
+          ? updated.chatbotLocations
+          : (current.chatbotLocations ?? DEFAULT_WHATSAPP_CONFIG.chatbotLocations),
     };
 
     this.cache = newConfig;

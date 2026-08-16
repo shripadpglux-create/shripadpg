@@ -2,6 +2,33 @@
 
 ---
 
+### 📍 Version 8.55 — Chatbot Location Card Deletion Persistence & Instant Cloud Sync 🗑️☁️✨
+
+```mermaid
+flowchart TD
+    subgraph AdminLocationCardUI ["Admin Chatbot Locations UI"]
+        TrashClick["Click Delete / Trash Button on Branch Card"]
+        EditCard["Add / Edit Branch Card Modal"]
+    end
+
+    subgraph StateAndAutoSync ["Client React State & Instant Sync"]
+        LocalFilter["Filter chatbotLocations array immediately"]
+        AutoPUT["PUT /api/whatsapp/templates with updated array<br/>(No manual 'Save' click needed)"]
+        
+        TrashClick --> LocalFilter --> AutoPUT
+        EditCard --> AutoPUT
+    end
+
+    subgraph MongoDBAtlasPersistence ["MongoDB Atlas & File Cache"]
+        TemplateModel["WhatsAppTemplateModel.saveTemplates()"]
+        PreserveArray["Preserves exact filtered array in DB & cache<br/>(Eliminates default 4-card fallback on reload)"]
+        
+        AutoPUT --> TemplateModel --> PreserveArray
+    end
+```
+
+---
+
 ### 📍 Version 8.54 — Strict Whole-Word Boundary Keyword Matching & Chatbot Precision 🎯💬🛡️
 
 ```mermaid

@@ -2006,7 +2006,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     }
   };
 
-  const handleSaveBranch = (branchData: typeof editingBranch) => {
+  const handleSaveBranch = async (branchData: typeof editingBranch) => {
     if (!branchData || !waTemplates) return;
     let currentLocations = [...(waTemplates.chatbotLocations || [])];
     const existingIndex = currentLocations.findIndex((b) => b.id === branchData.id);
@@ -2015,17 +2015,50 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     } else {
       currentLocations.push({ ...branchData, id: branchData.id || String(Date.now()) });
     }
-    setWaTemplates({ ...waTemplates, chatbotLocations: currentLocations });
+    const updated = { ...waTemplates, chatbotLocations: currentLocations };
+    setWaTemplates(updated);
     setIsBranchModalOpen(false);
     setEditingBranch(null);
-    showToast(`Branch "${branchData.name}" updated in list. Click "Save All Changes" to sync.`, "info");
+
+    // Auto-sync immediately to backend
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/whatsapp/templates`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updated),
+      });
+      const data = await res.json();
+      if (data.success && data.templates) {
+        setWaTemplates(data.templates);
+        showToast(`Branch "${branchData.name}" saved and synced! ✨`, "success");
+      }
+    } catch {
+      showToast(`Branch "${branchData.name}" updated. Click "Save All Changes" to retry sync.`, "info");
+    }
   };
 
-  const handleDeleteBranch = (branchId: string) => {
+  const handleDeleteBranch = async (branchId: string) => {
     if (!waTemplates) return;
+    const branchToDelete = waTemplates.chatbotLocations?.find((b) => b.id === branchId);
     const currentLocations = (waTemplates.chatbotLocations || []).filter((b) => b.id !== branchId);
-    setWaTemplates({ ...waTemplates, chatbotLocations: currentLocations });
-    showToast("Branch removed from list. Remember to save changes.", "info");
+    const updated = { ...waTemplates, chatbotLocations: currentLocations };
+    setWaTemplates(updated);
+
+    // Auto-sync immediately to backend database
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/whatsapp/templates`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updated),
+      });
+      const data = await res.json();
+      if (data.success && data.templates) {
+        setWaTemplates(data.templates);
+        showToast(`Branch "${branchToDelete?.name || ''}" deleted successfully! 🗑️`, "success");
+      }
+    } catch {
+      showToast("Branch removed locally. Click 'Save All Changes' to retry sync.", "info");
+    }
   };
 
   const fetchBookings = async () => {
