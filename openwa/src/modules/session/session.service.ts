@@ -352,9 +352,11 @@ export class SessionService implements OnModuleDestroy, OnModuleInit, OnApplicat
   }
 
   async findOne(id: string): Promise<Session> {
-    const session = await this.sessionRepository.findOne({ where: { id } });
+    const session = await this.sessionRepository.findOne({
+      where: [{ id }, { name: id }],
+    });
     if (!session) {
-      throw new NotFoundException(`Session with id '${id}' not found`);
+      throw new NotFoundException(`Session with id or name '${id}' not found`);
     }
     return this.attachRuntimeState(session);
   }

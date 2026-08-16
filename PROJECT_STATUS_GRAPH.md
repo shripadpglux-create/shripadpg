@@ -2,6 +2,38 @@
 
 ---
 
+### 📍 Version 8.50 — Dynamic Session UUID Resolution & Real-Time WhatsApp Status / Chatbot Reply Pipeline ⚡📱🤖
+
+```mermaid
+flowchart TD
+    subgraph AdminDashboardUI ["Admin Dashboard (Frontend)"]
+        FetchStatus["fetchWhatsAppStatus() -> GET /api/whatsapp/status"]
+        LiveBanner["🟢 Online Banner + Linked Phone (+91 84469 82438) & Name (Shiv Khude)"]
+        FetchStatus --> LiveBanner
+    end
+
+    subgraph ExpressBackendGateway ["Shripad PG Backend (Render)"]
+        ActiveSessionResolver["WhatsAppService.getActiveSession()<br/>(Queries GET /api/sessions, maps name/UUID)"]
+        StatusHandler["GET /api/whatsapp/status"]
+        WebhookHandler["POST /api/whatsapp/webhook (Inbound 'hii')"]
+        OutboundDispatcher["sendTextMessage(phone, reply)<br/>(Uses resolved Session UUID)"]
+
+        ActiveSessionResolver --> StatusHandler
+        WebhookHandler --> OutboundDispatcher
+        OutboundDispatcher --> ActiveSessionResolver
+    end
+
+    subgraph OpenWAGatewayEngine ["OpenWA Baileys Gateway (Render)"]
+        SessionsEndpoint["GET /api/sessions (UUID: 8cd60077..., status: ready)"]
+        SendEndpoint["POST /api/sessions/:sessionId/messages/send-text"]
+        
+        ActiveSessionResolver --> SessionsEndpoint
+        OutboundDispatcher -->|"POST /api/sessions/{uuid}/messages/send-text"| SendEndpoint
+    end
+```
+
+---
+
 ### 📍 Version 8.49 — Baileys Multi-Device Persistent Auth State & Auto-Boot Architecture (MongoDB Atlas) 🔄☁️📱
 
 ```mermaid

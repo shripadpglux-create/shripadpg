@@ -43,8 +43,10 @@ export interface InvoiceNotificationDetails {
 }
 
 export class WhatsAppService {
+  private static cachedSessionId: string | null = null;
+
   private static getApiBaseUrl(): string {
-    return (process.env.OPENWA_API_URL || "http://localhost:2886").replace(/\/$/, "");
+    return (process.env.OPENWA_API_URL || "https://shripadpglux.onrender.com").replace(/\/$/, "");
   }
 
   private static getSessionName(): string {
@@ -61,6 +63,54 @@ export class WhatsAppService {
       "X-Api-Key": this.getApiKey(),
       Authorization: `Bearer ${this.getApiKey()}`,
     };
+  }
+
+  /**
+   * Fetch list of all sessions from OpenWA to find the real session UUID and live state
+   */
+  public static async getActiveSession(): Promise<{
+    id: string;
+    name: string;
+    status: string;
+    phone?: string | null;
+    pushName?: string | null;
+    connected: boolean;
+  } | null> {
+    try {
+      const url = `${this.getApiBaseUrl()}/api/sessions`;
+      const res = await axios.get(url, {
+        headers: this.getHeaders(),
+        timeout: 5000,
+      });
+
+      const list: any[] = Array.isArray(res.data) ? res.data : [];
+      if (list.length === 0) return null;
+
+      const targetName = this.getSessionName();
+      const match = list.find(s => s.name === targetName || s.name === "shripad-pg") || list[0];
+
+      if (match) {
+        this.cachedSessionId = match.id;
+        const isConnected =
+          match.status === "ready" ||
+          match.status === "CONNECTED" ||
+          match.status === "authenticated" ||
+          match.connected === true;
+
+        return {
+          id: match.id,
+          name: match.name,
+          status: match.status,
+          phone: match.phone || null,
+          pushName: match.pushName || null,
+          connected: isConnected,
+        };
+      }
+      return null;
+    } catch (err: any) {
+      console.warn("[WhatsApp getActiveSession Notice]:", err?.response?.data || err.message);
+      return null;
+    }
   }
 
   /**
@@ -90,27 +140,28 @@ export class WhatsAppService {
   public static async getStatus(): Promise<{
     connected: boolean;
     status: string;
-    qrCode?: string;
+    phone?: string | null;
+    pushName?: string | null;
+    sessionId?: string;
     details?: any;
   }> {
     try {
-      const url = `${this.getApiBaseUrl()}/api/sessions/${this.getSessionName()}/status`;
-      const res = await axios.get(url, {
-        headers: this.getHeaders(),
-        timeout: 4000,
-      });
-
-      const data = res.data;
-      const isConnected =
-        data?.status === "CONNECTED" ||
-        data?.status === "ready" ||
-        data?.status === "authenticated" ||
-        data?.connected === true;
+      const session = await this.getActiveSession();
+      if (!session) {
+        return {
+          connected: false,
+          status: "DISCONNECTED",
+          details: "No active WhatsApp session found in OpenWA",
+        };
+      }
 
       return {
-        connected: isConnected,
-        status: data?.status || (isConnected ? "CONNECTED" : "DISCONNECTED"),
-        details: data,
+        connected: session.connected,
+        status: session.connected ? "CONNECTED" : (session.status || "DISCONNECTED").toUpperCase(),
+        phone: session.phone,
+        pushName: session.pushName,
+        sessionId: session.id,
+        details: session,
       };
     } catch (err: any) {
       return {
@@ -126,10 +177,13 @@ export class WhatsAppService {
    */
   public static async getQRCode(): Promise<{ qr: string | null; status: string }> {
     try {
-      const url = `${this.getApiBaseUrl()}/api/sessions/${this.getSessionName()}/qr`;
+      const session = await this.getActiveSession();
+      const sessionId = session?.id || this.cachedSessionId || this.getSessionName();
+
+      const url = `${this.getApiBaseUrl()}/api/sessions/${sessionId}/qr`;
       const res = await axios.get(url, {
         headers: this.getHeaders(),
-        timeout: 4000,
+        timeout: 5000,
       });
 
       if (res.data?.qr) {
@@ -146,7 +200,10 @@ export class WhatsAppService {
    */
   public static async startSession(): Promise<{ success: boolean; message: string }> {
     try {
-      const url = `${this.getApiBaseUrl()}/api/sessions/${this.getSessionName()}/start`;
+      const session = await this.getActiveSession();
+      const sessionId = session?.id || this.cachedSessionId || this.getSessionName();
+
+      const url = `${this.getApiBaseUrl()}/api/sessions/${sessionId}/start`;
       const res = await axios.post(url, {}, { headers: this.getHeaders(), timeout: 8000 });
       return { success: true, message: res.data?.message || "Session started successfully" };
     } catch (err: any) {
@@ -164,8 +221,12 @@ export class WhatsAppService {
         return { success: false, error: "Invalid phone number provided." };
       }
 
-      const url = `${this.getApiBaseUrl()}/api/sessions/${this.getSessionName()}/messages/send-text`;
-      console.log(`[WhatsApp Outbound] Sending to: ${toJid} (chatId=${toJid}) -> URL: ${url}`);
+      // Resolve the actual session UUID
+      const session = await this.getActiveSession();
+      const sessionId = session?.id || this.cachedSessionId || this.getSessionName();
+
+      const url = `${this.getApiBaseUrl()}/api/sessions/${sessionId}/messages/send-text`;
+      console.log(`[WhatsApp Outbound] Sending to: ${toJid} using session UUID: ${sessionId} -> URL: ${url}`);
 
       const res = await axios.post(
         url,

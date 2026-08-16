@@ -267,7 +267,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
   // WhatsApp Automation Center State
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
-  const [whatsappStatus, setWhatsappStatus] = useState<{ connected: boolean; status: string } | null>(null);
+  const [whatsappStatus, setWhatsappStatus] = useState<{
+    connected: boolean;
+    status: string;
+    phone?: string | null;
+    pushName?: string | null;
+    sessionId?: string | null;
+  } | null>(null);
   const [whatsappQrCode, setWhatsappQrCode] = useState<string | null>(null);
   const [isCheckingWhatsApp, setIsCheckingWhatsApp] = useState(false);
   const [waTestPhone, setWaTestPhone] = useState("");
@@ -1874,9 +1880,17 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       const res = await fetch(`${API_BASE_URL}/api/whatsapp/status`);
       const data = await res.json();
       if (data.success) {
-        setWhatsappStatus({ connected: data.connected, status: data.status });
+        setWhatsappStatus({
+          connected: data.connected,
+          status: data.status,
+          phone: data.phone || null,
+          pushName: data.pushName || null,
+          sessionId: data.sessionId || null,
+        });
         if (!data.connected) {
           fetchWhatsAppQr();
+        } else {
+          setWhatsappQrCode(null);
         }
       }
     } catch (err) {
@@ -8865,17 +8879,24 @@ function doPost(e) {
                     whatsappStatus?.connected ? "bg-emerald-50/70 border-emerald-300" : "bg-amber-50/70 border-amber-300"
                   }`}>
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">{whatsappStatus?.connected ? "🟢" : "📱"}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">{whatsappStatus?.connected ? "🟢" : "📱"}</span>
                         <div>
-                          <h4 className="text-sm font-black text-slate-900">
-                            {whatsappStatus?.connected
-                              ? "WhatsApp Multi-Device Baileys Connected"
-                              : "WhatsApp Authentication Required"}
-                          </h4>
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-sm font-black text-slate-900">
+                              {whatsappStatus?.connected
+                                ? "WhatsApp Multi-Device Baileys Connected"
+                                : "WhatsApp Authentication Required"}
+                            </h4>
+                            {whatsappStatus?.phone && (
+                              <span className="px-2.5 py-0.5 rounded-full bg-emerald-600 text-white font-mono text-[11px] font-black tracking-wide shadow-xs">
+                                +{whatsappStatus.phone}
+                              </span>
+                            )}
+                          </div>
                           <p className="text-xs text-slate-600 font-medium mt-0.5">
                             {whatsappStatus?.connected
-                              ? "Auto-dispatch is ACTIVE for room allotments, rent receipts, invoices, and chatbot auto-replies."
+                              ? `Linked Admin Account: ${whatsappStatus.pushName || "Shripad Admin"} (+${whatsappStatus.phone}). Real-time auto-dispatch & location chatbot are active.`
                               : "Start the session below or scan the QR code to link your PG Admin WhatsApp number."}
                           </p>
                         </div>
