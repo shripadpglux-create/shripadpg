@@ -2257,9 +2257,9 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       <div className={`flex flex-1 flex-col transition-all duration-300 min-w-0 ${isSidebarCollapsed ? "lg:pl-0" : "lg:pl-72"}`}>
         {/* Centered top navigation bar wrapper aligning perfectly with main layout margins */}
         <div className="sticky top-4 z-30 w-full px-4 sm:px-6 lg:px-8 mt-4 mb-2">
-          <header className="mx-auto max-w-7xl rounded-full border border-slate-200/80 bg-white/90 shadow-lg shadow-slate-200/50 backdrop-blur-xl px-5 sm:px-7 py-3 flex items-center justify-between gap-4 transition-all">
-            {/* Left: Mobile & Desktop Toggle & Curved Search Pill */}
-            <div className="flex items-center gap-3 flex-1 max-w-md">
+          <header className="mx-auto max-w-7xl rounded-full border border-slate-200/80 bg-white/90 shadow-lg shadow-slate-200/50 backdrop-blur-xl px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3 transition-all">
+            {/* Left: Menu, Role Scope & Core Management Actions */}
+            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 flex-wrap lg:flex-nowrap">
               <button
                 onClick={() => {
                   if (window.innerWidth < 1024) {
@@ -2268,32 +2268,16 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                     setIsSidebarCollapsed(!isSidebarCollapsed);
                   }
                 }}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200/80 bg-slate-50 text-slate-600 hover:bg-slate-100 shadow-2xs cursor-pointer"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200/80 bg-slate-50 text-slate-600 hover:bg-slate-100 shadow-2xs cursor-pointer"
+                title="Toggle Sidebar Navigation"
               >
-                <Menu className="h-5 w-5" />
+                <Menu className="h-4 w-4" />
               </button>
 
-              <div className="relative w-full">
-                <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Search rooms, buildings, residents..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full rounded-full border border-slate-200/80 bg-slate-50/70 pl-11 pr-12 py-2.5 text-xs sm:text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:border-brand-green focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/20 transition shadow-inner"
-                />
-                <kbd className="hidden sm:inline-block absolute right-3.5 top-1/2 -translate-y-1/2 rounded-full bg-white px-2.5 py-0.5 text-[10px] font-bold text-slate-400 border border-slate-200 shadow-2xs">
-                  ⌘K
-                </kbd>
-              </div>
-            </div>
-
-            {/* Right: Interactive Profile Dropdown & Quick Actions */}
-            <div className="flex items-center gap-3 sm:gap-4 shrink-0 relative">
               {/* Staff / Building Scope Badge or Dropdown */}
               {!isStaffMode ? (
                 <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100/90 border border-slate-200 text-xs font-bold text-slate-800">
-                  <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
                   <span className="text-[10px] text-slate-400 uppercase font-black">Role Scope:</span>
                   <select
                     value={activeStaffScopeId}
@@ -2316,8 +2300,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   </select>
                 </div>
               ) : (
-                <div className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-900">
-                  <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+                <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-900">
+                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
                   <span className="text-[10px] text-emerald-600 uppercase font-black">Staff Scope:</span>
                   <span className="font-extrabold text-xs text-emerald-950">
                     {activeStaffMember?.name} ({activeStaffMember?.assignedBuildings?.join(", ") || "PG A"})
@@ -2329,10 +2313,10 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
               {!isStaffMode && (
                 <button
                   onClick={() => setIsStaffModalOpen(true)}
-                  className="hidden lg:flex items-center gap-2 px-3.5 py-2 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 text-xs font-black transition cursor-pointer shadow-xs active:scale-95"
+                  className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 text-xs font-black transition cursor-pointer shadow-xs active:scale-95"
                   title="Manage Staff & Building Assignments"
                 >
-                  <UserCheck className="h-4 w-4 text-emerald-600" />
+                  <UserCheck className="h-3.5 w-3.5 text-emerald-600" />
                   <span>Staff & Buildings</span>
                 </button>
               )}
@@ -2341,64 +2325,71 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
               {!isStaffMode && (
                 <button
                   onClick={() => setIsPaymentSettingsModalOpen(true)}
-                  className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-brand-navy hover:bg-slate-800 text-white text-xs font-black transition cursor-pointer shadow-md active:scale-95"
+                  className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-navy hover:bg-slate-800 text-white text-xs font-black transition cursor-pointer shadow-md active:scale-95"
                   title="Configure Real Payment Details & QR Code"
                 >
-                  <QrCode className="h-4 w-4 text-brand-gold" />
+                  <QrCode className="h-3.5 w-3.5 text-brand-gold" />
                   <span>Payment & QR</span>
                 </button>
               )}
-
-              {/* Complaints Center Quick Access Notification Button */}
-              <button
-                onClick={() => setIsComplaintsHubModalOpen(true)}
-                className={`relative flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-black transition cursor-pointer shadow-md active:scale-95 border ${
-                  activeComplaintsCount > 0
-                    ? "bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100 animate-pulse"
-                    : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200"
-                }`}
-                title="Manage Resident Complaints & Service Requests"
-              >
-                <MessageSquare className={`h-4 w-4 ${activeComplaintsCount > 0 ? "text-rose-600" : "text-slate-500"}`} />
-                <span className="hidden sm:inline">Complaints</span>
-                {activeComplaintsCount > 0 && (
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 text-[10px] font-black text-white px-1.5 shadow-xs">
-                    {activeComplaintsCount}
-                  </span>
-                )}
-              </button>
 
               {/* WhatsApp Baileys Automation Center Button */}
               <button
                 onClick={() => {
                   setIsWhatsAppModalOpen(true);
                   fetchWhatsAppStatus();
+                  fetchWhatsAppTemplates();
                 }}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-black transition cursor-pointer shadow-md active:scale-95 border ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black transition cursor-pointer shadow-sm active:scale-95 border ${
                   whatsappStatus?.connected
                     ? "bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700"
                     : "bg-emerald-50 text-emerald-900 border-emerald-200 hover:bg-emerald-100"
                 }`}
-                title="WhatsApp Baileys Automation Center (Auto-Credentials & Invoices)"
+                title="WhatsApp Baileys Automation Center (Auto-Credentials, Invoices & Chatbot)"
               >
-                <span className="text-sm">💬</span>
-                <span className="hidden sm:inline">WhatsApp</span>
+                <span className="text-xs">💬</span>
+                <span>WhatsApp</span>
                 <span className={`h-2 w-2 rounded-full ${whatsappStatus?.connected ? "bg-white animate-pulse" : "bg-amber-500"}`} />
               </button>
 
-              {/* Install SripadPG App Button */}
+              {/* Complaints Center Quick Access Notification Button */}
               <button
-                onClick={handleInstallPwa}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white text-xs font-black transition cursor-pointer shadow-md active:scale-95 border border-indigo-400/30"
-                title="Install SripadPG App on your Phone"
+                onClick={() => setIsComplaintsHubModalOpen(true)}
+                className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black transition cursor-pointer shadow-sm active:scale-95 border ${
+                  activeComplaintsCount > 0
+                    ? "bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100 animate-pulse"
+                    : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200"
+                }`}
+                title="Manage Resident Complaints & Service Requests"
               >
-                <span className="text-sm">📱</span>
-                <span className="hidden sm:inline">Install SripadPG App</span>
-                <span className="sm:hidden">Install App</span>
+                <MessageSquare className={`h-3.5 w-3.5 ${activeComplaintsCount > 0 ? "text-rose-600" : "text-slate-500"}`} />
+                <span className="hidden sm:inline">Complaints</span>
+                {activeComplaintsCount > 0 && (
+                  <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-600 text-[9px] font-black text-white px-1 shadow-xs">
+                    {activeComplaintsCount}
+                  </span>
+                )}
               </button>
+            </div>
+
+            {/* Right: Curved Search Bar & Profile Dropdown */}
+            <div className="flex items-center gap-3 flex-1 justify-end min-w-0">
+              <div className="relative w-full max-w-xs hidden sm:block">
+                <Search className="absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search rooms, residents..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full rounded-full border border-slate-200/80 bg-slate-50/70 pl-9 pr-10 py-1.5 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:border-brand-green focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/20 transition shadow-inner"
+                />
+                <kbd className="hidden md:inline-block absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full bg-white px-1.5 py-0.5 text-[9px] font-bold text-slate-400 border border-slate-200 shadow-2xs">
+                  ⌘K
+                </kbd>
+              </div>
 
               {/* Profile Dropdown Container */}
-              <div className="relative">
+              <div className="relative shrink-0">
                 <button
                   onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
                   className="flex items-center gap-2.5 rounded-full border border-slate-200/80 bg-slate-50/80 hover:bg-slate-100/80 p-1.5 pr-3 shadow-2xs transition-all active:scale-95 cursor-pointer"

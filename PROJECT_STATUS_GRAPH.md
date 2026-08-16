@@ -2,6 +2,31 @@
 
 ---
 
+### 📍 Version 8.46 — Header Navigation Restructuring & Management Control Clustering 🧭✨
+
+```mermaid
+flowchart LR
+    subgraph LeftHeaderCluster ["Left Header Section (Management Controls)"]
+        MenuToggle["Sidebar Menu Toggle"]
+        RoleScope["Role Scope Selector<br/>(Master Admin / Building Scope)"]
+        StaffBtn["Staff & Buildings Button"]
+        PaymentBtn["Payment & QR Button"]
+        WhatsAppBtn["WhatsApp Automation Center Button"]
+        ComplaintsBtn["Complaints Hub Button"]
+
+        MenuToggle --> RoleScope --> StaffBtn --> PaymentBtn --> WhatsAppBtn --> ComplaintsBtn
+    end
+
+    subgraph RightHeaderCluster ["Right Header Section (Search & Profile)"]
+        SearchInput["Global Search Pill (⌘K)"]
+        ProfileDropdown["Admin Profile Dropdown"]
+
+        SearchInput --> ProfileDropdown
+    end
+```
+
+---
+
 ### 📍 Version 8.45 — Customizable WhatsApp Notification Templates & Interactive Multi-Branch AI Location Chatbot 🤖🏢💬
 
 ```mermaid
