@@ -129,21 +129,31 @@ export class SessionService implements OnModuleDestroy, OnModuleInit, OnApplicat
       }
 
       // Auto-provision default Webhook for Render synchronization
-      const targetWebhookUrl = process.env.WEBHOOK_URL || 'https://shripadpg.onrender.com';
-      const existingWebhook = await this.webhookRepository.findOne({
+      const rawWebhookUrl = process.env.WEBHOOK_URL || 'https://shripadpg.onrender.com';
+      const targetWebhookUrl = rawWebhookUrl.endsWith('/api/whatsapp/webhook')
+        ? rawWebhookUrl
+        : `${rawWebhookUrl.replace(/\/$/, '')}/api/whatsapp/webhook`;
+
+      let existingWebhook = await this.webhookRepository.findOne({
         where: { sessionId: defaultSession.id },
       });
 
       if (!existingWebhook) {
-        const webhook = this.webhookRepository.create({
+        existingWebhook = this.webhookRepository.create({
           sessionId: defaultSession.id,
           url: targetWebhookUrl,
           events: ['message.received', 'message.sent', 'session.status', 'session.qr'],
           active: true,
           retryCount: 3,
         });
-        await this.webhookRepository.save(webhook);
+        await this.webhookRepository.save(existingWebhook);
         this.logger.log(`Auto-configured webhook for session ${defaultSession.name} -> ${targetWebhookUrl}`);
+      } else if (existingWebhook.url !== targetWebhookUrl) {
+        existingWebhook.url = targetWebhookUrl;
+        existingWebhook.events = ['message.received', 'message.sent', 'session.status', 'session.qr'];
+        existingWebhook.active = true;
+        await this.webhookRepository.save(existingWebhook);
+        this.logger.log(`Updated webhook URL for session ${defaultSession.name} -> ${targetWebhookUrl}`);
       }
     } catch (seedErr) {
       this.logger.warn('Default session/webhook seeding completed with note', {

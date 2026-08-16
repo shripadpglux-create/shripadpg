@@ -2,6 +2,36 @@
 
 ---
 
+### 📍 Version 8.48 — WhatsApp Inbound Webhook Synchronization & ChatId Payload Protocol Fix 🤖💬🚀
+
+```mermaid
+flowchart TD
+    subgraph WhatsAppCustomer ["WhatsApp User / Customer"]
+        UserMsg["User sends 'hii' / Area Name"]
+    end
+
+    subgraph OpenWAService ["OpenWA Gateway (Baileys Engine)"]
+        InboundUpsert["sock.ev 'messages.upsert'"]
+        AutoWebhookDispatch["Webhook Delivery -> POST /api/whatsapp/webhook"]
+        InboundUpsert --> AutoWebhookDispatch
+    end
+
+    subgraph ExpressBackend ["Shripad PG Backend (Render)"]
+        WebhookReceiver["POST /api/whatsapp/webhook (WhatsAppController)"]
+        ChatbotEngine["handleInboundChatbot() (Matches 'hii' / Branches)"]
+        OutboundSender["sendTextMessage({ chatId, text })"]
+        
+        WebhookReceiver --> ChatbotEngine --> OutboundSender
+    end
+
+    UserMsg --> InboundUpsert
+    AutoWebhookDispatch --> WebhookReceiver
+    OutboundSender -->|"POST /api/sessions/shripad-pg/messages/send-text"| OpenWAService
+    OpenWAService -->|"Delivers Instant Greeting / Branch Details"| WhatsAppCustomer
+```
+
+---
+
 ### 📍 Version 8.47 — Shifted Staff & Buildings and Payment & QR into Left Sidebar Features 📋🏢💳
 
 ```mermaid

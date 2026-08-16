@@ -65,11 +65,11 @@ export class WhatsAppService {
 
   /**
    * Normalize an Indian or international phone number to WhatsApp JID format.
-   * e.g., "9876543210" -> "919876543210@s.whatsapp.net"
+   * e.g., "9876543210" -> "919876543210@c.us"
    */
   public static formatPhoneNumber(rawPhone: string): string {
     if (!rawPhone) return "";
-    let cleaned = rawPhone.replace(/\D/g, "");
+    let cleaned = rawPhone.split(":")[0].replace(/@.*$/, "").replace(/\D/g, "");
 
     // If starts with 0 (e.g. 09876543210), trim leading zero
     if (cleaned.startsWith("0")) {
@@ -81,7 +81,7 @@ export class WhatsAppService {
       cleaned = "91" + cleaned;
     }
 
-    return `${cleaned}@s.whatsapp.net`;
+    return `${cleaned}@c.us`;
   }
 
   /**
@@ -165,27 +165,33 @@ export class WhatsAppService {
       }
 
       const url = `${this.getApiBaseUrl()}/api/sessions/${this.getSessionName()}/messages/send-text`;
+      console.log(`[WhatsApp Outbound] Sending to: ${toJid} (chatId=${toJid}) -> URL: ${url}`);
+
       const res = await axios.post(
         url,
         {
+          chatId: toJid,
           to: toJid,
           text: text,
         },
         {
           headers: this.getHeaders(),
-          timeout: 10000,
+          timeout: 15000,
         }
       );
+
+      console.log(`[WhatsApp Outbound] Sent successfully to ${toJid}:`, res.data?.id || res.data?.messageId || "OK");
 
       return {
         success: true,
         messageId: res.data?.id || res.data?.messageId || "sent",
       };
     } catch (err: any) {
-      console.warn("WhatsApp dispatch notice:", err?.response?.data || err?.message);
+      const errorDetail = err?.response?.data ? JSON.stringify(err.response.data) : err.message;
+      console.error(`[WhatsApp Outbound Error] Failed to send to ${phone}:`, errorDetail);
       return {
         success: false,
-        error: err?.response?.data?.message || err?.message || "OpenWA dispatch failed",
+        error: errorDetail,
       };
     }
   }
@@ -328,12 +334,16 @@ export class WhatsAppService {
    */
   public static async handleInboundChatbot(senderJid: string, messageBody: string): Promise<void> {
     try {
+      console.log(`[Chatbot Inbound Received] JID: ${senderJid} | Body: "${messageBody}"`);
       const templates = await WhatsAppTemplateModel.getTemplates();
-      if (!templates.chatbotEnabled) return;
+      if (!templates.chatbotEnabled) {
+        console.log(`[Chatbot Notice] Chatbot is disabled in settings.`);
+        return;
+      }
 
-      const cleanPhone = senderJid.replace(/@.*$/, "");
+      const cleanPhone = senderJid.split(":")[0].replace(/@.*$/, "").replace(/\D/g, "");
       const text = (messageBody || "").trim().toLowerCase();
-      if (!text) return;
+      if (!text || !cleanPhone) return;
 
       const locations = templates.chatbotLocations || [];
 
@@ -351,6 +361,7 @@ export class WhatsAppService {
           locationsList: locationsList || "1️⃣ Wakad Branch\n2️⃣ Chinchwad Branch\n3️⃣ Hinjewadi Branch\n4️⃣ Baner Branch",
         });
 
+        console.log(`[Chatbot Action] Sending Greeting Menu to ${cleanPhone}`);
         await this.sendTextMessage(cleanPhone, reply);
         return;
       }

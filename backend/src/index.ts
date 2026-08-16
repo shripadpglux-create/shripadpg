@@ -25,6 +25,7 @@ import buildingRoutes from "./routes/buildingRoutes.js";
 import staffRoutes from "./routes/staffRoutes.js";
 import expenseRoutes from "./routes/expenseRoutes.js";
 import whatsappRoutes from "./routes/whatsappRoutes.js";
+import { WhatsAppController } from "./controllers/whatsappController.js";
 
 dotenv.config();
 
@@ -131,6 +132,10 @@ app.use("/api", buildingRoutes);
 app.use("/api", staffRoutes);
 app.use("/api", expenseRoutes);
 app.use("/api/whatsapp", whatsappRoutes);
+
+// Fallback direct webhook endpoints for OpenWA synchronization
+app.post("/webhook", WhatsAppController.handleWebhook);
+app.post("/api/webhook", WhatsAppController.handleWebhook);
 
 // ── Health check endpoint ───────────────────────────────────────────
 app.get("/api/health", (_req: Request, res: Response) => {
