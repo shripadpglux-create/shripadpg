@@ -402,14 +402,27 @@ export class WhatsAppService {
       }
 
       const cleanPhone = senderJid.split(":")[0].replace(/@.*$/, "").replace(/\D/g, "");
-      const text = (messageBody || "").trim().toLowerCase();
+      const rawText = (messageBody || "").trim();
+      const text = rawText.toLowerCase();
       if (!text || !cleanPhone) return;
 
       const locations = templates.chatbotLocations || [];
 
-      // 1. Check for Greeting Keywords
+      // Helper function for strict whole-word / exact token matching (prevents "eaddwakadhh" matching "wakad")
+      const matchesStrictKeyword = (input: string, keyword: string): boolean => {
+        if (!keyword || !input) return false;
+        const kw = keyword.trim().toLowerCase();
+        const norm = input.trim().toLowerCase();
+        if (norm === kw) return true;
+
+        const escaped = kw.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+        const regex = new RegExp(`(^|[^a-zA-Z0-9])${escaped}([^a-zA-Z0-9]|$)`, "i");
+        return regex.test(norm);
+      };
+
+      // 1. Check for Strict Greeting Keywords
       const greetingKeywords = ["hi", "hii", "hiii", "hello", "hey", "namaste", "start", "menu", "help", "pg", "rooms", "branch", "branches", "info"];
-      const isGreeting = greetingKeywords.some(g => text === g || text.startsWith(g + " "));
+      const isGreeting = greetingKeywords.some(g => matchesStrictKeyword(text, g));
 
       if (isGreeting) {
         // Construct Numbered Locations List
@@ -421,26 +434,27 @@ export class WhatsAppService {
           locationsList: locationsList || "1️⃣ Wakad Branch\n2️⃣ Chinchwad Branch\n3️⃣ Hinjewadi Branch\n4️⃣ Baner Branch",
         });
 
-        console.log(`[Chatbot Action] Sending Greeting Menu to ${cleanPhone}`);
+        console.log(`[Chatbot Action] Sending Strict Greeting Menu to ${cleanPhone}`);
         await this.sendTextMessage(cleanPhone, reply);
         return;
       }
 
-      // 2. Check for Specific Location Match (by number or keyword)
+      // 2. Check for Specific Location Match (by number or strict keyword)
       let matchedBranch: LocationBranch | undefined;
 
-      // Match by number (e.g. "1", "2")
-      const num = parseInt(text, 10);
-      if (!isNaN(num) && num >= 1 && num <= locations.length) {
+      // Match by exact single number (e.g. "1", "2")
+      const trimmedNum = text.trim();
+      const num = parseInt(trimmedNum, 10);
+      if (!isNaN(num) && /^\d+$/.test(trimmedNum) && num >= 1 && num <= locations.length) {
         matchedBranch = locations[num - 1];
       }
 
-      // Match by keyword in text (e.g. "wakad", "chinchwad", "hinjewadi", "baner")
+      // Match by strict whole word (e.g. "wakad", "chinchwad", "hinjewadi", "baner")
       if (!matchedBranch) {
         matchedBranch = locations.find(loc => {
-          const kw = (loc.keyword || "").toLowerCase();
-          const nm = (loc.name || "").toLowerCase();
-          return text.includes(kw) || text.includes(nm);
+          const kw = (loc.keyword || "").trim();
+          const nm = (loc.name || "").trim();
+          return (kw && matchesStrictKeyword(text, kw)) || (nm && matchesStrictKeyword(text, nm));
         });
       }
 
@@ -465,13 +479,13 @@ ${matchedBranch.mapLink}
 
 _To view another location, reply with *HII* or the Area Name._`;
 
+        console.log(`[Chatbot Action] Strict match for branch "${matchedBranch.name}" -> replying to ${cleanPhone}`);
         await this.sendTextMessage(cleanPhone, branchReply);
         return;
       }
 
-      // 3. Fallback Reply for general queries
-      const defaultReply = templates.chatbotDefaultReply || `👋 Thank you for reaching out to *Shripad Luxury PG*! 🏢\n\nReply with *HII* to view all PG branches and pricing, or call *+91 98765 43210*.`;
-      await this.sendTextMessage(cleanPhone, defaultReply);
+      // If no strict keyword or command matched, ignore conversational noise to prevent spamming
+      console.log(`[Chatbot Ignored] No strict keyword match for message: "${text}"`);
     } catch (err: any) {
       console.warn("Chatbot auto-reply notice:", err.message);
     }
