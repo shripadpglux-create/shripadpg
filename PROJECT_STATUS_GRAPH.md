@@ -2,6 +2,36 @@
 
 ---
 
+### 📍 Version 8.57 — Robust Safe Number Formatting & Null-Safe Invoice Calculations 🛡️🧾✨
+
+```mermaid
+flowchart TD
+    subgraph DataArrival ["Invoice & Pending Payment Data Streams"]
+        InvoicesFromAPI["API /api/invoices (Saved Invoices array)"]
+        PendingReqs["pendingRequests array (Resident rent payment proofs)"]
+    end
+
+    subgraph NullSafeFormatting ["Defensive Rendering Pipeline"]
+        SafeReduce["Number(i.paidAmount || 0) in reduce / totals"]
+        SafeMap["Number(inv.rentAmount || 0).toLocaleString('en-IN') in tables"]
+        SafeQuery["(inv.invoiceNo || '').toLowerCase() in search filter"]
+        
+        InvoicesFromAPI --> SafeReduce
+        InvoicesFromAPI --> SafeMap
+        InvoicesFromAPI --> SafeQuery
+        PendingReqs --> SafeMap
+    end
+
+    subgraph StableRender ["Zero-Crash React Client Rendering"]
+        RenderInvoiceUI["Invoice Editor, History Table & Pending Requests Render Flawlessly ⚡"]
+        SafeReduce --> RenderInvoiceUI
+        SafeMap --> RenderInvoiceUI
+        SafeQuery --> RenderInvoiceUI
+    end
+```
+
+---
+
 ### 📍 Version 8.56 — Automated WhatsApp Invoice & Receipt Dispatch and In-App Payment Receipt PDF Modal 🧾📱⚡
 
 ```mermaid

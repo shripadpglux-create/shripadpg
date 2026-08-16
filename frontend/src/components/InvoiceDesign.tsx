@@ -472,17 +472,18 @@ export function InvoiceDesign({
 
   // Filtered Invoices List
   const filteredInvoices = scopedInvoicesList.filter((inv) => {
+    const q = (searchQuery || "").toLowerCase();
     const matchesSearch =
-      inv.invoiceNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      inv.tenantName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      inv.building.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      inv.room.toLowerCase().includes(searchQuery.toLowerCase());
+      (inv.invoiceNo || "").toLowerCase().includes(q) ||
+      (inv.tenantName || "").toLowerCase().includes(q) ||
+      (inv.building || "").toLowerCase().includes(q) ||
+      (inv.room || "").toLowerCase().includes(q);
     const matchesStatus = statusFilter === "ALL" || inv.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const totalCollected = scopedInvoicesList.reduce((sum, i) => sum + (i.paidAmount || 0), 0);
-  const totalBalanceDue = scopedInvoicesList.reduce((sum, i) => sum + (i.balanceDue || 0), 0);
+  const totalCollected = scopedInvoicesList.reduce((sum, i) => sum + (Number(i.paidAmount) || 0), 0);
+  const totalBalanceDue = scopedInvoicesList.reduce((sum, i) => sum + (Number(i.balanceDue) || 0), 0);
 
   return (
     <div className="space-y-6">
@@ -1084,9 +1085,9 @@ export function InvoiceDesign({
                           </div>
                         </td>
                         <td className="px-4 py-3.5">{inv.date}</td>
-                        <td className="px-4 py-3.5 font-bold">₹{inv.rentAmount.toLocaleString("en-IN")}</td>
-                        <td className="px-4 py-3.5 font-bold text-emerald-700">₹{inv.paidAmount.toLocaleString("en-IN")}</td>
-                        <td className="px-4 py-3.5 font-bold text-amber-700">₹{inv.balanceDue.toLocaleString("en-IN")}</td>
+                        <td className="px-4 py-3.5 font-bold">₹{Number(inv.rentAmount || 0).toLocaleString("en-IN")}</td>
+                        <td className="px-4 py-3.5 font-bold text-emerald-700">₹{Number(inv.paidAmount || 0).toLocaleString("en-IN")}</td>
+                        <td className="px-4 py-3.5 font-bold text-amber-700">₹{Number(inv.balanceDue || 0).toLocaleString("en-IN")}</td>
                         <td className="px-4 py-3.5">
                           <span
                             className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide ${
@@ -1182,7 +1183,7 @@ export function InvoiceDesign({
                       <div>
                         <div className="flex items-center gap-3">
                           <span className="text-2xl sm:text-3xl font-black text-slate-900">
-                            ₹{req.amount.toLocaleString("en-IN")}
+                            ₹{Number(req.amount || 0).toLocaleString("en-IN")}
                           </span>
                           <span className="text-xs font-black text-slate-500">
                             Month: {monthName} {req.year}
