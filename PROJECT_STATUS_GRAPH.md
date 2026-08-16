@@ -2,6 +2,41 @@
 
 ---
 
+### 📍 Version 8.64 — Full Admin Storage Token Authentication & Tab Visibility Fix 🔑🖥️✨
+
+```mermaid
+flowchart TD
+    subgraph StorageTokens ["Admin & Staff Session Authentication"]
+        Token1["shripad_admin_session"]
+        Token2["shripad_staff_session"]
+        Token3["shripad_auth_token"]
+    end
+
+    subgraph AuthEvaluator ["InvoiceDesign Auth Guard"]
+        CheckAuth["Evaluates all active session keys in localStorage & sessionStorage"]
+        StorageTokens --> CheckAuth
+        
+        CheckAuth -->|Authenticated Admin/Staff| AdminDashboardView
+        CheckAuth -->|Public Resident Viewer| PublicInvoiceView
+    end
+
+    subgraph AdminDashboardView ["Admin Invoice Management Suite"]
+        TabsVisible["All Tabs Visible: Editor & Generator, History, Pending Requests"]
+        EditorActive["Active Creation / Edit with 'Save & Issue' and 'Resident' Selector"]
+        HistoryAccess["Full Table Access with View, Edit, Print, and Delete actions"]
+        
+        TabsVisible --> FullAccess
+        EditorActive --> FullAccess
+        HistoryAccess --> FullAccess
+    end
+
+    subgraph PublicInvoiceView ["Public WhatsApp Link"]
+        LockedReceipt["Strict locked read-only verified invoice with Print button only"]
+    end
+```
+
+---
+
 ### 📍 Version 8.63 — Two-State Invoice Lifecycle: Locked View vs. Explicit Edit Mode 🔒✏️🧾
 
 ```mermaid

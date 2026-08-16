@@ -121,6 +121,12 @@ export function InvoiceDesign({
   const isAdminOrStaff = React.useMemo(() => {
     if (typeof window === "undefined") return false;
     return !!(
+      localStorage.getItem("shripad_admin_session") ||
+      localStorage.getItem("shripad_staff_session") ||
+      localStorage.getItem("shripad_auth_token") ||
+      sessionStorage.getItem("shripad_admin_session") ||
+      sessionStorage.getItem("shripad_staff_session") ||
+      sessionStorage.getItem("shripad_auth_token") ||
       sessionStorage.getItem("adminAuth") ||
       localStorage.getItem("adminAuth") ||
       sessionStorage.getItem("staffAuth") ||
