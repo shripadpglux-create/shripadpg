@@ -2,6 +2,37 @@
 
 ---
 
+### 📍 Version 8.56 — Automated WhatsApp Invoice & Receipt Dispatch and In-App Payment Receipt PDF Modal 🧾📱⚡
+
+```mermaid
+flowchart TD
+    subgraph AdminPaymentOperations ["Payment Logging & Verification"]
+        LogPayment["Admin Logs / Submits Payment (Cash, UPI, Bank)"]
+        VerifyPayment["Admin Verifies Payment / Approves Request"]
+        ViewReceipt["Click 'View & Download PDF' on Payment Record"]
+    end
+
+    subgraph AutoWhatsAppEngine ["WhatsApp Automated Outbound Engine"]
+        WAPaymentNotice["WhatsAppService.sendPaymentReceiptNotification()<br/>Sends formatted rent confirmation + receipt details"]
+        WAInvoiceNotice["WhatsAppService.sendInvoiceNotification()<br/>Sends official invoice link: https://shripadpg.pages.dev/invoice?invoiceNo=..."]
+        
+        LogPayment --> WAPaymentNotice
+        LogPayment --> WAInvoiceNotice
+        VerifyPayment --> WAPaymentNotice
+        VerifyPayment --> WAInvoiceNotice
+    end
+
+    subgraph ReceiptAndInvoiceUI ["In-App Printable Receipt & Public Invoice Viewer"]
+        ModalPreview["In-App Payment Receipt Modal<br/>(Live preview, Print, WhatsApp share, ₹ breakdown)"]
+        PublicInvoiceRoute["/invoice & /admin/invoice Router<br/>(URL query params auto-load, PDF download & print)"]
+        
+        ViewReceipt --> ModalPreview
+        WAInvoiceNotice --> PublicInvoiceRoute
+    end
+```
+
+---
+
 ### 📍 Version 8.55 — Chatbot Location Card Deletion Persistence & Instant Cloud Sync 🗑️☁️✨
 
 ```mermaid

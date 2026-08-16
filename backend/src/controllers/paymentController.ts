@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { BookingModel } from "../models/bookingModel.js";
 import { InvoiceModel } from "../models/invoiceModel.js";
 import { SmsParserService } from "../services/smsParserService.js";
+import { WhatsAppService } from "../services/whatsappService.js";
 
 export class PaymentController {
   /**
@@ -49,6 +50,11 @@ export class PaymentController {
         }
       }
 
+      // If recorded by admin from dashboard, mark as verified
+      if (req.body.verified === true || req.body.status === "verified") {
+        status = "verified";
+      }
+
       const result = await BookingModel.addPayment(bookingId, {
         month: Number(month) || new Date().getMonth() + 1,
         year: Number(year) || new Date().getFullYear(),
@@ -69,10 +75,40 @@ export class PaymentController {
         });
       }
 
+      // Automated WhatsApp dispatch for rent receipt / invoice notification
+      const residentPhone = result.booking.phone || "";
+      if (residentPhone) {
+        const mName = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][(result.payment.month || 1) - 1];
+        void WhatsAppService.sendPaymentReceiptNotification({
+          residentName: result.booking.name || payerName || "Resident",
+          phone: residentPhone,
+          amount: result.payment.amount,
+          txnId: result.payment.transactionId,
+          month: `${mName} ${result.payment.year}`,
+          date: result.payment.paymentDate,
+          room: result.booking.allocatedRoom ? `Room ${result.booking.allocatedRoom}` : "Room 101",
+          bed: result.booking.allocatedBed || "Bed A",
+          building: result.booking.allocatedBuilding || result.booking.building || "Shripad PG",
+          paymentMode: result.payment.paymentMethod,
+        }).catch((err) => console.warn("[WhatsApp Auto-Receipt Notice]:", err.message));
+
+        void WhatsAppService.sendInvoiceNotification({
+          customerName: result.booking.name || payerName || "Resident",
+          phone: residentPhone,
+          invoiceNo: result.payment.transactionId,
+          amount: result.payment.amount,
+          month: `${mName} ${result.payment.year}`,
+          room: result.booking.allocatedRoom ? `Room ${result.booking.allocatedRoom}` : "Room 101",
+          bed: result.booking.allocatedBed || "Bed A",
+          building: result.booking.allocatedBuilding || result.booking.building || "Shripad PG",
+          invoiceLink: `https://shripadpg.pages.dev/invoice?invoiceNo=${result.payment.transactionId}`,
+        }).catch((err) => console.warn("[WhatsApp Auto-Invoice Notice]:", err.message));
+      }
+
       res.status(201).json({
         success: true,
-        message: autoVerified
-          ? "🎉 Payment submitted and auto-verified!"
+        message: autoVerified || status === "verified"
+          ? "🎉 Payment submitted, verified & WhatsApp receipt sent!"
           : "Payment request submitted. Pending admin verification.",
         payment: result.payment,
         booking: result.booking,
@@ -89,7 +125,7 @@ export class PaymentController {
   }
 
   /**
-   * Manually verify a payment record & automatically raise invoice.
+   * Manually verify a payment record & automatically raise invoice & dispatch WhatsApp.
    */
   public static async verifyPayment(req: Request, res: Response) {
     try {
@@ -114,13 +150,13 @@ export class PaymentController {
         });
       }
 
+      const paymentRecord = updatedBooking.paymentHistory?.find((p) => p.id === paymentId);
+      const invNo = paymentRecord?.transactionId && paymentRecord.transactionId.startsWith("INV-")
+        ? paymentRecord.transactionId
+        : `INV-${Math.floor(100000 + Math.random() * 900000)}`;
+
       let createdInvoice = null;
       if (raiseInvoice !== false) {
-        const paymentRecord = updatedBooking.paymentHistory?.find((p) => p.id === paymentId);
-        const invNo = paymentRecord?.transactionId && paymentRecord.transactionId.startsWith("INV-")
-          ? paymentRecord.transactionId
-          : `INV-${Math.floor(100000 + Math.random() * 900000)}`;
-
         createdInvoice = await InvoiceModel.createOrUpdate({
           invoiceNo: invNo,
           residentId: updatedBooking.id,
@@ -142,9 +178,38 @@ export class PaymentController {
         });
       }
 
+      // Automated WhatsApp notification on payment verification
+      if (paymentRecord && updatedBooking.phone) {
+        const mName = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][(paymentRecord.month || 1) - 1];
+        void WhatsAppService.sendPaymentReceiptNotification({
+          residentName: updatedBooking.name || paymentRecord.payerName || "Resident",
+          phone: updatedBooking.phone,
+          amount: paymentRecord.amount,
+          txnId: paymentRecord.transactionId,
+          month: `${mName} ${paymentRecord.year}`,
+          date: paymentRecord.paymentDate,
+          room: updatedBooking.allocatedRoom ? `Room ${updatedBooking.allocatedRoom}` : "Room 101",
+          bed: updatedBooking.allocatedBed || "Bed A",
+          building: updatedBooking.allocatedBuilding || updatedBooking.building || "Shripad PG",
+          paymentMode: paymentRecord.paymentMethod,
+        }).catch((err) => console.warn("[WhatsApp Auto-Receipt Notice]:", err.message));
+
+        void WhatsAppService.sendInvoiceNotification({
+          customerName: updatedBooking.name || paymentRecord.payerName || "Resident",
+          phone: updatedBooking.phone,
+          invoiceNo: createdInvoice?.invoiceNo || paymentRecord.transactionId,
+          amount: paymentRecord.amount,
+          month: `${mName} ${paymentRecord.year}`,
+          room: updatedBooking.allocatedRoom ? `Room ${updatedBooking.allocatedRoom}` : "Room 101",
+          bed: updatedBooking.allocatedBed || "Bed A",
+          building: updatedBooking.allocatedBuilding || updatedBooking.building || "Shripad PG",
+          invoiceLink: `https://shripadpg.pages.dev/invoice?invoiceNo=${createdInvoice?.invoiceNo || paymentRecord.transactionId}`,
+        }).catch((err) => console.warn("[WhatsApp Auto-Invoice Notice]:", err.message));
+      }
+
       res.json({
         success: true,
-        message: "Payment verified successfully and official invoice raised!",
+        message: "Payment verified successfully and official invoice raised & sent on WhatsApp!",
         booking: updatedBooking,
         invoice: createdInvoice,
       });

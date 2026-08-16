@@ -241,6 +241,70 @@ export function InvoiceDesign({
     fetchInvoices();
   }, []);
 
+  // Parse URL query parameter (e.g. /invoice?invoiceNo=INV-123456 or ?txnId=...)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const targetNo = params.get("invoiceNo") || params.get("txnId") || params.get("id");
+    if (!targetNo) return;
+
+    setInvoiceNo(targetNo);
+
+    // If invoices already loaded, find match
+    const match = invoicesList.find(
+      (inv) =>
+        inv.invoiceNo?.toLowerCase() === targetNo.toLowerCase() ||
+        inv.id === targetNo ||
+        inv.residentId === targetNo
+    );
+
+    if (match) {
+      setTenantName(match.tenantName || "");
+      setContact(match.contact || "");
+      if (match.email) setEmail(match.email);
+      if (match.building) setBuilding(match.building);
+      if (match.floor) setFloor(match.floor);
+      if (match.room) setRoom(match.room);
+      if (match.bed) setBed(match.bed);
+      if (match.date) setDate(match.date);
+      if (match.dueDate) setDueDate(match.dueDate);
+      if (match.rentAmount !== undefined) setRentAmount(match.rentAmount);
+      if (match.paidAmount !== undefined) setPaidAmount(match.paidAmount);
+      if (match.paymentModes) setSelectedModes(match.paymentModes);
+      if (match.notes) setNotes(match.notes);
+    } else {
+      // Fetch directly by ID or invoiceNo from API
+      void fetch(`${API_BASE_URL}/api/invoices`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && Array.isArray(data.invoices)) {
+            const apiMatch = data.invoices.find(
+              (inv: SavedInvoice) =>
+                inv.invoiceNo?.toLowerCase() === targetNo.toLowerCase() ||
+                inv.id === targetNo ||
+                inv.residentId === targetNo
+            );
+            if (apiMatch) {
+              setTenantName(apiMatch.tenantName || "");
+              setContact(apiMatch.contact || "");
+              if (apiMatch.email) setEmail(apiMatch.email);
+              if (apiMatch.building) setBuilding(apiMatch.building);
+              if (apiMatch.floor) setFloor(apiMatch.floor);
+              if (apiMatch.room) setRoom(apiMatch.room);
+              if (apiMatch.bed) setBed(apiMatch.bed);
+              if (apiMatch.date) setDate(apiMatch.date);
+              if (apiMatch.dueDate) setDueDate(apiMatch.dueDate);
+              if (apiMatch.rentAmount !== undefined) setRentAmount(apiMatch.rentAmount);
+              if (apiMatch.paidAmount !== undefined) setPaidAmount(apiMatch.paidAmount);
+              if (apiMatch.paymentModes) setSelectedModes(apiMatch.paymentModes);
+              if (apiMatch.notes) setNotes(apiMatch.notes);
+            }
+          }
+        })
+        .catch((err) => console.warn("Failed fetching specific invoice:", err));
+    }
+  }, [invoicesList]);
+
   // Synchronize resident selection when selected from dropdown
   const handleSelectResident = (resId: string) => {
     setSelectedResidentId(resId);

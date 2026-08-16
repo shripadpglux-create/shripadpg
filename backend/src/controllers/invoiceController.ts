@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { InvoiceModel } from "../models/invoiceModel.js";
 import { BookingModel, PaymentRecord } from "../models/bookingModel.js";
+import { WhatsAppService } from "../services/whatsappService.js";
 
 export class InvoiceController {
   /**
@@ -131,9 +132,24 @@ export class InvoiceController {
         syncedBooking = await BookingModel.update(targetBooking.id, updatedBooking);
       }
 
+      // Automated WhatsApp notification with invoice link
+      if (savedInvoice && savedInvoice.contact) {
+        void WhatsAppService.sendInvoiceNotification({
+          customerName: savedInvoice.tenantName || "Resident",
+          phone: savedInvoice.contact,
+          invoiceNo: savedInvoice.invoiceNo,
+          amount: savedInvoice.paidAmount > 0 ? savedInvoice.paidAmount : savedInvoice.rentAmount,
+          month: new Date(savedInvoice.date).toLocaleDateString("en-IN", { month: "short", year: "numeric" }),
+          room: savedInvoice.room,
+          bed: savedInvoice.bed,
+          building: savedInvoice.building,
+          invoiceLink: `https://shripadpg.pages.dev/invoice?invoiceNo=${savedInvoice.invoiceNo}`,
+        }).catch((err) => console.warn("[WhatsApp Auto-Invoice Notice]:", err.message));
+      }
+
       res.status(201).json({
         success: true,
-        message: `Invoice ${savedInvoice.invoiceNo} issued and resident payment history updated!`,
+        message: `Invoice ${savedInvoice.invoiceNo} issued and sent on WhatsApp!`,
         invoice: savedInvoice,
         syncedBooking,
       });
