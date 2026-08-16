@@ -215,6 +215,7 @@ export class SessionService implements OnModuleDestroy, OnModuleInit, OnApplicat
       where: claimable.flatMap(clause => [
         { ...clause, phone: Not(IsNull()), status: SessionStatus.DISCONNECTED },
         { ...clause, name: 'shripad-pg' },
+        { ...clause, status: SessionStatus.CREATED },
       ]),
     });
 

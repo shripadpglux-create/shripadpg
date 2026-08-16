@@ -2,6 +2,31 @@
 
 ---
 
+### 📍 Version 8.53 — Automated Session Boot & Auto-Start Configuration on Deploy ⚡🔄
+
+```mermaid
+flowchart TD
+    subgraph RenderBoot ["OpenWA Gateway Deployment / Boot Cycle"]
+        ContainerStart["OpenWA Gateway Spins Up (Render / Docker)"]
+        BootHook["onApplicationBootstrap()"]
+    end
+
+    subgraph AutoStartOrchestration ["Session Engine Auto-Start"]
+        FeatureFlag["computeFeatureFlags() -> autoStartSessions: default TRUE"]
+        SessionScanner["autoStartSessions()<br/>Finds 'shripad-pg', CREATED, DISCONNECTED & authenticated sessions"]
+        EngineLaunch["this.start(session.id)<br/>Spins up Baileys socket with MongoDB Atlas restored auth"]
+    end
+
+    subgraph RealTimeStatus ["Real-Time Connected Badge"]
+        LiveStatus["Status: 🟢 Online (No manual 'Start' click required)"]
+        ChatbotLive["Interactive Location Chatbot & Outbound Messages Ready"]
+    end
+
+    ContainerStart --> BootHook --> FeatureFlag --> SessionScanner --> EngineLaunch --> LiveStatus --> ChatbotLive
+```
+
+---
+
 ### 📍 Version 8.52 — EngineRegistry Single-Session Fallback & Strict SendTextMessageDto Compliance 🚀💬⚡
 
 ```mermaid
