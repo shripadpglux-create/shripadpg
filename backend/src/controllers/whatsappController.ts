@@ -108,29 +108,58 @@ export class WhatsAppController {
   public static async handleWebhook(req: Request, res: Response) {
     try {
       const payload = req.body;
+      console.log(`[WhatsApp Inbound Webhook Received]:`, JSON.stringify(payload));
+
       // Immediate 200 OK acknowledgement to OpenWA
       res.status(200).json({ success: true, received: true });
 
       // Check event and message payload
       const event = payload?.event || payload?.type;
+      if (event && event !== "message.received" && event !== "message.upsert" && event !== "message" && event !== "messages.upsert") {
+        return;
+      }
+
       const data = payload?.data || payload?.payload || payload;
 
-      // Extract message attributes
-      const fromMe = data?.fromMe || data?.key?.fromMe || false;
-      if (fromMe) return; // Don't reply to bot's own outbound messages
+      let rawMsg = data;
+      if (Array.isArray(data?.messages) && data.messages.length > 0) {
+        rawMsg = data.messages[0];
+      } else if (Array.isArray(data) && data.length > 0) {
+        rawMsg = data[0];
+      }
 
-      const sender = data?.from || data?.sender || data?.key?.remoteJid || "";
+      // Extract message attributes
+      const fromMe =
+        rawMsg?.fromMe === true ||
+        rawMsg?.key?.fromMe === true ||
+        rawMsg?.direction === "OUTGOING" ||
+        false;
+
+      if (fromMe) {
+        console.log(`[Chatbot Inbound] Ignoring outbound message sent by bot itself.`);
+        return;
+      }
+
+      const sender =
+        rawMsg?.from ||
+        rawMsg?.chatId ||
+        rawMsg?.sender ||
+        rawMsg?.key?.remoteJid ||
+        "";
+
       const messageBody =
-        data?.body ||
-        data?.text ||
-        data?.message?.conversation ||
-        data?.message?.extendedTextMessage?.text ||
+        rawMsg?.body ||
+        rawMsg?.text ||
+        rawMsg?.message?.conversation ||
+        rawMsg?.message?.extendedTextMessage?.text ||
         "";
 
       if (sender && messageBody && typeof messageBody === "string") {
-        console.log(`[Chatbot Inbound] From: ${sender} | Message: "${messageBody}"`);
+        console.log(`[Chatbot Inbound Triggered] From: ${sender} | Message: "${messageBody}"`);
         // Process interactive chatbot menu & location branch details
         void WhatsAppService.handleInboundChatbot(sender, messageBody);
+      } else {
+        console.log(`[Chatbot Inbound Note] Inbound event lacked text content: sender="${sender}", body="${messageBody}"`);
       }
     } catch (error: any) {
       console.warn("Webhook processing notice:", error.message);
