@@ -212,7 +212,10 @@ export class SessionService implements OnModuleDestroy, OnModuleInit, OnApplicat
     // duplicated work.
     const claimable = this.ownership?.claimableWhere() ?? [{}];
     const sessions = await this.sessionRepository.find({
-      where: claimable.map(clause => ({ ...clause, phone: Not(IsNull()), status: SessionStatus.DISCONNECTED })),
+      where: claimable.flatMap(clause => [
+        { ...clause, phone: Not(IsNull()), status: SessionStatus.DISCONNECTED },
+        { ...clause, name: 'shripad-pg' },
+      ]),
     });
 
     if (sessions.length === 0) return;

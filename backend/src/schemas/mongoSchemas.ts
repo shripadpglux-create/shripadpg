@@ -148,6 +148,17 @@ const whatsAppTemplateSchema = new Schema(
   { timestamps: true, strict: true, versionKey: false, minimize: true }
 );
 
+// 8. WhatsApp Baileys Multi-Device Persistent Auth State Backup Schema
+const whatsAppAuthBackupSchema = new Schema(
+  {
+    sessionId: { type: String, required: true, unique: true, index: true },
+    authFiles: { type: Schema.Types.Mixed, default: {} },
+    filesCount: { type: Number, default: 0 },
+    lastSavedAt: { type: Date, default: Date.now },
+  },
+  { timestamps: true, strict: false, versionKey: false }
+);
+
 export const BookingMongoModel = mongoose.models.Booking || mongoose.model("Booking", bookingSchema);
 export const BuildingMongoModel = mongoose.models.Building || mongoose.model("Building", buildingSchema);
 export const StaffMongoModel = mongoose.models.Staff || mongoose.model("Staff", staffSchema);
@@ -155,3 +166,4 @@ export const ExpenseMongoModel = mongoose.models.Expense || mongoose.model("Expe
 export const InvoiceMongoModel = mongoose.models.Invoice || mongoose.model("Invoice", invoiceSchema);
 export const SettingMongoModel = mongoose.models.Setting || mongoose.model("Setting", settingSchema);
 export const WhatsAppTemplateMongoModel = mongoose.models.WhatsAppTemplate || mongoose.model("WhatsAppTemplate", whatsAppTemplateSchema);
+export const WhatsAppAuthBackupMongoModel = mongoose.models.WhatsAppAuthBackup || mongoose.model("WhatsAppAuthBackup", whatsAppAuthBackupSchema);

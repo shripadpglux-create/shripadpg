@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as path from 'path';
 import type { Agent } from 'https';
 import * as qrcode from 'qrcode';
 import { HttpsProxyAgent } from 'https-proxy-agent';
@@ -14,6 +15,97 @@ import { createBaileysLogger } from './baileys-logger';
 import type { BaileysEvents } from './baileys-events';
 import type { BaileysHistory } from './baileys-history';
 import type { BaileysSessionStore } from './baileys-session-store';
+
+function getBackendBaseUrl(): string {
+  const raw = process.env.BACKEND_URL || process.env.WEBHOOK_URL || 'https://shripadpg.onrender.com';
+  return raw.replace(/\/api\/whatsapp\/webhook$/, '').replace(/\/$/, '');
+}
+
+async function restoreAuthFilesFromBackup(sessionId: string, authPath: string, logger: any): Promise<boolean> {
+  try {
+    const credsPath = path.join(authPath, 'creds.json');
+    if (fs.existsSync(credsPath)) {
+      return true;
+    }
+
+    const restoreUrl = `${getBackendBaseUrl()}/api/whatsapp/auth/restore/${encodeURIComponent(sessionId)}`;
+    logger.log(`[Baileys Auth] Checking MongoDB Atlas for persistent session backup: ${restoreUrl}`);
+
+    const response = await fetch(restoreUrl, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
+    const data: any = await response.json();
+    if (data?.success && data?.authFiles && typeof data.authFiles === 'object') {
+      const files = Object.keys(data.authFiles);
+      if (files.length > 0) {
+        if (!fs.existsSync(authPath)) {
+          fs.mkdirSync(authPath, { recursive: true });
+        }
+        for (const file of files) {
+          const filePath = path.join(authPath, file);
+          fs.writeFileSync(filePath, data.authFiles[file], 'utf8');
+        }
+        logger.log(`[Baileys Auth] ✅ Successfully restored ${files.length} auth state files from MongoDB Atlas for session: ${sessionId}`);
+        return true;
+      }
+    }
+  } catch (err: any) {
+    logger.warn(`[Baileys Auth] Could not restore auth backup from backend: ${err.message}`);
+  }
+  return false;
+}
+
+let backupDebounceTimer: NodeJS.Timeout | null = null;
+
+async function backupAuthFilesToBackend(sessionId: string, authPath: string, logger: any): Promise<void> {
+  if (backupDebounceTimer) clearTimeout(backupDebounceTimer);
+  backupDebounceTimer = setTimeout(async () => {
+    try {
+      if (!fs.existsSync(authPath)) return;
+      const fileNames = fs.readdirSync(authPath);
+      if (fileNames.length === 0) return;
+
+      const authFiles: Record<string, string> = {};
+      for (const file of fileNames) {
+        const fullPath = path.join(authPath, file);
+        const stat = fs.statSync(fullPath);
+        if (stat.isFile() && stat.size < 5 * 1024 * 1024) {
+          authFiles[file] = fs.readFileSync(fullPath, 'utf8');
+        }
+      }
+
+      if (Object.keys(authFiles).length === 0 || !authFiles['creds.json']) {
+        return;
+      }
+
+      const backupUrl = `${getBackendBaseUrl()}/api/whatsapp/auth/backup`;
+      const response = await fetch(backupUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sessionId,
+          authFiles,
+        }),
+      });
+
+      if (response.ok) {
+        logger.log(`[Baileys Auth] 💾 Successfully backed up ${Object.keys(authFiles).length} auth files to MongoDB Atlas for session: ${sessionId}`);
+      }
+    } catch (err: any) {
+      logger.warn(`[Baileys Auth Backup Notice]: ${err.message}`);
+    }
+  }, 1500);
+}
 
 /** Linked-device identity shown in WhatsApp (Settings → Linked Devices). The display name is
  * operator-brandable via BAILEYS_BROWSER_NAME; it only applies to pairings made after the change. */
@@ -178,6 +270,9 @@ export class BaileysLifecycle {
       // Credential-stripped, matching the wwjs adapter's log line (#628).
       this.host.logger.log(`Using proxy: ${protocol}//${host}`, { sessionId: this.host.config.sessionId });
     }
+    // Restore persistent session files from MongoDB Atlas if available
+    await restoreAuthFilesFromBackup(this.host.config.sessionId, this.host.authPath, this.host.logger);
+
     const b = await this.loadLib();
     const { state, saveCreds } = await b.useMultiFileAuthState(this.host.authPath);
     const { version } = await b.fetchLatestBaileysVersion();
@@ -275,12 +370,16 @@ export class BaileysLifecycle {
     sock.ev.on(
       'creds.update',
       () =>
-        void saveCreds().catch(err => {
-          this.host.logger.warn('Baileys creds.update save failed', {
-            sessionId: this.host.config.sessionId,
-            error: err instanceof Error ? err.message : String(err),
-          });
-        }),
+        void saveCreds()
+          .then(() => {
+            void backupAuthFilesToBackend(this.host.config.sessionId, this.host.authPath, this.host.logger);
+          })
+          .catch(err => {
+            this.host.logger.warn('Baileys creds.update save failed', {
+              sessionId: this.host.config.sessionId,
+              error: err instanceof Error ? err.message : String(err),
+            });
+          }),
     );
     sock.ev.on('connection.update', update => this.handleConnectionUpdate(update));
     sock.ev.on('messages.upsert', event => this.host.handleMessagesUpsert(event));
@@ -380,6 +479,8 @@ export class BaileysLifecycle {
       void this.probeAccountRestriction();
       // Backfill names the initial sync skipped (see BaileysHistory.hydrateNames).
       void this.host.hydrateNames();
+      // Persist authenticated session credentials into MongoDB Atlas
+      void backupAuthFilesToBackend(this.host.config.sessionId, this.host.authPath, this.host.logger);
     }
 
     if (connection === 'close') {

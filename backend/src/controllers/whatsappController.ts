@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { WhatsAppService } from "../services/whatsappService.js";
 import { WhatsAppTemplateModel } from "../models/whatsappTemplateModel.js";
+import { WhatsAppAuthBackupModel } from "../models/whatsappAuthBackupModel.js";
 
 export class WhatsAppController {
   /**
@@ -133,6 +134,41 @@ export class WhatsAppController {
       }
     } catch (error: any) {
       console.warn("Webhook processing notice:", error.message);
+    }
+  }
+
+  /**
+   * POST /api/whatsapp/auth/backup
+   * Save Baileys auth files to MongoDB Atlas so sessions survive redeploys
+   */
+  public static async backupAuth(req: Request, res: Response) {
+    try {
+      const { sessionId, authFiles } = req.body;
+      if (!sessionId || !authFiles) {
+        return res.status(400).json({ success: false, message: "Missing sessionId or authFiles" });
+      }
+      const saved = await WhatsAppAuthBackupModel.saveAuthBackup(sessionId, authFiles);
+      res.json({ success: saved, message: saved ? "Auth backed up to MongoDB Atlas." : "Backup failed." });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  /**
+   * GET /api/whatsapp/auth/restore/:sessionId
+   * Restore Baileys auth files from MongoDB Atlas
+   */
+  public static async restoreAuth(req: Request, res: Response) {
+    try {
+      const sessionId = String(req.params.sessionId || "shripad-pg");
+      const authFiles = await WhatsAppAuthBackupModel.restoreAuthBackup(sessionId);
+      if (authFiles) {
+        res.json({ success: true, authFiles, count: Object.keys(authFiles).length });
+      } else {
+        res.json({ success: false, message: "No saved auth session found in MongoDB." });
+      }
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: error.message });
     }
   }
 }

@@ -14,4 +14,8 @@ router.get("/templates", WhatsAppController.getTemplates);
 router.put("/templates", WhatsAppController.updateTemplates);
 router.post("/templates/reset", WhatsAppController.resetTemplates);
 
+// Multi-Device Baileys Persistent Auth State Backup & Restore (MongoDB Atlas)
+router.post("/auth/backup", WhatsAppController.backupAuth);
+router.get("/auth/restore/:sessionId", WhatsAppController.restoreAuth);
+
 export default router;

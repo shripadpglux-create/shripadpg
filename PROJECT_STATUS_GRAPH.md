@@ -2,6 +2,39 @@
 
 ---
 
+### 📍 Version 8.49 — Baileys Multi-Device Persistent Auth State & Auto-Boot Architecture (MongoDB Atlas) 🔄☁️📱
+
+```mermaid
+flowchart TD
+    subgraph RenderDeployLifecycle ["Render Container Redeploy / Restart Lifecycle"]
+        RedeployEvent["Container Redeploy / Restart (Local Disk Cleared)"]
+        OpenWABoot["OpenWA onApplicationBootstrap()"]
+        AutoStartShripad["autoStartSessions() triggers 'shripad-pg'"]
+        
+        RedeployEvent --> OpenWABoot --> AutoStartShripad
+    end
+
+    subgraph MongoDBAtlasPersistence ["MongoDB Atlas Cloud (Persistent Layer)"]
+        AuthBackupCollection[("whatsapp_auth_backups Collection<br/>(creds.json, keys, tokens)")]
+    end
+
+    subgraph BaileysEngineAdapter ["Baileys Engine Lifecycle (OpenWA)"]
+        RestoreAuthHook["restoreAuthFilesFromBackup()"]
+        UseMultiFileAuth["useMultiFileAuthState('./data/sessions/shripad-pg/auth')"]
+        DirectConnect["sock.default(auth: state)"]
+        ConnectedReady["EngineStatus.READY (🟢 Reconnected without QR scan)"]
+        SaveCredsHook["sock.ev.on('creds.update') -> backupAuthFilesToBackend()"]
+
+        AutoStartShripad --> RestoreAuthHook
+        RestoreAuthHook -->|"GET /api/whatsapp/auth/restore/shripad-pg"| AuthBackupCollection
+        RestoreAuthHook --> UseMultiFileAuth --> DirectConnect --> ConnectedReady
+        ConnectedReady --> SaveCredsHook
+        SaveCredsHook -->|"POST /api/whatsapp/auth/backup"| AuthBackupCollection
+    end
+```
+
+---
+
 ### 📍 Version 8.48 — WhatsApp Inbound Webhook Synchronization & ChatId Payload Protocol Fix 🤖💬🚀
 
 ```mermaid
