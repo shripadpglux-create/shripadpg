@@ -8,18 +8,34 @@ export const Route = createFileRoute("/invoice")({
       {
         name: "description",
         content:
-          "Fill and print official Shripad PG rent invoice template — editable A4 sheet for residents and admin.",
+          "Official Shripad PG verified rent receipt and invoice — printable A4 document for residents.",
       },
       { property: "og:title", content: "Shripad PG Rent Invoice" },
       {
         property: "og:description",
-        content: "Editable A4 rent invoice for Shripad PG residents.",
+        content: "Verified A4 rent invoice & receipt for Shripad PG residents.",
       },
     ],
   }),
-  component: () => (
-    <div className="min-h-screen bg-slate-100 py-8 px-4">
-      <InvoiceDesign />
-    </div>
-  ),
+  component: () => {
+    // Determine whether current viewer is an authenticated admin/staff
+    const isAdminOrStaff =
+      typeof window !== "undefined" &&
+      !!(
+        sessionStorage.getItem("adminAuth") ||
+        localStorage.getItem("adminAuth") ||
+        sessionStorage.getItem("staffAuth") ||
+        localStorage.getItem("staffAuth")
+      );
+
+    return (
+      <div className="min-h-screen bg-slate-100 py-6 sm:py-8 px-3 sm:px-4">
+        <InvoiceDesign
+          readOnly={!isAdminOrStaff}
+          hideHeaderTabs={!isAdminOrStaff}
+        />
+      </div>
+    );
+  },
 });
+

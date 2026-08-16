@@ -25,6 +25,7 @@ import {
   FileSpreadsheet,
   Eye,
   Download,
+  ShieldCheck,
 } from "lucide-react";
 import brandLogo from "@/assets/shripad-logo.png";
 
@@ -109,6 +110,20 @@ export function InvoiceDesign({
   const [activeSubTab, setActiveSubTab] = useState<"editor" | "history" | "pending">(
     pendingRequests.length > 0 ? "pending" : "editor"
   );
+
+  // Authentication check: Detect if viewer is an admin or customer
+  const isAdminOrStaff = React.useMemo(() => {
+    if (typeof window === "undefined") return false;
+    return !!(
+      sessionStorage.getItem("adminAuth") ||
+      localStorage.getItem("adminAuth") ||
+      sessionStorage.getItem("staffAuth") ||
+      localStorage.getItem("staffAuth")
+    );
+  }, []);
+
+  const isEffectiveReadOnly = readOnly || !isAdminOrStaff;
+  const isEffectiveHideTabs = hideHeaderTabs || !isAdminOrStaff;
 
   // Form State
   const [selectedResidentId, setSelectedResidentId] = useState<string>(initialResident?.id || initialInvoiceData?.residentId || "");
@@ -520,59 +535,59 @@ export function InvoiceDesign({
 
   return (
     <div className="space-y-6">
-      {/* Sub-Navigation Header Tabs */}
-      {!hideHeaderTabs && (
+      {/* Sub-Navigation Header Tabs (Admin / Staff Only) */}
+      {!isEffectiveHideTabs && (
         <div className="no-print mx-auto flex w-full max-w-[210mm] items-center justify-between gap-2 border-b border-slate-200 pb-3">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setActiveSubTab("editor")}
-            className={`flex items-center gap-2 rounded-2xl px-5 py-2.5 text-xs font-black transition cursor-pointer ${
-              activeSubTab === "editor"
-                ? "bg-[#0f1b3d] text-white shadow-md"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-            }`}
-          >
-            <Sparkles className="h-4 w-4 text-emerald-400" />
-            <span>Invoice Editor & Generator</span>
-          </button>
-          <button
-            onClick={() => setActiveSubTab("history")}
-            className={`flex items-center gap-2 rounded-2xl px-5 py-2.5 text-xs font-black transition cursor-pointer ${
-              activeSubTab === "history"
-                ? "bg-[#0f1b3d] text-white shadow-md"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-            }`}
-          >
-            <Clock className="h-4 w-4 text-emerald-400" />
-            <span>All Invoices & History</span>
-            <span className="ml-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-extrabold text-emerald-700">
-              {scopedInvoicesList.length}
-            </span>
-          </button>
-          <button
-            onClick={() => setActiveSubTab("pending")}
-            className={`flex items-center gap-2 rounded-2xl px-5 py-2.5 text-xs font-black transition cursor-pointer ${
-              activeSubTab === "pending"
-                ? "bg-[#0f1b3d] text-white shadow-md"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-            }`}
-          >
-            <AlertCircle className={`h-4 w-4 ${pendingRequests.length > 0 ? "text-amber-400 animate-pulse" : "text-slate-400"}`} />
-            <span>Pending Requests</span>
-            {pendingRequests.length > 0 && (
-              <span className="ml-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-[10px] font-black text-white shadow-xs animate-bounce">
-                {pendingRequests.length}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setActiveSubTab("editor")}
+              className={`flex items-center gap-2 rounded-2xl px-5 py-2.5 text-xs font-black transition cursor-pointer ${
+                activeSubTab === "editor"
+                  ? "bg-[#0f1b3d] text-white shadow-md"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              <Sparkles className="h-4 w-4 text-emerald-400" />
+              <span>Invoice Editor & Generator</span>
+            </button>
+            <button
+              onClick={() => setActiveSubTab("history")}
+              className={`flex items-center gap-2 rounded-2xl px-5 py-2.5 text-xs font-black transition cursor-pointer ${
+                activeSubTab === "history"
+                  ? "bg-[#0f1b3d] text-white shadow-md"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              <Clock className="h-4 w-4 text-emerald-400" />
+              <span>All Invoices & History</span>
+              <span className="ml-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-extrabold text-emerald-700">
+                {scopedInvoicesList.length}
               </span>
-            )}
-          </button>
-        </div>
-
-        {saveNotification && (
-          <div className="hidden sm:flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-300 px-3 py-1.5 text-xs font-extrabold text-emerald-800 animate-fade-in">
-            <span>{saveNotification}</span>
+            </button>
+            <button
+              onClick={() => setActiveSubTab("pending")}
+              className={`flex items-center gap-2 rounded-2xl px-5 py-2.5 text-xs font-black transition cursor-pointer ${
+                activeSubTab === "pending"
+                  ? "bg-[#0f1b3d] text-white shadow-md"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              <AlertCircle className={`h-4 w-4 ${pendingRequests.length > 0 ? "text-amber-400 animate-pulse" : "text-slate-400"}`} />
+              <span>Pending Requests</span>
+              {pendingRequests.length > 0 && (
+                <span className="ml-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-[10px] font-black text-white shadow-xs animate-bounce">
+                  {pendingRequests.length}
+                </span>
+              )}
+            </button>
           </div>
-        )}
-      </div>
+
+          {saveNotification && (
+            <div className="hidden sm:flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-300 px-3 py-1.5 text-xs font-extrabold text-emerald-800 animate-fade-in">
+              <span>{saveNotification}</span>
+            </div>
+          )}
+        </div>
       )}
 
       {saveNotification && (
@@ -587,19 +602,36 @@ export function InvoiceDesign({
           {/* Top Controls Toolbar (Hidden when printing or when hideTopBar is true) */}
           {!hideTopBar && (
             <div className="no-print mx-auto flex w-full max-w-[210mm] flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 rounded-2xl sm:rounded-3xl border border-slate-200/90 bg-white/95 p-3.5 sm:p-4 shadow-sm backdrop-blur-xl">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-green/10 text-brand-green border border-brand-green/20">
-                  <Sparkles className="h-4 w-4" />
+              {isEffectiveReadOnly ? (
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    <ShieldCheck className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-xs sm:text-sm font-black text-slate-900">Official Rent Receipt & Tax Invoice</h2>
+                      <span className="rounded-full bg-emerald-100 border border-emerald-300/80 px-2 py-0.5 text-[10px] font-black text-emerald-800 uppercase tracking-wide">
+                        Verified
+                      </span>
+                    </div>
+                    <p className="text-[10px] sm:text-xs font-medium text-slate-500">Shripad PG Co-Living Accommodations • Pune</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-xs sm:text-sm font-black text-slate-900">Shripad PG Rent Invoice</h2>
-                  <p className="text-[10px] sm:text-xs font-medium text-slate-500">Edit fields below and issue or save PDF</p>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-green/10 text-brand-green border border-brand-green/20">
+                    <Sparkles className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-xs sm:text-sm font-black text-slate-900">Shripad PG Rent Invoice</h2>
+                    <p className="text-[10px] sm:text-xs font-medium text-slate-500">Edit fields below and issue or save PDF</p>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="flex items-center gap-2.5 self-end sm:self-auto shrink-0 flex-wrap sm:flex-nowrap">
                 {/* RESIDENT SELECTOR (Admin Only) */}
-                {!readOnly && residentsList.length > 0 && (
+                {!isEffectiveReadOnly && residentsList.length > 0 && (
                   <div className="flex items-center gap-1.5">
                     <span className="text-[11px] font-bold text-slate-600 shrink-0">Resident:</span>
                     <select
@@ -637,7 +669,7 @@ export function InvoiceDesign({
                 )}
 
                 {/* SAVE & ISSUE INVOICE BUTTON (Admin Only) */}
-                {!readOnly && (
+                {!isEffectiveReadOnly && (
                   <button
                     onClick={handleSaveInvoice}
                     disabled={isSaving}
@@ -648,6 +680,18 @@ export function InvoiceDesign({
                   </button>
                 )}
 
+                {/* PRINT RECEIPT BUTTON */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (typeof window !== "undefined") window.print();
+                  }}
+                  className="flex items-center justify-center gap-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 px-3.5 py-1.5 text-xs font-bold text-slate-700 shadow-sm transition active:scale-95 cursor-pointer whitespace-nowrap"
+                >
+                  <Printer className="h-3.5 w-3.5" />
+                  <span>Print</span>
+                </button>
+
                 {/* DOWNLOAD PDF BUTTON */}
                 <button
                   onClick={handleDownloadPdf}
@@ -655,7 +699,7 @@ export function InvoiceDesign({
                   className="flex items-center justify-center gap-1.5 rounded-xl bg-[#0f1b3d] hover:bg-slate-800 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition active:scale-95 cursor-pointer whitespace-nowrap disabled:opacity-50"
                 >
                   <Download className="h-3.5 w-3.5 text-emerald-400" />
-                  <span>{isDownloadingPdf ? "Downloading PDF..." : "Download PDF"}</span>
+                  <span>{isDownloadingPdf ? "Downloading..." : "Download PDF"}</span>
                 </button>
               </div>
             </div>
@@ -699,7 +743,7 @@ export function InvoiceDesign({
                   <input
                     type="text"
                     value={invoiceNo}
-                    disabled={readOnly}
+                    disabled={isEffectiveReadOnly}
                     onChange={(e) => setInvoiceNo(e.target.value)}
                     className="inv-input rounded-none font-bold text-slate-900 border-none py-1 disabled:bg-slate-50 disabled:cursor-not-allowed"
                   />
@@ -711,7 +755,7 @@ export function InvoiceDesign({
                   <input
                     type="date"
                     value={date}
-                    disabled={readOnly}
+                    disabled={isEffectiveReadOnly}
                     onChange={(e) => setDate(e.target.value)}
                     className="inv-input font-medium text-slate-800 py-1 disabled:bg-slate-50 disabled:cursor-not-allowed"
                   />
@@ -723,7 +767,7 @@ export function InvoiceDesign({
                   <input
                     type="date"
                     value={dueDate}
-                    disabled={readOnly}
+                    disabled={isEffectiveReadOnly}
                     onChange={(e) => setDueDate(e.target.value)}
                     className="inv-input font-medium text-slate-800 py-1 disabled:bg-slate-50 disabled:cursor-not-allowed"
                   />
@@ -748,7 +792,7 @@ export function InvoiceDesign({
                     <input
                       type="text"
                       value={tenantName}
-                      disabled={readOnly}
+                      disabled={isEffectiveReadOnly}
                       onChange={(e) => setTenantName(e.target.value)}
                       placeholder="Resident Full Name"
                       className="inv-input font-semibold py-1 disabled:bg-slate-50 disabled:cursor-not-allowed"
@@ -759,7 +803,7 @@ export function InvoiceDesign({
                     <input
                       type="text"
                       value={contact}
-                      disabled={readOnly}
+                      disabled={isEffectiveReadOnly}
                       onChange={(e) => setContact(e.target.value)}
                       placeholder="+91 Phone Number"
                       className="inv-input py-1 disabled:bg-slate-50 disabled:cursor-not-allowed"
@@ -770,7 +814,7 @@ export function InvoiceDesign({
                     <input
                       type="email"
                       value={email}
-                      disabled={readOnly}
+                      disabled={isEffectiveReadOnly}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="resident@gmail.com"
                       className="inv-input py-1 disabled:bg-slate-50 disabled:cursor-not-allowed"
@@ -783,7 +827,7 @@ export function InvoiceDesign({
                     <input
                       type="text"
                       value={building}
-                      disabled={readOnly}
+                      disabled={isEffectiveReadOnly}
                       onChange={(e) => setBuilding(e.target.value)}
                       placeholder="Building Name"
                       className="inv-input py-1 disabled:bg-slate-50 disabled:cursor-not-allowed"
@@ -794,7 +838,7 @@ export function InvoiceDesign({
                     <input
                       type="text"
                       value={floor}
-                      disabled={readOnly}
+                      disabled={isEffectiveReadOnly}
                       onChange={(e) => setFloor(e.target.value)}
                       placeholder="Floor"
                       className="inv-input py-1 disabled:bg-slate-50 disabled:cursor-not-allowed"
@@ -806,7 +850,7 @@ export function InvoiceDesign({
                       <input
                         type="text"
                         value={room}
-                        disabled={readOnly}
+                        disabled={isEffectiveReadOnly}
                         onChange={(e) => setRoom(e.target.value)}
                         placeholder="Room No"
                         className="inv-input py-1 disabled:bg-slate-50 disabled:cursor-not-allowed"
@@ -814,7 +858,7 @@ export function InvoiceDesign({
                       <input
                         type="text"
                         value={bed}
-                        disabled={readOnly}
+                        disabled={isEffectiveReadOnly}
                         onChange={(e) => setBed(e.target.value)}
                         placeholder="Bed Tag"
                         className="inv-input py-1 disabled:bg-slate-50 disabled:cursor-not-allowed"
@@ -845,7 +889,7 @@ export function InvoiceDesign({
                     <input
                       type="number"
                       value={rentAmount === 0 ? "" : rentAmount}
-                      disabled={readOnly}
+                      disabled={isEffectiveReadOnly}
                       onChange={(e) => {
                         const val = e.target.value;
                         setRentAmount(val === "" ? 0 : parseInt(val.replace(/^0+/, "") || "0", 10));
@@ -868,7 +912,7 @@ export function InvoiceDesign({
                         <input
                           type="checkbox"
                           checked={selectedModes.includes(m)}
-                          disabled={readOnly}
+                          disabled={isEffectiveReadOnly}
                           onChange={() => togglePaymentMode(m)}
                           className="h-3.5 w-3.5 accent-emerald-700 rounded cursor-pointer disabled:cursor-not-allowed"
                         />
@@ -893,7 +937,7 @@ export function InvoiceDesign({
               <div className="relative rounded-xl rounded-tl-none border-2 border-[#0f1b3d] p-2.5 bg-white">
                 <textarea
                   value={notes}
-                  disabled={readOnly}
+                  disabled={isEffectiveReadOnly}
                   onChange={(e) => setNotes(e.target.value)}
                   className="inv-input relative h-[65px] resize-none bg-emerald-50/40 text-xs font-medium leading-relaxed py-1 disabled:cursor-not-allowed"
                 />
@@ -919,7 +963,7 @@ export function InvoiceDesign({
                     <input
                       type="number"
                       value={rentAmount === 0 ? "" : rentAmount}
-                      disabled={readOnly}
+                      disabled={isEffectiveReadOnly}
                       onChange={(e) => {
                         const val = e.target.value;
                         setRentAmount(val === "" ? 0 : parseInt(val.replace(/^0+/, "") || "0", 10));
@@ -937,7 +981,7 @@ export function InvoiceDesign({
                     <input
                       type="number"
                       value={paidAmount === 0 ? "" : paidAmount}
-                      disabled={readOnly}
+                      disabled={isEffectiveReadOnly}
                       onChange={(e) => {
                         const val = e.target.value;
                         setPaidAmount(val === "" ? 0 : parseInt(val.replace(/^0+/, "") || "0", 10));

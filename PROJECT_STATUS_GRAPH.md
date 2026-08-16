@@ -2,6 +2,41 @@
 
 ---
 
+### 📍 Version 8.61 — Public Shared Invoice Access Control & Customer Read-Only Enforcement 🛡️📄🔒
+
+```mermaid
+flowchart TD
+    subgraph RouteEntry ["Public Invoice Route (/invoice?invoiceNo=...)"]
+        CheckAuth["Evaluate isAdminOrStaff token from storage"]
+    end
+
+    subgraph AccessEnforcement ["Permission Gate"]
+        CustomerSession["Customer (Unauthenticated or Resident)"]
+        AdminSession["Admin / Staff Session"]
+        
+        CheckAuth -->|No Admin Token| CustomerSession
+        CheckAuth -->|Valid Admin Token| AdminSession
+    end
+
+    subgraph CustomerViewSecurity ["Locked Customer Read-Only Presentation"]
+        HideTabs["Hide all Admin Tabs (Editor, History, Pending)"]
+        HideAdminButtons["Hide 'Save & Issue' and Resident Dropdown"]
+        CleanInputs["Lock all sheet inputs to read-only clean text"]
+        ShowVerified["Display Verified Shield & Print / Download PDF buttons"]
+        
+        CustomerSession --> HideTabs
+        CustomerSession --> HideAdminButtons
+        CustomerSession --> CleanInputs
+        CustomerSession --> ShowVerified
+    end
+
+    subgraph AdminViewAccess ["Full Admin Power Suite"]
+        AdminSession --> FullEditor["Interactive Editor, History, Pending Tabs & Issue Buttons"]
+    end
+```
+
+---
+
 ### 📍 Version 8.60 — MongoDB Schema Strict-Mode Fix & Full-Stack Payment History Persistence 🗄️🛡️✨
 
 ```mermaid
