@@ -2231,6 +2231,35 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
               </button>
             );
           })}
+
+          {/* Admin Management Actions in Sidebar */}
+          {!isStaffMode && (
+            <div className="pt-2 border-t border-slate-100 space-y-1.5">
+              <button
+                onClick={() => {
+                  setIsStaffModalOpen(true);
+                  setIsMobileMenuOpen(false);
+                }}
+                className="group relative flex w-full items-center gap-3.5 rounded-full px-5 py-3 text-sm font-bold text-slate-600 hover:bg-emerald-50 hover:text-emerald-900 hover:translate-x-1 transition-all duration-300 cursor-pointer"
+                title="Manage Staff & Building Assignments"
+              >
+                <UserCheck className="h-5 w-5 text-emerald-600 transition-transform group-hover:scale-110" />
+                <span>Staff & Buildings</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setIsPaymentSettingsModalOpen(true);
+                  setIsMobileMenuOpen(false);
+                }}
+                className="group relative flex w-full items-center gap-3.5 rounded-full px-5 py-3 text-sm font-bold text-slate-600 hover:bg-slate-100/90 hover:text-slate-900 hover:translate-x-1 transition-all duration-300 cursor-pointer"
+                title="Configure Real Payment Details & QR Code"
+              >
+                <QrCode className="h-5 w-5 text-amber-500 transition-transform group-hover:scale-110" />
+                <span>Payment & QR</span>
+              </button>
+            </div>
+          )}
         </nav>
 
         {/* Enlarged Prominent Shripad PG Logo Showcase Footer */}
@@ -2258,8 +2287,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
         {/* Centered top navigation bar wrapper aligning perfectly with main layout margins */}
         <div className="sticky top-4 z-30 w-full px-4 sm:px-6 lg:px-8 mt-4 mb-2">
           <header className="mx-auto max-w-7xl rounded-full border border-slate-200/80 bg-white/90 shadow-lg shadow-slate-200/50 backdrop-blur-xl px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3 transition-all">
-            {/* Left: Menu, Role Scope & Core Management Actions */}
-            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 flex-wrap lg:flex-nowrap">
+            {/* Left: Menu, Role Scope, WhatsApp & Complaints */}
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0 flex-wrap lg:flex-nowrap">
               <button
                 onClick={() => {
                   if (window.innerWidth < 1024) {
@@ -2309,30 +2338,6 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 </div>
               )}
 
-              {/* Staff Assignments Modal Trigger (Super Admin Only) */}
-              {!isStaffMode && (
-                <button
-                  onClick={() => setIsStaffModalOpen(true)}
-                  className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 text-xs font-black transition cursor-pointer shadow-xs active:scale-95"
-                  title="Manage Staff & Building Assignments"
-                >
-                  <UserCheck className="h-3.5 w-3.5 text-emerald-600" />
-                  <span>Staff & Buildings</span>
-                </button>
-              )}
-
-              {/* Payment & QR Settings Direct Header Button (Super Admin Only) */}
-              {!isStaffMode && (
-                <button
-                  onClick={() => setIsPaymentSettingsModalOpen(true)}
-                  className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-navy hover:bg-slate-800 text-white text-xs font-black transition cursor-pointer shadow-md active:scale-95"
-                  title="Configure Real Payment Details & QR Code"
-                >
-                  <QrCode className="h-3.5 w-3.5 text-brand-gold" />
-                  <span>Payment & QR</span>
-                </button>
-              )}
-
               {/* WhatsApp Baileys Automation Center Button */}
               <button
                 onClick={() => {
@@ -2340,7 +2345,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   fetchWhatsAppStatus();
                   fetchWhatsAppTemplates();
                 }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black transition cursor-pointer shadow-sm active:scale-95 border ${
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black transition cursor-pointer shadow-sm active:scale-95 border ${
                   whatsappStatus?.connected
                     ? "bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700"
                     : "bg-emerald-50 text-emerald-900 border-emerald-200 hover:bg-emerald-100"

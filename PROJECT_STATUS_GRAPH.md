@@ -2,6 +2,39 @@
 
 ---
 
+### 📍 Version 8.47 — Shifted Staff & Buildings and Payment & QR into Left Sidebar Features 📋🏢💳
+
+```mermaid
+flowchart LR
+    subgraph SidebarFeatures ["Left Sidebar Features Menu"]
+        DashboardItem["Dashboard"]
+        RevenueItem["Revenue"]
+        ReportsItem["Reports"]
+        InvoiceItem["Invoice"]
+        CreateItem["Create (+)"]
+        BuildingsItem["Buildings"]
+        CustomersItem["Customers"]
+        AllocationItem["Allocation"]
+        StaffItem["Staff & Buildings (Modal Action)"]
+        PaymentItem["Payment & QR (Modal Action)"]
+
+        DashboardItem --> RevenueItem --> ReportsItem --> InvoiceItem --> CreateItem --> BuildingsItem --> CustomersItem --> AllocationItem --> StaffItem --> PaymentItem
+    end
+
+    subgraph CleanTopNavbar ["Clean Top Navigation Bar"]
+        MenuToggle["Menu Toggle"]
+        RoleScope["Role Scope Dropdown"]
+        WhatsAppBtn["WhatsApp Automation (🟢/🟡)"]
+        ComplaintsBtn["Complaints (Badge)"]
+        SearchInput["Global Search (⌘K)"]
+        ProfileDropdown["Admin Profile"]
+
+        MenuToggle --> RoleScope --> WhatsAppBtn --> ComplaintsBtn --> SearchInput --> ProfileDropdown
+    end
+```
+
+---
+
 ### 📍 Version 8.46 — Header Navigation Restructuring & Management Control Clustering 🧭✨
 
 ```mermaid
