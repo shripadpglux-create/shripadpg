@@ -38,10 +38,50 @@ export interface ResidentOption {
   phone: string;
   email?: string;
   building?: string;
+  floor?: string;
   room?: string;
   bed?: string;
   rentAmount?: number;
 }
+
+// Single-Source-of-Truth Data Pipeline Helper to avoid any data mismatch
+export const resolveResidentPipelineData = (r: any) => {
+  if (!r) return null;
+  const building = r.allocatedBuilding || r.building || "PG A";
+  const room = r.allocatedRoom || r.room || "Room 101";
+  const bed = r.allocatedBed || r.bed || "Bed A";
+
+  // Robust Floor derivation pipeline:
+  let floor = "";
+  if (r.allocatedFloor !== undefined && r.allocatedFloor !== null && String(r.allocatedFloor).trim() !== "") {
+    const flStr = String(r.allocatedFloor).trim();
+    floor = flStr.toLowerCase().startsWith("floor") ? flStr : `Floor ${flStr}`;
+  } else if (r.floor !== undefined && r.floor !== null && String(r.floor).trim() !== "") {
+    const flStr = String(r.floor).trim();
+    floor = flStr.toLowerCase().startsWith("floor") ? flStr : `Floor ${flStr}`;
+  } else {
+    // Pipeline deduction from room number (e.g. "Room 202" or "202" -> Floor 2)
+    const roomDigits = String(room).replace(/\D/g, "");
+    if (roomDigits.length >= 3) {
+      const firstDigit = roomDigits.charAt(0);
+      floor = `Floor ${firstDigit}`;
+    } else {
+      floor = "Floor 1";
+    }
+  }
+
+  return {
+    id: r.id,
+    name: r.name || "",
+    phone: r.phone || "",
+    email: r.email || "",
+    building,
+    floor,
+    room: room.startsWith("Room") ? room : `Room ${room}`,
+    bed: bed.startsWith("Bed") ? bed : `Bed ${bed}`,
+    rentAmount: r.rentAmount || 0,
+  };
+};
 
 export interface SavedInvoice {
   id: string;
@@ -137,6 +177,8 @@ export function InvoiceDesign({
   const isEffectiveReadOnly = readOnly || !isAdminOrStaff || !isEditing;
   const isEffectiveHideTabs = hideHeaderTabs || !isAdminOrStaff;
 
+  const initPipeline = resolveResidentPipelineData(initialResident);
+
   // Form State
   const [selectedResidentId, setSelectedResidentId] = useState<string>(initialResident?.id || initialInvoiceData?.residentId || "");
   const [invoiceNo, setInvoiceNo] = useState<string>(initialInvoiceData?.invoiceNo || `INV-${Math.floor(100000 + Math.random() * 900000)}`);
@@ -145,16 +187,16 @@ export function InvoiceDesign({
     initialInvoiceData?.dueDate || (new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0] as string)
   );
 
-  const [tenantName, setTenantName] = useState<string>(initialInvoiceData?.tenantName || initialResident?.name || "");
-  const [contact, setContact] = useState<string>(initialInvoiceData?.contact || initialResident?.phone || "");
-  const [email, setEmail] = useState<string>(initialInvoiceData?.email || initialResident?.email || "");
-  const [building, setBuilding] = useState<string>(initialInvoiceData?.building || initialResident?.building || "PG A - Main Branch");
-  const [floor, setFloor] = useState<string>(initialInvoiceData?.floor || "1st Floor");
-  const [room, setRoom] = useState<string>(initialInvoiceData?.room || initialResident?.room || "Room 101");
-  const [bed, setBed] = useState<string>(initialInvoiceData?.bed || initialResident?.bed || "Bed A");
+  const [tenantName, setTenantName] = useState<string>(initialInvoiceData?.tenantName || initPipeline?.name || "");
+  const [contact, setContact] = useState<string>(initialInvoiceData?.contact || initPipeline?.phone || "");
+  const [email, setEmail] = useState<string>(initialInvoiceData?.email || initPipeline?.email || "");
+  const [building, setBuilding] = useState<string>(initialInvoiceData?.building || initPipeline?.building || "PG A");
+  const [floor, setFloor] = useState<string>(initialInvoiceData?.floor || initPipeline?.floor || "Floor 1");
+  const [room, setRoom] = useState<string>(initialInvoiceData?.room || initPipeline?.room || "Room 101");
+  const [bed, setBed] = useState<string>(initialInvoiceData?.bed || initPipeline?.bed || "Bed A");
 
-  const [rentAmount, setRentAmount] = useState<number>(initialInvoiceData?.rentAmount ?? initialResident?.rentAmount ?? 0);
-  const [paidAmount, setPaidAmount] = useState<number>(initialInvoiceData?.paidAmount ?? initialResident?.rentAmount ?? 0);
+  const [rentAmount, setRentAmount] = useState<number>(initialInvoiceData?.rentAmount ?? initPipeline?.rentAmount ?? 0);
+  const [paidAmount, setPaidAmount] = useState<number>(initialInvoiceData?.paidAmount ?? initPipeline?.rentAmount ?? 0);
   const [selectedModes, setSelectedModes] = useState<string[]>(initialInvoiceData?.paymentModes || ["UPI"]);
   const [notes, setNotes] = useState<string>(
     initialInvoiceData?.notes || "Monthly PG rent payment for comfortable living space including Wi-Fi, 3-time meals, and maintenance charges."
@@ -180,15 +222,19 @@ export function InvoiceDesign({
       if (initialInvoiceData.paymentModes) setSelectedModes(initialInvoiceData.paymentModes);
       if (initialInvoiceData.notes) setNotes(initialInvoiceData.notes);
     } else if (initialResident) {
-      if (initialResident.name) setTenantName(initialResident.name);
-      if (initialResident.phone) setContact(initialResident.phone);
-      if (initialResident.email) setEmail(initialResident.email);
-      if (initialResident.building) setBuilding(initialResident.building);
-      if (initialResident.room) setRoom(initialResident.room);
-      if (initialResident.bed) setBed(initialResident.bed);
-      if (initialResident.rentAmount !== undefined) {
-        setRentAmount(initialResident.rentAmount);
-        setPaidAmount(initialResident.rentAmount);
+      const p = resolveResidentPipelineData(initialResident);
+      if (p) {
+        setTenantName(p.name);
+        setContact(p.phone);
+        if (p.email) setEmail(p.email);
+        setBuilding(p.building);
+        setFloor(p.floor);
+        setRoom(p.room);
+        setBed(p.bed);
+        if (p.rentAmount !== undefined) {
+          setRentAmount(p.rentAmount);
+          setPaidAmount(p.rentAmount);
+        }
       }
     }
   }, [initialInvoiceData, initialResident]);
@@ -371,15 +417,19 @@ export function InvoiceDesign({
     if (!resId) return;
     const found = residentsList.find((r) => r.id === resId);
     if (found) {
-      setTenantName(found.name || "");
-      setContact(found.phone || "");
-      if (found.email) setEmail(found.email);
-      if (found.building) setBuilding(found.building);
-      if (found.room) setRoom(found.room);
-      if (found.bed) setBed(found.bed);
-      if (found.rentAmount) {
-        setRentAmount(found.rentAmount);
-        setPaidAmount(found.rentAmount);
+      const p = resolveResidentPipelineData(found);
+      if (p) {
+        setTenantName(p.name);
+        setContact(p.phone);
+        if (p.email) setEmail(p.email);
+        setBuilding(p.building);
+        setFloor(p.floor);
+        setRoom(p.room);
+        setBed(p.bed);
+        if (p.rentAmount) {
+          setRentAmount(p.rentAmount);
+          setPaidAmount(p.rentAmount);
+        }
       }
     }
   };

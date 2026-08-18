@@ -2,6 +2,27 @@
 
 ---
 
+### 📍 Version 8.86 — Single-Source Resident Data Pipeline & Automatic Floor Synchronization 🔄🏢✨
+
+```mermaid
+flowchart TD
+    subgraph DataPipeline ["Unified Resident Data Pipeline (resolveResidentPipelineData)"]
+        BookingSource["Customer Booking / Room Allocation Record"]
+        PipelineResolver["Pipeline Resolver:
+        • Extracts Building: PG A / PG B
+        • Extracts Room Number & Bed Tag
+        • Auto-derives Accurate Floor (e.g., Room 202 ➔ Floor 2)
+        • Syncs Phone, Email, & Rent Amount"]
+        InvoiceTarget["Invoice Canvas:
+        • BILL TO: Tenant Details
+        • Accurate Building, Floor, Room, Bed without Duplication/Mismatch"]
+        
+        BookingSource --> PipelineResolver --> InvoiceTarget
+    end
+```
+
+---
+
 ### 📍 Version 8.85 — Single-Page A4 Print Alignment, Top-Left Radius Flush & 2-Col Mode Collision Fix 🖨️📄✨
 
 ```mermaid
