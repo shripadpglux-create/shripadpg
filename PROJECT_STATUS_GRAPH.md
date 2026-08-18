@@ -2,6 +2,33 @@
 
 ---
 
+### 📍 Version 9.13 — Absolute Dark Navy Blue (#00022E) Primary Palette Implementation 🌌💎✨
+
+```mermaid
+flowchart TD
+    subgraph DarkNavyBlueEnforcement ["Dark Navy Blue (#00022E) Global Standardization"]
+        TokenDefinition["Root Brand Custom Properties:
+        • --primary: #00022E
+        • --brand-navy: #00022E
+        • --brand-green: #00022E (Mapped for backwards compatibility)
+        • --field-tint & --brand-green-light: #F0F4FF (Soft Ice Blue tint)"]
+
+        ButtonActionEnforcement["Action & Interactive Elements:
+        • + New Resident Quick Admission Deck: bg-[#00022E] hover:bg-[#00044A]
+        • Floating Action Button (FAB): bg-[#00022E] shadow-xl shadow-[#00022E]/40
+        • Active Sidebar Navigation Pills: bg-[#00022E] with white pulse dot
+        • Modal Primary Buttons, Export Buttons & Action Triggers: bg-[#00022E]"]
+
+        LogoAndBranding["Logo & Typography:
+        • ShripadNameLogo 'PG' badge: text-[#00022E]
+        • Hero Badge & Tagline Accents: text-[#00022E] with #F0F4FF soft pill"]
+
+        TokenDefinition & ButtonActionEnforcement & LogoAndBranding --> TotalDarkNavyExperience["Zero Generic Green — Pure Executive Dark Navy Blue (#00022E)"]
+    end
+```
+
+---
+
 ### 📍 Version 9.12 — Transition from Green to Deep Royal Navy Executive Theme 🌌🏛️💎
 
 ```mermaid

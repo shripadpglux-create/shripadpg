@@ -644,8 +644,8 @@ export function InvoiceDesign({
           </div>
 
           {saveNotification && (
-            <div className="mt-3 flex items-center gap-2 rounded-2xl bg-emerald-50 border border-emerald-300 px-4 py-2.5 text-xs sm:text-sm font-extrabold text-emerald-800 animate-fade-in shadow-2xs">
-              <CheckCircle className="h-4.5 w-4.5 text-emerald-600 shrink-0" />
+            <div className="mt-3 flex items-center gap-2 rounded-2xl bg-[#F0F4FF] border border-blue-200 px-4 py-2.5 text-xs sm:text-sm font-extrabold text-[#00022E] animate-fade-in shadow-2xs">
+              <CheckCircle className="h-4.5 w-4.5 text-[#00022E] shrink-0" />
               <span>{saveNotification}</span>
             </div>
           )}
@@ -660,13 +660,13 @@ export function InvoiceDesign({
             <div className="no-print mx-auto flex w-full max-w-4xl flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 rounded-2xl sm:rounded-3xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs">
               {isEffectiveReadOnly ? (
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#F0F4FF] text-[#00022E] border border-blue-200">
                     <ShieldCheck className="h-5 w-5" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
                       <h2 className="text-sm sm:text-base font-black text-slate-900">{invoiceNo}</h2>
-                      <span className="rounded-full bg-emerald-100 border border-emerald-300/80 px-2.5 py-0.5 text-[10px] font-black text-emerald-800 uppercase tracking-wide">
+                      <span className="rounded-full bg-[#F0F4FF] border border-blue-200/80 px-2.5 py-0.5 text-[10px] font-black text-[#00022E] uppercase tracking-wide">
                         Verified
                       </span>
                     </div>
@@ -726,7 +726,7 @@ export function InvoiceDesign({
                   <button
                     onClick={handleSaveInvoice}
                     disabled={isSaving}
-                    className="flex items-center justify-center gap-1.5 rounded-xl bg-brand-green hover:bg-emerald-700 px-4 py-2 text-xs sm:text-sm font-black text-white shadow-xs transition active:scale-95 cursor-pointer disabled:opacity-50"
+                    className="flex items-center justify-center gap-1.5 rounded-xl bg-brand-green hover:bg-[#00022E] px-4 py-2 text-xs sm:text-sm font-black text-white shadow-xs transition active:scale-95 cursor-pointer disabled:opacity-50"
                   >
                     <Save className="h-4 w-4" />
                     <span>{isSaving ? "Saving..." : "Save & Issue"}</span>
@@ -756,7 +756,7 @@ export function InvoiceDesign({
                         : `https://wa.me/?text=${text}`;
                       window.open(waUrl, "_blank");
                     }}
-                    className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3.5 py-2 text-xs sm:text-sm font-bold text-white shadow-xs transition active:scale-95 cursor-pointer"
+                    className="flex items-center justify-center gap-1.5 rounded-xl bg-[#00022E] hover:bg-[#00044A] px-3.5 py-2 text-xs sm:text-sm font-bold text-white shadow-xs transition active:scale-95 cursor-pointer"
                     title="Send Receipt directly on WhatsApp to Resident"
                   >
                     <span>WhatsApp 📱</span>
@@ -794,7 +794,7 @@ export function InvoiceDesign({
                     onClick={handleStartNewInvoice}
                     className="flex items-center justify-center gap-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 shadow-xs transition active:scale-95 cursor-pointer"
                   >
-                    <Plus className="h-4 w-4 text-emerald-600" />
+                    <Plus className="h-4 w-4 text-[#00022E]" />
                     <span>New</span>
                   </button>
                 )}
@@ -847,7 +847,7 @@ export function InvoiceDesign({
                   />
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="w-[130px] shrink-0 text-right text-xs font-black text-emerald-800 uppercase tracking-wide">
+                  <span className="w-[130px] shrink-0 text-right text-xs font-black text-[#00022E] uppercase tracking-wide">
                     DATE:
                   </span>
                   <input
@@ -859,7 +859,7 @@ export function InvoiceDesign({
                   />
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="w-[130px] shrink-0 text-right text-xs font-black text-emerald-800 uppercase tracking-wide">
+                  <span className="w-[130px] shrink-0 text-right text-xs font-black text-[#00022E] uppercase tracking-wide">
                     DUE DATE:
                   </span>
                   <input
@@ -876,10 +876,10 @@ export function InvoiceDesign({
             {/* Bill To Section */}
             <section className="px-6 sm:px-10 pt-2.5 sm:pt-3">
               <div className="flex items-center">
-                <div className="flex h-8 w-10 items-center justify-center rounded-t-lg bg-emerald-800 text-white">
+                <div className="flex h-8 w-10 items-center justify-center rounded-t-lg bg-[#00022E] text-white">
                   <User className="h-3.5 w-3.5" />
                 </div>
-                <div className="flex h-8 items-center rounded-t-lg bg-emerald-800 px-4 text-xs font-extrabold tracking-wider text-white uppercase">
+                <div className="flex h-8 items-center rounded-t-lg bg-[#00022E] px-4 text-xs font-extrabold tracking-wider text-white uppercase">
                   BILL TO (TENANT DETAILS)
                 </div>
               </div>
@@ -970,10 +970,10 @@ export function InvoiceDesign({
             {/* Payment Details Section */}
             <section className="px-6 sm:px-10 pt-2.5 sm:pt-3">
               <div className="flex items-center">
-                <div className="flex h-8 w-10 items-center justify-center rounded-t-lg bg-emerald-800 text-white">
+                <div className="flex h-8 w-10 items-center justify-center rounded-t-lg bg-[#00022E] text-white">
                   <CreditCard className="h-3.5 w-3.5" />
                 </div>
-                <div className="flex h-8 items-center rounded-t-lg bg-emerald-800 px-4 text-xs font-extrabold tracking-wider text-white uppercase">
+                <div className="flex h-8 items-center rounded-t-lg bg-[#00022E] px-4 text-xs font-extrabold tracking-wider text-white uppercase">
                   PAYMENT DETAILS
                 </div>
               </div>
@@ -982,8 +982,8 @@ export function InvoiceDesign({
                   <div className="bg-[#0f1b3d] py-1.5 text-center text-xs font-bold text-white uppercase">
                     MONTHLY RENT AMOUNT
                   </div>
-                  <div className="flex items-center gap-2 bg-emerald-50/60 p-3">
-                    <span className="text-xl font-black text-emerald-800">₹</span>
+                  <div className="flex items-center gap-2 bg-[#F0F4FF] p-3">
+                    <span className="text-xl font-black text-[#00022E]">₹</span>
                     <input
                       type="number"
                       value={rentAmount === 0 ? "" : rentAmount}
@@ -1001,7 +1001,7 @@ export function InvoiceDesign({
                   <div className="bg-[#0f1b3d] py-1.5 text-center text-xs font-bold text-white uppercase">
                     PAYMENT MODE
                   </div>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 bg-emerald-50/60 p-3 flex-1 items-center">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 bg-[#F0F4FF] p-3 flex-1 items-center">
                     {modes.map((m) => (
                       <label
                         key={m}
@@ -1025,10 +1025,10 @@ export function InvoiceDesign({
             {/* Description / Notes Section */}
             <section className="px-6 sm:px-10 pt-2.5 sm:pt-3">
               <div className="flex items-center">
-                <div className="flex h-8 w-10 items-center justify-center rounded-t-lg bg-emerald-800 text-white">
+                <div className="flex h-8 w-10 items-center justify-center rounded-t-lg bg-[#00022E] text-white">
                   <FileText className="h-3.5 w-3.5" />
                 </div>
-                <div className="flex h-8 items-center rounded-t-lg bg-emerald-800 px-4 text-xs font-extrabold tracking-wider text-white uppercase">
+                <div className="flex h-8 items-center rounded-t-lg bg-[#00022E] px-4 text-xs font-extrabold tracking-wider text-white uppercase">
                   DESCRIPTION / NOTES
                 </div>
               </div>
@@ -1037,7 +1037,7 @@ export function InvoiceDesign({
                   value={notes}
                   disabled={isEffectiveReadOnly}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="inv-input relative h-[48px] resize-none bg-emerald-50/40 text-xs font-medium leading-relaxed py-1 disabled:cursor-not-allowed"
+                  className="inv-input relative h-[48px] resize-none bg-[#F0F4FF]/40 text-xs font-medium leading-relaxed py-1 disabled:cursor-not-allowed"
                 />
               </div>
             </section>
@@ -1045,7 +1045,7 @@ export function InvoiceDesign({
             {/* Totals Section */}
             <section className="grid grid-cols-1 sm:grid-cols-2 items-end gap-4 px-6 sm:px-10 pt-2.5 sm:pt-3">
               <div>
-                <p className="font-script text-3xl font-bold text-emerald-800">Thank You!</p>
+                <p className="font-script text-3xl font-bold text-[#00022E]">Thank You!</p>
                 <p className="mt-1 text-xs font-bold leading-tight text-[#0f1b3d]">
                   For choosing Shripad PG.
                   <br />
@@ -1056,8 +1056,8 @@ export function InvoiceDesign({
               <div className="overflow-hidden rounded-xl border-2 border-[#0f1b3d] bg-white">
                 <div className="grid grid-cols-2 items-center bg-[#0f1b3d]">
                   <span className="px-3 py-1.5 text-xs font-extrabold text-white">TOTAL RENT</span>
-                  <div className="flex items-center gap-1 bg-emerald-50 px-3 py-1 border-l border-[#0f1b3d]">
-                    <span className="font-bold text-emerald-800">₹</span>
+                  <div className="flex items-center gap-1 bg-[#F0F4FF] px-3 py-1 border-l border-[#0f1b3d]">
+                    <span className="font-bold text-[#00022E]">₹</span>
                     <input
                       type="number"
                       value={rentAmount === 0 ? "" : rentAmount}
@@ -1090,11 +1090,11 @@ export function InvoiceDesign({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 items-center border-t-2 border-[#0f1b3d] bg-emerald-50/50">
-                  <span className="px-3 py-1.5 text-xs font-black text-emerald-800">BALANCE DUE</span>
+                <div className="grid grid-cols-2 items-center border-t-2 border-[#0f1b3d] bg-[#F0F4FF]">
+                  <span className="px-3 py-1.5 text-xs font-black text-[#00022E]">BALANCE DUE</span>
                   <div className="flex items-center gap-1 px-3 py-1.5 border-l border-[#0f1b3d]">
-                    <span className="font-black text-emerald-800">₹</span>
-                    <span className="text-sm font-black text-emerald-800">{balanceDue.toLocaleString("en-IN")}</span>
+                    <span className="font-black text-[#00022E]">₹</span>
+                    <span className="text-sm font-black text-[#00022E]">{balanceDue.toLocaleString("en-IN")}</span>
                   </div>
                 </div>
               </div>
@@ -1104,21 +1104,21 @@ export function InvoiceDesign({
             <footer className="relative mt-4 shrink-0 overflow-hidden bg-[#0f1b3d] border-t-2 border-[#D49A3B]">
               <div className="relative py-2.5 px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 text-xs font-bold text-white z-10">
                 <span className="flex items-center gap-1.5 whitespace-nowrap">
-                  <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full border border-emerald-400 text-emerald-400 shrink-0">
+                  <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full border border-blue-300 text-emerald-400 shrink-0">
                     <Phone className="h-2.5 w-2.5" />
                   </span>
                   +91 87675 31345
                 </span>
                 <span className="hidden sm:inline h-3.5 w-px bg-[#D49A3B]" />
                 <span className="flex items-center gap-1.5 whitespace-nowrap">
-                  <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full border border-emerald-400 text-emerald-400 shrink-0">
+                  <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full border border-blue-300 text-emerald-400 shrink-0">
                     <Mail className="h-2.5 w-2.5" />
                   </span>
                   shripadpglux@gmail.com
                 </span>
                 <span className="hidden sm:inline h-3.5 w-px bg-[#D49A3B]" />
                 <span className="flex items-center gap-1.5 whitespace-nowrap">
-                  <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full border border-emerald-400 text-emerald-400 shrink-0">
+                  <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full border border-blue-300 text-emerald-400 shrink-0">
                     <MapPin className="h-2.5 w-2.5" />
                   </span>
                   Shripad PG, Pune, MH, India
@@ -1141,7 +1141,7 @@ export function InvoiceDesign({
             <button
               type="button"
               onClick={handleStartNewInvoice}
-              className="inline-flex items-center gap-1.5 rounded-full bg-brand-green hover:bg-emerald-700 text-white px-4 py-2 text-xs font-black shadow-xs transition active:scale-95 cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-full bg-brand-green hover:bg-[#00022E] text-white px-4 py-2 text-xs font-black shadow-xs transition active:scale-95 cursor-pointer"
             >
               <Plus className="h-4 w-4" />
               <span>Create Invoice</span>
@@ -1212,7 +1212,7 @@ export function InvoiceDesign({
                       <span
                         className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase ${
                           inv.status === "PAID"
-                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            ? "bg-[#F0F4FF] text-[#00022E] border border-blue-200"
                             : inv.status === "PARTIAL"
                             ? "bg-amber-50 text-amber-700 border border-amber-200"
                             : "bg-rose-50 text-rose-700 border border-rose-200"
@@ -1227,13 +1227,13 @@ export function InvoiceDesign({
                       {inv.building} • Room {inv.room} {inv.bed ? `(${inv.bed})` : ""}
                     </p>
                     <p className="text-[11px] font-medium text-slate-400">{inv.date}</p>
-                    <p className="text-sm font-black text-emerald-700">₹ {Number(inv.paidAmount || inv.rentAmount || 0).toLocaleString("en-IN")}</p>
+                    <p className="text-sm font-black text-[#00022E]">₹ {Number(inv.paidAmount || inv.rentAmount || 0).toLocaleString("en-IN")}</p>
                   </div>
 
                   <div className="flex items-center gap-2 self-start sm:self-center">
                     <button
                       onClick={() => handleLoadInvoice(inv, false)}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-black text-xs px-3.5 py-1.5 transition cursor-pointer shadow-2xs"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-[#F0F4FF] hover:bg-[#F0F4FF] border border-blue-200 text-[#00022E] font-black text-xs px-3.5 py-1.5 transition cursor-pointer shadow-2xs"
                     >
                       <Eye className="h-3.5 w-3.5" />
                       <span>View</span>
@@ -1309,7 +1309,7 @@ export function InvoiceDesign({
                         </div>
                         <p className="text-xs font-bold text-slate-600 mt-1">
                           Paid by: <span className="font-black text-slate-900">{req.payerName || req.residentName}</span> via{" "}
-                          <span className="uppercase font-black text-emerald-700">{req.paymentMethod}</span>
+                          <span className="uppercase font-black text-[#00022E]">{req.paymentMethod}</span>
                         </p>
                       </div>
 
@@ -1344,7 +1344,7 @@ export function InvoiceDesign({
                             if (onInvoiceSaved) onInvoiceSaved();
                           }
                         }}
-                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-black shadow-md shadow-emerald-700/20 transition-all active:scale-95 cursor-pointer"
+                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-[#00022E] hover:bg-[#00044A] text-white text-xs font-black shadow-md shadow-[#00022E]/25 transition-all active:scale-95 cursor-pointer"
                       >
                         <CheckCircle className="h-4 w-4 text-emerald-300" />
                         <span>Verify & Raise Invoice</span>

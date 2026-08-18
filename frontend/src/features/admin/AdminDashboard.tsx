@@ -2255,7 +2255,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     <div className="flex min-h-screen bg-slate-100/60 font-sans text-slate-800 selection:bg-brand-green selection:text-white relative overflow-x-hidden">
       {/* Subtle Ambient Background Gradients */}
       <div className="fixed top-0 left-64 w-96 h-96 bg-brand-green-light/30 rounded-full blur-3xl pointer-events-none -z-10" />
-      <div className="fixed bottom-0 right-0 w-96 h-96 bg-emerald-100/40 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="fixed bottom-0 right-0 w-96 h-96 bg-[#F0F4FF]/40 rounded-full blur-3xl pointer-events-none -z-10" />
 
       {/* Desktop Sidebar (lg screens only) */}
       <aside
@@ -2295,7 +2295,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   onClick={() => handleTabClick(item.name)}
                   className={`group relative flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-xs font-bold transition-all duration-200 cursor-pointer ${
                     isActive
-                      ? "bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 text-white shadow-md shadow-blue-900/25"
+                      ? "bg-[#00022E] text-white shadow-md shadow-blue-900/25"
                       : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 active:scale-[0.98]"
                   }`}
                 >
@@ -2334,7 +2334,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   onClick={() => handleTabClick(item.name)}
                   className={`group relative flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-xs font-bold transition-all duration-200 cursor-pointer ${
                     isActive
-                      ? "bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 text-white shadow-md shadow-blue-900/25"
+                      ? "bg-[#00022E] text-white shadow-md shadow-blue-900/25"
                       : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 active:scale-[0.98]"
                   }`}
                 >
@@ -2402,7 +2402,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 onClick={() => handleTabClick("Settings")}
                 className={`group flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-xs font-bold transition-all cursor-pointer active:scale-[0.98] ${
                   activeTab === "Settings"
-                    ? "bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 text-white shadow-md shadow-blue-900/25"
+                    ? "bg-[#00022E] text-white shadow-md shadow-blue-900/25"
                     : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
                 }`}
               >
@@ -2469,7 +2469,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
               {/* Staff / Building Scope Badge or Dropdown */}
               {!isStaffMode ? (
                 <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100/90 border border-slate-200 text-xs font-bold text-slate-800">
-                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                  <ShieldCheck className="h-3.5 w-3.5 text-[#00022E] shrink-0" />
                   <span className="text-[10px] text-slate-400 uppercase font-black">Role Scope:</span>
                   <select
                     value={activeStaffScopeId}
@@ -2492,9 +2492,9 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   </select>
                 </div>
               ) : (
-                <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-900">
-                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                  <span className="text-[10px] text-emerald-600 uppercase font-black">Staff Scope:</span>
+                <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#F0F4FF] border border-blue-200 text-xs font-bold text-[#00022E]">
+                  <ShieldCheck className="h-3.5 w-3.5 text-[#00022E] shrink-0" />
+                  <span className="text-[10px] text-[#00022E] uppercase font-black">Staff Scope:</span>
                   <span className="font-extrabold text-xs text-emerald-950">
                     {activeStaffMember?.name} ({activeStaffMember?.assignedBuildings?.join(", ") || "PG A"})
                   </span>
@@ -2510,9 +2510,9 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 }}
                 className={`flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-black transition cursor-pointer shadow-sm active:scale-95 border ${
                   whatsappStatus?.connected
-                    ? "bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700 shadow-emerald-600/20"
+                    ? "bg-[#00022E] text-white border-[#00022E] hover:bg-[#00022E] shadow-[#00022E]/25"
                     : whatsappStatus === null
-                    ? "bg-emerald-50/80 text-emerald-900 border-emerald-200 hover:bg-emerald-100"
+                    ? "bg-[#F0F4FF] text-[#00022E] border-blue-200 hover:bg-[#F0F4FF]"
                     : "bg-amber-50 text-amber-950 border-amber-300 hover:bg-amber-100"
                 }`}
                 title={
@@ -2576,7 +2576,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
                   className="flex items-center gap-2.5 rounded-full border border-slate-200/80 bg-slate-50/80 hover:bg-slate-100/80 p-1.5 pr-3 shadow-2xs transition-all active:scale-95 cursor-pointer"
                 >
-                  <div className={`relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full ${isStaffMode ? "bg-emerald-600" : "bg-brand-green"} text-white font-black text-xs shadow-sm ring-2 ring-brand-green/20`}>
+                  <div className={`relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full ${isStaffMode ? "bg-[#00022E]" : "bg-brand-green"} text-white font-black text-xs shadow-sm ring-2 ring-brand-green/20`}>
                     {isStaffMode ? activeStaffMember?.name?.charAt(0) || "S" : "S"}
                   </div>
                   <div className="hidden text-left md:block leading-tight">
@@ -2702,8 +2702,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/95 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-xs">
                 <div>
                   <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-extrabold text-emerald-800 border border-emerald-200/80 shadow-2xs">
-                      <Sparkles className="h-3.5 w-3.5 text-emerald-600 animate-pulse" /> Live Operations Overview
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F0F4FF] px-3 py-1 text-[11px] font-extrabold text-[#00022E] border border-blue-200/80 shadow-2xs">
+                      <Sparkles className="h-3.5 w-3.5 text-[#00022E] animate-pulse" /> Live Operations Overview
                     </span>
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100/90 px-3 py-1 text-[11px] font-bold text-slate-700 border border-slate-200 shadow-2xs">
                       <Building2 className="h-3 w-3 text-slate-500" />
@@ -2724,7 +2724,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
                 <div className="flex items-center gap-2.5 flex-wrap">
                   <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-200/90 bg-slate-50/80 px-4 py-2.5 text-xs font-bold text-slate-700 shadow-2xs">
-                    <Calendar className="h-4 w-4 text-emerald-600" />
+                    <Calendar className="h-4 w-4 text-[#00022E]" />
                     <span>{new Date().toLocaleDateString("en-IN", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}</span>
                   </div>
 
@@ -2742,14 +2742,14 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3.5">
                 <button
                   onClick={() => setIsCreateModalOpen(true)}
-                  className="flex items-center gap-3 p-3 sm:p-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer group"
+                  className="flex items-center gap-3 p-3 sm:p-3.5 rounded-2xl bg-[#00022E] hover:bg-[#00044A] text-white font-bold text-xs sm:text-sm shadow-md shadow-[#00022E]/25 active:scale-95 transition-all cursor-pointer group"
                 >
                   <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-white/20 text-white group-hover:scale-110 transition-transform shrink-0">
                     <UserPlus className="h-4.5 w-4.5" />
                   </div>
                   <div className="text-left min-w-0">
                     <span className="block leading-tight font-black truncate">+ New Resident</span>
-                    <span className="block text-[10px] text-emerald-100 font-medium truncate">Quick Admission</span>
+                    <span className="block text-[10px] text-blue-100 font-medium truncate">Quick Admission</span>
                   </div>
                 </button>
 
@@ -2783,7 +2783,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   onClick={() => handleTabClick("Reports")}
                   className="flex items-center gap-3 p-3 sm:p-3.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200/80 font-bold text-xs sm:text-sm shadow-xs hover:border-slate-300 active:scale-95 transition-all cursor-pointer group"
                 >
-                  <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 group-hover:scale-110 transition-transform shrink-0">
+                  <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-[#F0F4FF] text-[#00022E] border border-emerald-100 group-hover:scale-110 transition-transform shrink-0">
                     <FileSpreadsheet className="h-4.5 w-4.5" />
                   </div>
                   <div className="text-left min-w-0">
@@ -2804,13 +2804,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       selectedBuilding: scopedBuildingsList[0]?.name || "PG A",
                     })
                   }
-                  className="group rounded-3xl border border-emerald-200/90 bg-white p-4 sm:p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10 hover:border-emerald-400 cursor-pointer relative overflow-hidden active:scale-[0.99]"
+                  className="group rounded-3xl border border-blue-200/90 bg-white p-4 sm:p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10 hover:border-blue-300 cursor-pointer relative overflow-hidden active:scale-[0.99]"
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs group-hover:scale-110 transition-transform">
+                    <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-[#F0F4FF] text-[#00022E] border border-blue-200/80 shadow-2xs group-hover:scale-110 transition-transform">
                       <Bed className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
                     </div>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-emerald-800 border border-emerald-200/80 shadow-2xs">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[#F0F4FF] px-2.5 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-[#00022E] border border-blue-200/80 shadow-2xs">
                       🟢 Available
                     </span>
                   </div>
@@ -2819,7 +2819,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                     <p className="mt-0.5 sm:mt-1 text-xl sm:text-2xl lg:text-3xl font-black text-slate-900">
                       {overallOccupancyStats.totalUnocc} <span className="text-[11px] sm:text-xs font-bold text-slate-400">Beds</span>
                     </p>
-                    <p className="mt-1 text-[10px] sm:text-xs font-bold text-emerald-700 group-hover:underline flex items-center gap-1">
+                    <p className="mt-1 text-[10px] sm:text-xs font-bold text-[#00022E] group-hover:underline flex items-center gap-1">
                       Vacant Matrix →
                     </p>
                   </div>
@@ -2937,11 +2937,11 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                             setBmsBuilding(bldg.name);
                             handleTabClick("Buildings");
                           }}
-                          className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:border-emerald-300 hover:shadow-sm transition cursor-pointer active:scale-[0.99] space-y-2.5 group"
+                          className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:border-blue-200 hover:shadow-sm transition cursor-pointer active:scale-[0.99] space-y-2.5 group"
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2 min-w-0">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-700 group-hover:bg-emerald-50 group-hover:text-emerald-700 transition">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-700 group-hover:bg-[#F0F4FF] group-hover:text-[#00022E] transition">
                                 <Building2 className="h-4 w-4" />
                               </div>
                               <p className="text-xs sm:text-sm font-black text-slate-900 truncate">{bldg.name}</p>
@@ -2951,7 +2951,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                                 occRate >= 90
                                   ? "bg-rose-50 text-rose-700 border-rose-200"
                                   : occRate >= 70
-                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                  ? "bg-[#F0F4FF] text-[#00022E] border-blue-200"
                                   : "bg-slate-100 text-slate-600 border-slate-200"
                               }`}
                             >
@@ -2963,7 +2963,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                           <div className="w-full bg-slate-200/80 rounded-full h-2 overflow-hidden">
                             <div
                               className={`h-2 rounded-full transition-all duration-500 ${
-                                occRate >= 90 ? "bg-rose-500" : "bg-emerald-600"
+                                occRate >= 90 ? "bg-rose-500" : "bg-[#00022E]"
                               }`}
                               style={{ width: `${Math.min(100, occRate)}%` }}
                             />
@@ -2995,7 +2995,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <span className="rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80 px-3 py-1 text-[11px] font-black shadow-2xs">
+                        <span className="rounded-full bg-[#F0F4FF] text-[#00022E] border border-blue-200/80 px-3 py-1 text-[11px] font-black shadow-2xs">
                           Total: {getTimeFilteredBookings().length} Registrations
                         </span>
                       </div>
@@ -3025,7 +3025,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
                     {/* Custom Date Inputs Range (Shown when 'custom' is active) */}
                     {customerTimeFilter === "custom" && (
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 p-2.5 sm:p-3 mb-3 rounded-xl sm:rounded-2xl bg-emerald-50/60 border border-emerald-200/60 text-xs font-bold">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 p-2.5 sm:p-3 mb-3 rounded-xl sm:rounded-2xl bg-[#F0F4FF] border border-blue-200/60 text-xs font-bold">
                         <div className="flex items-center gap-1.5 text-brand-green">
                           <CalendarRange className="h-4 w-4 shrink-0" />
                           <span className="sm:hidden text-[11px]">Date Range:</span>
@@ -3085,13 +3085,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                               : "Pending Room Allocation";
 
                             const isOnline = cust.source === "online";
-                            const badgeBg = isOnline ? "bg-indigo-50 text-indigo-600 border-indigo-200/50" : "bg-emerald-50 text-emerald-600 border-emerald-200/50";
+                            const badgeBg = isOnline ? "bg-indigo-50 text-indigo-600 border-indigo-200/50" : "bg-[#F0F4FF] text-[#00022E] border-blue-200/50";
 
                             return (
                               <div
                                 key={cust.id}
                                 onClick={() => setSelectedHistoryResident(cust)}
-                                className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:border-emerald-300 hover:shadow-xs transition cursor-pointer active:scale-[0.99] gap-3"
+                                className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:border-blue-200 hover:shadow-xs transition cursor-pointer active:scale-[0.99] gap-3"
                               >
                                 <div className="flex items-center gap-3 min-w-0 flex-1">
                                   <div className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl font-black text-sm border ${badgeBg}`}>
@@ -3112,7 +3112,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                                       )}
                                       <span className="text-slate-300">•</span>
                                       {cust.createdByRole === "staff" ? (
-                                        <span className="text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 text-[10px] font-black">
+                                        <span className="text-[#00022E] bg-[#F0F4FF] px-2 py-0.5 rounded-md border border-blue-200 text-[10px] font-black">
                                           👤 Staff Admitted: {cust.createdBy || "Staff Member"}
                                         </span>
                                       ) : cust.createdByRole === "admin" ? (
@@ -3134,7 +3134,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                                     <span
                                       className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-extrabold ${
                                         hasAllocation
-                                          ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                                          ? "bg-[#F0F4FF] text-[#00022E] border border-blue-200"
                                           : "bg-amber-100 text-amber-700 border border-amber-200 animate-pulse"
                                       }`}
                                     >
@@ -3200,8 +3200,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-black text-emerald-800 border border-emerald-200/80">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F0F4FF] px-2.5 py-0.5 text-[11px] font-black text-[#00022E] border border-blue-200/80">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#F0F4FF]0 animate-pulse" />
                       Live Treasury Ledger
                     </span>
                     <span className="text-[11px] font-bold text-slate-400">
@@ -3222,7 +3222,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                     onClick={() => setRevenueSubTab("analytics")}
                     className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
                       revenueSubTab === "analytics"
-                        ? "bg-white text-emerald-800 shadow-xs border border-slate-200/80"
+                        ? "bg-white text-[#00022E] shadow-xs border border-slate-200/80"
                         : "text-slate-500 hover:text-slate-900"
                     }`}
                   >
@@ -3246,12 +3246,12 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
               {/* Financial KPI Cards Grid (4 Cards: Gross Revenue, Spend, Net Profit, Escrow Held) */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
                 {/* 1. Total Gross Revenue */}
-                <div className="rounded-3xl border border-emerald-200/80 bg-white p-4 sm:p-5 shadow-xs transition-all duration-300 hover:shadow-md hover:border-emerald-300">
+                <div className="rounded-3xl border border-blue-200/80 bg-white p-4 sm:p-5 shadow-xs transition-all duration-300 hover:shadow-md hover:border-blue-200">
                   <div className="flex items-center justify-between">
-                    <div className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200/70">
+                    <div className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-[#F0F4FF] text-[#00022E] border border-blue-200/70">
                       <Wallet className="h-5 w-5" />
                     </div>
-                    <span className="hidden sm:inline-flex items-center gap-0.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-black text-emerald-700 border border-emerald-200/80">
+                    <span className="hidden sm:inline-flex items-center gap-0.5 rounded-full bg-[#F0F4FF] px-2.5 py-0.5 text-[10px] font-black text-[#00022E] border border-blue-200/80">
                       <ArrowUpRight className="h-3 w-3" /> Collections
                     </span>
                   </div>
@@ -3288,14 +3288,14 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 </div>
 
                 {/* 3. Net Profit */}
-                <div className="rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-xs transition-all duration-300 hover:shadow-md hover:border-emerald-300">
+                <div className="rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-xs transition-all duration-300 hover:shadow-md hover:border-blue-200">
                   <div className="flex items-center justify-between">
                     <div className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-amber-50 text-amber-700 border border-amber-200/70">
                       <TrendingUp className="h-5 w-5" />
                     </div>
                     <span className={`hidden sm:inline-flex items-center gap-0.5 rounded-full px-2.5 py-0.5 text-[10px] font-black border ${
                       netProfit >= 0
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        ? "bg-[#F0F4FF] text-[#00022E] border-blue-200"
                         : "bg-rose-50 text-rose-700 border-rose-200"
                     }`}>
                       {netProfit >= 0 ? "Profitable" : "Deficit"}
@@ -3303,7 +3303,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   </div>
                   <div className="mt-3 sm:mt-4">
                     <p className="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400">Net Profit</p>
-                    <p className={`mt-0.5 sm:mt-1 text-lg sm:text-2xl lg:text-3xl font-black ${netProfit >= 0 ? "text-emerald-700" : "text-rose-600"}`}>
+                    <p className={`mt-0.5 sm:mt-1 text-lg sm:text-2xl lg:text-3xl font-black ${netProfit >= 0 ? "text-[#00022E]" : "text-rose-600"}`}>
                       ₹ {netProfit.toLocaleString("en-IN")}
                     </p>
                     <p className="mt-0.5 text-[10px] sm:text-xs font-semibold text-slate-500 truncate">
@@ -3369,13 +3369,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                         });
 
                         return (
-                          <div key={bld.name} className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:border-emerald-300 hover:shadow-xs transition space-y-2.5">
+                          <div key={bld.name} className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:border-blue-200 hover:shadow-xs transition space-y-2.5">
                             <div className="flex items-center justify-between font-bold text-xs">
                               <span className="font-black text-slate-900 text-sm flex items-center gap-1.5">
                                 <Building2 className="h-4 w-4 text-brand-green" />
                                 {bld.name}
                               </span>
-                              <span className="font-black text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200/60">₹{bldRev.toLocaleString("en-IN")}</span>
+                              <span className="font-black text-[#00022E] bg-[#F0F4FF] px-2.5 py-0.5 rounded-lg border border-blue-200/60">₹{bldRev.toLocaleString("en-IN")}</span>
                             </div>
 
                             <div className="space-y-1.5">
@@ -3413,7 +3413,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                           resetExpenseForm();
                           setIsExpenseModalOpen(true);
                         }}
-                        className="inline-flex items-center gap-2 rounded-2xl bg-brand-green hover:bg-emerald-700 text-white font-extrabold text-xs px-4 py-2.5 shadow-md shadow-brand-green/20 transition cursor-pointer active:scale-95 self-start sm:self-auto"
+                        className="inline-flex items-center gap-2 rounded-2xl bg-brand-green hover:bg-[#00022E] text-white font-extrabold text-xs px-4 py-2.5 shadow-md shadow-brand-green/20 transition cursor-pointer active:scale-95 self-start sm:self-auto"
                       >
                         <Plus className="h-4 w-4" />
                         <span>+ Log Expense</span>
@@ -3518,7 +3518,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
                     <button
                       onClick={() => handleTabClick("Invoice")}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-green text-white font-bold text-xs shadow-xs hover:bg-emerald-700 transition cursor-pointer active:scale-95"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-green text-white font-bold text-xs shadow-xs hover:bg-[#00022E] transition cursor-pointer active:scale-95"
                     >
                       <Receipt className="h-3.5 w-3.5" />
                       <span>Create / Verify Invoices</span>
@@ -3582,7 +3582,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                               <td className="py-3.5 px-3 text-slate-500">
                                 {tx.building} {tx.room ? `• Room ${tx.room}` : ""}
                               </td>
-                              <td className="py-3.5 px-3 font-black text-emerald-700">₹{Number(tx.amount || 0).toLocaleString("en-IN")}</td>
+                              <td className="py-3.5 px-3 font-black text-[#00022E]">₹{Number(tx.amount || 0).toLocaleString("en-IN")}</td>
                               <td className="py-3.5 px-3">
                                 <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-extrabold text-slate-700 uppercase">
                                   {tx.paymentMethod || "UPI"}
@@ -3591,7 +3591,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                               <td className="py-3.5 px-3">
                                 <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-extrabold border ${
                                   tx.status === "verified"
-                                    ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                                    ? "bg-[#F0F4FF] text-[#00022E] border-blue-200"
                                     : "bg-amber-100 text-amber-800 border-amber-200"
                                 }`}>
                                   {tx.status === "verified" ? "Verified" : "Submitted"}
@@ -3624,7 +3624,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 <div className="absolute right-0 top-0 translate-x-12 -translate-y-8 w-64 h-64 bg-brand-green/20 rounded-full blur-3xl pointer-events-none" />
                 <div className="relative z-10 space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-bold text-emerald-300 border border-emerald-500/30">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F0F4FF]0/20 px-3 py-1 text-xs font-bold text-emerald-300 border border-[#00022E]/30">
                       <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-400" /> Excel (.xlsx) Reports Center
                     </span>
                   </div>
@@ -3694,19 +3694,19 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
               {/* 4 FEATURED EXPORT CARDS */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                 {/* 1. Contact Report Card */}
-                <div className="group relative flex flex-col justify-between rounded-3xl bg-white p-5 border border-slate-200/80 shadow-md hover:shadow-xl hover:border-emerald-300 transition-all duration-300">
+                <div className="group relative flex flex-col justify-between rounded-3xl bg-white p-5 border border-slate-200/80 shadow-md hover:shadow-xl hover:border-blue-200 transition-all duration-300">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 group-hover:scale-110 transition-transform">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F0F4FF] text-[#00022E] group-hover:scale-110 transition-transform">
                         <Users className="h-6 w-6" />
                       </div>
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-extrabold text-emerald-700 border border-emerald-200">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#F0F4FF] px-2.5 py-1 text-[11px] font-extrabold text-[#00022E] border border-blue-200">
                         .xlsx Format
                       </span>
                     </div>
 
                     <div>
-                      <h3 className="text-lg font-black text-slate-900 group-hover:text-emerald-700 transition-colors">
+                      <h3 className="text-lg font-black text-slate-900 group-hover:text-[#00022E] transition-colors">
                         Contact Directory Report
                       </h3>
                       <p className="text-xs font-medium text-slate-500 mt-1 line-clamp-3">
@@ -3730,7 +3730,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       });
                       generateContactReport(filtered);
                     }}
-                    className="mt-5 w-full flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-3 shadow-md hover:shadow-lg transition-all cursor-pointer"
+                    className="mt-5 w-full flex items-center justify-center gap-2 rounded-2xl bg-[#00022E] hover:bg-[#00044A] text-white font-bold text-xs py-3 shadow-md hover:shadow-lg transition-all cursor-pointer"
                   >
                     <FileSpreadsheet className="h-4 w-4" />
                     <span>Export Contact Report</span>
@@ -3905,13 +3905,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 {/* Styled Centered Title Bar for Preview */}
                 <div className="rounded-2xl bg-gradient-to-r from-emerald-900 via-emerald-800 to-emerald-900 p-4 text-center text-white shadow-md">
                   <h3 className="text-lg font-black tracking-widest uppercase">SHRIPAD PG</h3>
-                  <p className="text-xs font-bold uppercase tracking-wider text-emerald-200 mt-0.5">
+                  <p className="text-xs font-bold uppercase tracking-wider text-blue-200 mt-0.5">
                     {reportActivePreviewTab === "revenue" && "REVENUE & FINANCIAL TRANSACTIONS REPORT"}
                     {reportActivePreviewTab === "allocation" && "ROOM & BED ALLOCATION MATRIX REPORT"}
                     {reportActivePreviewTab === "building" && "BUILDING OCCUPANCY & INFRASTRUCTURE REPORT"}
                     {reportActivePreviewTab === "contact" && "RESIDENT & APPLICANT CONTACT DIRECTORY REPORT"}
                   </p>
-                  <p className="text-[10px] italic text-emerald-100/70 mt-1">
+                  <p className="text-[10px] italic text-blue-100/70 mt-1">
                     Official Management Audit Record  •  Centered Excel Banner Format
                   </p>
                 </div>
@@ -3922,7 +3922,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   {reportActivePreviewTab === "revenue" && (
                     <table className="w-full text-center border-collapse text-xs">
                       <thead>
-                        <tr className="bg-emerald-700 text-white font-bold sticky top-0 z-10">
+                        <tr className="bg-[#00022E] text-white font-bold sticky top-0 z-10">
                           <th className="p-3 text-center">S.No.</th>
                           <th className="p-3 text-center">Txn ID</th>
                           <th className="p-3 text-center">Resident Name</th>
@@ -3984,7 +3984,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                               <td className="p-3 text-center font-bold text-slate-900">{p.name}</td>
                               <td className="p-3 text-center text-slate-600">{p.phone}</td>
                               <td className="p-3 text-center font-semibold text-slate-700">{p.building}</td>
-                              <td className="p-3 text-center font-black text-emerald-700">₹{(p.amount || 0).toLocaleString("en-IN")}</td>
+                              <td className="p-3 text-center font-black text-[#00022E]">₹{(p.amount || 0).toLocaleString("en-IN")}</td>
                               <td className="p-3 text-center">
                                 <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-extrabold text-slate-700">
                                   {p.method}
@@ -3993,7 +3993,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                               <td className="p-3 text-center">
                                 <span
                                   className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold ${
-                                    p.status === "Verified" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
+                                    p.status === "Verified" ? "bg-[#F0F4FF] text-[#00022E]" : "bg-amber-100 text-amber-800"
                                   }`}
                                 >
                                   {p.status}
@@ -4001,8 +4001,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                               </td>
                               <td className="p-3 text-center">
                                 {p.autoVerified ? (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 border border-emerald-300">
-                                    <CheckCircle2 className="h-3 w-3 text-emerald-600" /> Matched 100%
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-[#F0F4FF] px-2 py-0.5 text-[10px] font-bold text-[#00022E] border border-blue-200">
+                                    <CheckCircle2 className="h-3 w-3 text-[#00022E]" /> Matched 100%
                                   </span>
                                 ) : (
                                   <span className="text-[10px] font-semibold text-slate-400">Manual</span>
@@ -4019,7 +4019,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   {reportActivePreviewTab === "allocation" && (
                     <table className="w-full text-center border-collapse text-xs">
                       <thead>
-                        <tr className="bg-emerald-700 text-white font-bold sticky top-0 z-10">
+                        <tr className="bg-[#00022E] text-white font-bold sticky top-0 z-10">
                           <th className="p-3 text-center">S.No.</th>
                           <th className="p-3 text-center">Resident Name</th>
                           <th className="p-3 text-center">Phone</th>
@@ -4060,7 +4060,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                               <td className="p-3 text-center">
                                 <span
                                   className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold ${
-                                    b.status === "allocated" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
+                                    b.status === "allocated" ? "bg-[#F0F4FF] text-[#00022E]" : "bg-amber-100 text-amber-800"
                                   }`}
                                 >
                                   {b.status === "allocated" ? "Allocated" : "Pending"}
@@ -4077,13 +4077,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   {reportActivePreviewTab === "building" && (
                     <table className="w-full text-center border-collapse text-xs">
                       <thead>
-                        <tr className="bg-emerald-700 text-white font-bold sticky top-0 z-10">
+                        <tr className="bg-[#00022E] text-white font-bold sticky top-0 z-10">
                           <th className="p-3 text-center">S.No.</th>
                           <th className="p-3 text-center">Building Name</th>
                           <th className="p-3 text-center">Floors</th>
                           <th className="p-3 text-center">Total Rooms</th>
                           <th className="p-3 text-center">Capacity (Beds)</th>
-                          <th className="p-3 text-center text-emerald-200">Occupied</th>
+                          <th className="p-3 text-center text-blue-200">Occupied</th>
                           <th className="p-3 text-center text-amber-200">Vacant</th>
                           <th className="p-3 text-center">Occupancy Rate</th>
                           <th className="p-3 text-center">Est. Monthly Revenue</th>
@@ -4108,10 +4108,10 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                               <td className="p-3 text-center">{bld.floors}</td>
                               <td className="p-3 text-center">{totalRooms}</td>
                               <td className="p-3 text-center font-bold text-slate-800">{cap} Beds</td>
-                              <td className="p-3 text-center font-black text-emerald-600">{occ}</td>
+                              <td className="p-3 text-center font-black text-[#00022E]">{occ}</td>
                               <td className="p-3 text-center font-black text-amber-600">{vac}</td>
                               <td className="p-3 text-center font-bold text-slate-700">{rate}</td>
-                              <td className="p-3 text-center font-black text-emerald-700">₹{rev.toLocaleString("en-IN")}</td>
+                              <td className="p-3 text-center font-black text-[#00022E]">₹{rev.toLocaleString("en-IN")}</td>
                             </tr>
                           );
                         })}
@@ -4123,7 +4123,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   {reportActivePreviewTab === "contact" && (
                     <table className="w-full text-center border-collapse text-xs">
                       <thead>
-                        <tr className="bg-emerald-700 text-white font-bold sticky top-0 z-10">
+                        <tr className="bg-[#00022E] text-white font-bold sticky top-0 z-10">
                           <th className="p-3 text-center">S.No.</th>
                           <th className="p-3 text-center">Resident Name</th>
                           <th className="p-3 text-center">Phone</th>
@@ -4152,7 +4152,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                               <td className="p-3 text-center">
                                 <span
                                   className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold ${
-                                    b.status === "allocated" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
+                                    b.status === "allocated" ? "bg-[#F0F4FF] text-[#00022E]" : "bg-amber-100 text-amber-800"
                                   }`}
                                 >
                                   {b.status === "allocated" ? "Allocated" : "Pending"}
@@ -4176,8 +4176,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-black text-emerald-800 border border-emerald-200/80">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F0F4FF] px-2.5 py-0.5 text-[11px] font-black text-[#00022E] border border-blue-200/80">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#F0F4FF]0" />
                       Live Property Portfolio
                     </span>
                     <span className="text-[11px] font-bold text-slate-400">
@@ -4194,7 +4194,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
                 <button
                   onClick={() => setIsAddBuildingModalOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-brand-green hover:bg-emerald-700 text-white font-extrabold text-xs px-5 py-3 shadow-md shadow-brand-green/20 transition cursor-pointer active:scale-95 self-start sm:self-auto shrink-0"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-brand-green hover:bg-[#00022E] text-white font-extrabold text-xs px-5 py-3 shadow-md shadow-brand-green/20 transition cursor-pointer active:scale-95 self-start sm:self-auto shrink-0"
                 >
                   <Plus className="h-4 w-4" />
                   <span>+ Add New Building</span>
@@ -4225,9 +4225,9 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       <p className="text-[10px] sm:text-xs font-extrabold uppercase text-blue-700">Total PG Rooms</p>
                       <p className="text-lg sm:text-2xl font-black text-slate-900 mt-0.5">{totalRoomsAll}</p>
                     </div>
-                    <div className="rounded-3xl border border-emerald-200/80 bg-white p-4 shadow-xs">
-                      <p className="text-[10px] sm:text-xs font-extrabold uppercase text-emerald-700">Occupancy Rate</p>
-                      <p className="text-lg sm:text-2xl font-black text-emerald-800 mt-0.5">
+                    <div className="rounded-3xl border border-blue-200/80 bg-white p-4 shadow-xs">
+                      <p className="text-[10px] sm:text-xs font-extrabold uppercase text-[#00022E]">Occupancy Rate</p>
+                      <p className="text-lg sm:text-2xl font-black text-[#00022E] mt-0.5">
                         {overallPct}% <span className="text-[10px] sm:text-xs font-bold text-slate-400">({totalOccBedsAll}/{totalBedsAll})</span>
                       </p>
                     </div>
@@ -4261,13 +4261,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   });
 
                   return (
-                    <div key={b.name} className="rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-xs space-y-4 hover:shadow-md hover:border-emerald-300 transition">
+                    <div key={b.name} className="rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-xs space-y-4 hover:shadow-md hover:border-blue-200 transition">
                       <div className="flex items-center justify-between">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200/70">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#F0F4FF] text-[#00022E] border border-blue-200/70">
                           <Building2 className="h-5 w-5" />
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-black text-emerald-800 border border-emerald-200/80">Active Property</span>
+                          <span className="rounded-full bg-[#F0F4FF] px-2.5 py-0.5 text-[10px] font-black text-[#00022E] border border-blue-200/80">Active Property</span>
                           <button
                             title="Edit Building Details"
                             onClick={() => setEditingBuilding({ originalName: b.name, name: b.name, floors: b.floors, roomsPerFloor: b.roomsPerFloor })}
@@ -4307,13 +4307,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                         <div className="h-2 w-full rounded-full bg-slate-200/80 overflow-hidden">
                           <div
                             className={`h-full rounded-full transition-all duration-500 ${
-                              occPct >= 90 ? "bg-rose-500" : occPct >= 60 ? "bg-emerald-600" : "bg-amber-500"
+                              occPct >= 90 ? "bg-rose-500" : occPct >= 60 ? "bg-[#00022E]" : "bg-amber-500"
                             }`}
                             style={{ width: `${Math.min(100, occPct)}%` }}
                           />
                         </div>
                         <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 pt-0.5">
-                          <span className="text-emerald-700">🟢 {stats.occupiedBedsCount} Occupied</span>
+                          <span className="text-[#00022E]">🟢 {stats.occupiedBedsCount} Occupied</span>
                           <span className="text-amber-700">🟡 {stats.vacantBedsCount} Free Beds</span>
                         </div>
                       </div>
@@ -4384,9 +4384,9 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 {/* Add New Building Interactive Card */}
                 <button
                   onClick={() => setIsAddBuildingModalOpen(true)}
-                  className="rounded-3xl border-2 border-dashed border-slate-200 hover:border-brand-green bg-white hover:bg-emerald-50/20 p-6 flex flex-col items-center justify-center space-y-3 transition-all cursor-pointer min-h-[220px] group"
+                  className="rounded-3xl border-2 border-dashed border-slate-200 hover:border-brand-green bg-white hover:bg-[#F0F4FF]/20 p-6 flex flex-col items-center justify-center space-y-3 transition-all cursor-pointer min-h-[220px] group"
                 >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-brand-green group-hover:bg-brand-green group-hover:text-white transition-all">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F0F4FF] text-brand-green group-hover:bg-brand-green group-hover:text-white transition-all">
                     <Plus className="h-6 w-6" />
                   </div>
                   <div className="text-center">
@@ -4405,8 +4405,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-black text-emerald-800 border border-emerald-200/80">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F0F4FF] px-2.5 py-0.5 text-[11px] font-black text-[#00022E] border border-blue-200/80">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#F0F4FF]0" />
                       Live Resident Roster
                     </span>
                     <span className="text-[11px] font-bold text-slate-400">
@@ -4423,7 +4423,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
                 <button
                   onClick={() => setIsCreateModalOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-brand-green hover:bg-emerald-700 text-white font-extrabold text-xs px-5 py-3 shadow-md shadow-brand-green/20 transition cursor-pointer active:scale-95 self-start sm:self-auto shrink-0"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-brand-green hover:bg-[#00022E] text-white font-extrabold text-xs px-5 py-3 shadow-md shadow-brand-green/20 transition cursor-pointer active:scale-95 self-start sm:self-auto shrink-0"
                 >
                   <Plus className="h-4 w-4" />
                   <span>+ Admit Customer</span>
@@ -4436,9 +4436,9 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   <p className="text-[10px] sm:text-xs font-extrabold uppercase text-slate-400">Total Records</p>
                   <p className="text-lg sm:text-2xl font-black text-slate-900 mt-0.5">{scopedBookings.length}</p>
                 </div>
-                <div className="rounded-3xl border border-emerald-200/80 bg-white p-4 shadow-xs">
-                  <p className="text-[10px] sm:text-xs font-extrabold uppercase text-emerald-700">Allocated Tenants</p>
-                  <p className="text-lg sm:text-2xl font-black text-emerald-800 mt-0.5">
+                <div className="rounded-3xl border border-blue-200/80 bg-white p-4 shadow-xs">
+                  <p className="text-[10px] sm:text-xs font-extrabold uppercase text-[#00022E]">Allocated Tenants</p>
+                  <p className="text-lg sm:text-2xl font-black text-[#00022E] mt-0.5">
                     {scopedBookings.filter((b) => b.status === "allocated").length}
                   </p>
                 </div>
@@ -4560,13 +4560,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                     return filtered.map((res) => {
                       const hasAllocation = res.status === "allocated";
                       const isOnline = res.source === "online";
-                      const badgeBg = isOnline ? "bg-indigo-50 text-indigo-600 border-indigo-200/50" : "bg-emerald-50 text-emerald-600 border-emerald-200/50";
+                      const badgeBg = isOnline ? "bg-indigo-50 text-indigo-600 border-indigo-200/50" : "bg-[#F0F4FF] text-[#00022E] border-blue-200/50";
 
                       return (
                         <div
                           key={res.id}
                           onClick={() => setSelectedHistoryResident(res)}
-                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:border-emerald-300 hover:shadow-xs transition cursor-pointer active:scale-[0.995] gap-3"
+                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:border-blue-200 hover:shadow-xs transition cursor-pointer active:scale-[0.995] gap-3"
                         >
                           {/* Left: Avatar & Resident Info */}
                           <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -4584,7 +4584,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                                 <p className="text-xs sm:text-sm font-black text-slate-900 truncate">{res.name}</p>
                                 <span className={`inline-block rounded-full px-2.5 py-0.5 text-[9px] font-extrabold border ${
                                   hasAllocation
-                                    ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                                    ? "bg-[#F0F4FF] text-[#00022E] border-blue-200"
                                     : "bg-amber-100 text-amber-800 border-amber-200 animate-pulse"
                                 }`}>
                                   {hasAllocation ? "Active Tenant" : "Pending Allocation"}
@@ -4613,7 +4613,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                               <button
                                 title="Allocate Room Now"
                                 onClick={() => handleTabClick("Allocation")}
-                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-brand-green text-white text-xs font-bold shadow-xs hover:bg-emerald-700 transition cursor-pointer active:scale-95"
+                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-brand-green text-white text-xs font-bold shadow-xs hover:bg-[#00022E] transition cursor-pointer active:scale-95"
                               >
                                 <KeyRound className="h-3 w-3" />
                                 <span>Allocate Room</span>
@@ -4664,8 +4664,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
               {/* Executive Header */}
               <div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-black text-emerald-800 border border-emerald-200/80">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F0F4FF] px-2.5 py-0.5 text-[11px] font-black text-[#00022E] border border-blue-200/80">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#F0F4FF]0" />
                     System Controls & Cloud Sync
                   </span>
                 </div>
@@ -4681,13 +4681,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
               <div className="rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-7 shadow-xs space-y-6 max-w-3xl relative overflow-hidden">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200/70">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#F0F4FF] text-[#00022E] border border-blue-200/70">
                       <FileSpreadsheet className="h-6 w-6" />
                     </div>
                     <div>
                       <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
                         Google Sheets Live Synchronization 📊
-                        <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-black text-emerald-800 border border-emerald-200/80">
+                        <span className="rounded-full bg-[#F0F4FF] px-2.5 py-0.5 text-[10px] font-black text-[#00022E] border border-blue-200/80">
                           Active Auto-Sync
                         </span>
                       </h3>
@@ -4701,10 +4701,10 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 {settingsSaveToast && (
                   <div className={`p-4 rounded-2xl text-xs font-bold flex items-center gap-2 ${
                     settingsSaveToast.success
-                      ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                      ? "bg-[#F0F4FF] text-[#00022E] border border-blue-200"
                       : "bg-rose-50 text-rose-800 border border-rose-200"
                   }`}>
-                    {settingsSaveToast.success ? <CheckCircle className="h-4 w-4 shrink-0 text-emerald-600" /> : <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />}
+                    {settingsSaveToast.success ? <CheckCircle className="h-4 w-4 shrink-0 text-[#00022E]" /> : <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />}
                     <span>{settingsSaveToast.message}</span>
                   </div>
                 )}
@@ -4720,7 +4720,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       {manualUrlTestStatus && (
                         <span className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-full ${
                           manualUrlTestStatus.success
-                            ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                            ? "bg-[#F0F4FF] text-[#00022E] border border-blue-200"
                             : "bg-rose-100 text-rose-800 border border-rose-200"
                         }`}>
                           {manualUrlTestStatus.success ? "Connection Verified ✅" : "Connection Failed ⚠️"}
@@ -4758,7 +4758,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       </div>
                     </div>
                     {manualUrlTestStatus?.message && (
-                      <p className={`text-[11px] font-medium ${manualUrlTestStatus.success ? "text-emerald-700" : "text-rose-600"}`}>
+                      <p className={`text-[11px] font-medium ${manualUrlTestStatus.success ? "text-[#00022E]" : "text-rose-600"}`}>
                         {manualUrlTestStatus.message}
                       </p>
                     )}
@@ -4771,13 +4771,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <label className="text-xs sm:text-sm font-extrabold text-slate-800 flex items-center gap-2">
-                        <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 text-xs font-black border border-emerald-200/70">2</span>
+                        <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-[#F0F4FF] text-[#00022E] text-xs font-black border border-blue-200/70">2</span>
                         Online Booking Google Sheet URL (Public Website Submissions) 🌐
                       </label>
                       {onlineUrlTestStatus && (
                         <span className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-full ${
                           onlineUrlTestStatus.success
-                            ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                            ? "bg-[#F0F4FF] text-[#00022E] border border-blue-200"
                             : "bg-rose-100 text-rose-800 border border-rose-200"
                         }`}>
                           {onlineUrlTestStatus.success ? "Connection Verified ✅" : "Connection Failed ⚠️"}
@@ -4815,7 +4815,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       </div>
                     </div>
                     {onlineUrlTestStatus?.message && (
-                      <p className={`text-[11px] font-medium ${onlineUrlTestStatus.success ? "text-emerald-700" : "text-rose-600"}`}>
+                      <p className={`text-[11px] font-medium ${onlineUrlTestStatus.success ? "text-[#00022E]" : "text-rose-600"}`}>
                         {onlineUrlTestStatus.message}
                       </p>
                     )}
@@ -4829,7 +4829,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                     <button
                       type="submit"
                       disabled={isSavingSettings}
-                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-green hover:bg-emerald-700 text-white font-extrabold text-xs px-6 py-3.5 shadow-md shadow-brand-green/20 transition cursor-pointer disabled:opacity-50 active:scale-[0.98]"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-green hover:bg-[#00022E] text-white font-extrabold text-xs px-6 py-3.5 shadow-md shadow-brand-green/20 transition cursor-pointer disabled:opacity-50 active:scale-[0.98]"
                     >
                       <Save className="h-4 w-4" />
                       <span>{isSavingSettings ? "Saving Sheet URLs..." : "Save Google Sheet Settings"}</span>
@@ -4852,7 +4852,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 {/* HELPER BOX: HOW TO GET CSV URL FROM GOOGLE SHEETS */}
                 <div className="rounded-2xl bg-slate-50/80 border border-slate-200/80 p-4 space-y-2 text-xs text-slate-600">
                   <p className="font-extrabold text-slate-800 flex items-center gap-1.5">
-                    <Sparkles className="h-4 w-4 text-emerald-600" /> How to get your Google Sheet CSV URL:
+                    <Sparkles className="h-4 w-4 text-[#00022E]" /> How to get your Google Sheet CSV URL:
                   </p>
                   <ol className="list-decimal list-inside space-y-1 font-semibold pl-1 text-[11px] text-slate-600">
                     <li>Open your Google Sheet in Google Drive.</li>
@@ -4886,8 +4886,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-black text-emerald-800 border border-emerald-200/80">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F0F4FF] px-2.5 py-0.5 text-[11px] font-black text-[#00022E] border border-blue-200/80">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#F0F4FF]0" />
                       Bed & Room Allocation Hub
                     </span>
                     <span className="text-[11px] font-bold text-slate-400">
@@ -4967,8 +4967,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       }}
                       className={`rounded-full px-2.5 py-1 text-[11px] font-extrabold transition-all cursor-pointer whitespace-nowrap ${
                         allocationFilter === "pending" && allocationSourceFilter === "manual"
-                          ? "bg-emerald-600 text-white shadow-xs"
-                          : "bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100"
+                          ? "bg-[#00022E] text-white shadow-xs"
+                          : "bg-[#F0F4FF] text-[#00022E] border border-blue-200 hover:bg-[#F0F4FF]"
                       }`}
                     >
                       Manual: {bookings.filter((b) => b.status === "pending" && b.source === "manual").length}
@@ -5008,26 +5008,26 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   }}
                   className={`rounded-3xl border p-4 sm:p-5 shadow-xs flex flex-col justify-between space-y-4 cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${
                     allocationFilter === "allocated"
-                      ? "border-emerald-400 bg-emerald-50/70 ring-2 ring-emerald-400/40"
-                      : "border-slate-200/80 bg-white hover:border-emerald-300"
+                      ? "border-blue-300 bg-[#F0F4FF] ring-2 ring-emerald-400/40"
+                      : "border-slate-200/80 bg-white hover:border-blue-200"
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 font-bold border border-emerald-200/70 shrink-0">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#F0F4FF] text-[#00022E] font-bold border border-blue-200/70 shrink-0">
                         <CheckCircle className="h-5 w-5" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
                           <h3 className="text-base sm:text-lg font-black text-slate-900">Allocated Customers</h3>
                           {allocationFilter === "allocated" && allocationSourceFilter === "all" && (
-                            <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-600 text-white">Active</span>
+                            <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#00022E] text-white">Active</span>
                           )}
                         </div>
                         <p className="text-[11px] font-semibold text-slate-500">Rooms & Beds Allotted</p>
                       </div>
                     </div>
-                    <span className="text-2xl sm:text-3xl font-black text-emerald-600">
+                    <span className="text-2xl sm:text-3xl font-black text-[#00022E]">
                       {bookings.filter((b) => b.status === "allocated").length}
                     </span>
                   </div>
@@ -5047,8 +5047,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       }}
                       className={`rounded-full px-2.5 py-1 text-[11px] font-extrabold transition-all cursor-pointer whitespace-nowrap ${
                         allocationFilter === "allocated" && allocationSourceFilter === "manual"
-                          ? "bg-emerald-600 text-white shadow-xs"
-                          : "bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100"
+                          ? "bg-[#00022E] text-white shadow-xs"
+                          : "bg-[#F0F4FF] text-[#00022E] border border-blue-200 hover:bg-[#F0F4FF]"
                       }`}
                     >
                       Manual: {bookings.filter((b) => b.status === "allocated" && b.source === "manual").length}
@@ -5140,14 +5140,14 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                           <div
                             key={cust.id}
                             onClick={() => setSelectedHistoryResident(cust)}
-                            className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 gap-3 hover:border-emerald-300 hover:bg-white hover:shadow-xs transition cursor-pointer active:scale-[0.995]"
+                            className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 gap-3 hover:border-blue-200 hover:bg-white hover:shadow-xs transition cursor-pointer active:scale-[0.995]"
                           >
                             <div className="flex items-center gap-3 min-w-0">
-                              <div className="relative flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 font-black text-sm border border-emerald-200/70">
+                              <div className="relative flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-2xl bg-[#F0F4FF] text-[#00022E] font-black text-sm border border-blue-200/70">
                                 {cust.name[0]}
                                 <span
                                   className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 sm:h-4 sm:w-4 rounded-full border-2 border-white flex items-center justify-center ${
-                                    cust.source === "online" ? "bg-indigo-600" : "bg-emerald-600"
+                                    cust.source === "online" ? "bg-indigo-600" : "bg-[#00022E]"
                                   }`}
                                 >
                                   {cust.source === "online" ? (
@@ -5165,7 +5165,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                                     className={`rounded-full px-2.5 py-0.5 text-[9px] font-extrabold ${
                                       cust.source === "online"
                                         ? "bg-indigo-50 text-indigo-700 border border-indigo-200"
-                                        : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                        : "bg-[#F0F4FF] text-[#00022E] border border-blue-200"
                                     }`}
                                   >
                                     {cust.source === "online" ? "Online Form" : "Manual Admission"}
@@ -5177,7 +5177,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                                         cust.depositStatus === "refunded"
                                           ? "bg-slate-100 text-slate-700 border border-slate-300"
                                           : cust.depositStatus === "paid"
-                                          ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                                          ? "bg-[#F0F4FF] text-[#00022E] border border-blue-200"
                                           : "bg-amber-100 text-amber-800 border border-amber-300"
                                       }`}
                                     >
@@ -5195,8 +5195,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                             <div className="flex flex-wrap items-center gap-1.5 mt-1 sm:mt-0 w-full sm:w-auto justify-start sm:justify-end">
                               {isAllocated ? (
                                 <div className="flex flex-wrap items-center gap-1.5">
-                                  <span className="rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 px-3 py-1 text-[11px] font-extrabold flex items-center gap-1">
-                                    <CheckCircle className="h-3 w-3 text-emerald-600 shrink-0" />
+                                  <span className="rounded-full bg-[#F0F4FF] text-[#00022E] border border-blue-200 px-3 py-1 text-[11px] font-extrabold flex items-center gap-1">
+                                    <CheckCircle className="h-3 w-3 text-[#00022E] shrink-0" />
                                     <span>{cust.allocatedBuilding} • Room {cust.allocatedRoom} ({cust.allocatedBed})</span>
                                   </span>
                                   <button
@@ -5248,7 +5248,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                                       setBmsDepositStatus(cust.depositStatus === "pending" ? "pending" : "paid");
                                       setBmsRentStartDate(cust.rentStartDate || new Date().toISOString().substring(0, 10));
                                     }}
-                                    className="rounded-2xl bg-brand-green hover:bg-emerald-700 text-white px-4 py-2 text-xs font-black shadow-md shadow-brand-green/20 transition-all active:scale-95 cursor-pointer"
+                                    className="rounded-2xl bg-brand-green hover:bg-[#00022E] text-white px-4 py-2 text-xs font-black shadow-md shadow-brand-green/20 transition-all active:scale-95 cursor-pointer"
                                   >
                                     Allocate Room & Bed
                                   </button>
@@ -5413,8 +5413,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 className="space-y-4 text-xs font-bold"
               >
                 {formSuccessMessage && (
-                  <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-2 font-bold animate-in fade-in">
-                    <CheckCircle className="h-5 w-5 text-emerald-600 shrink-0" />
+                  <div className="p-3.5 rounded-2xl bg-[#F0F4FF] border border-blue-200 text-[#00022E] flex items-center gap-2 font-bold animate-in fade-in">
+                    <CheckCircle className="h-5 w-5 text-[#00022E] shrink-0" />
                     <span>{formSuccessMessage}</span>
                   </div>
                 )}
@@ -5491,8 +5491,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                     <div className="flex flex-col items-center justify-center gap-1.5">
                       <UploadCloud className="h-7 w-7 text-brand-green" />
                       {newCustomerDocumentName ? (
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
-                          <CheckCircle className="h-4 w-4 text-emerald-600" />
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F0F4FF] text-[#00022E] text-xs font-bold border border-blue-200">
+                          <CheckCircle className="h-4 w-4 text-[#00022E]" />
                           <span>{newCustomerDocumentName}</span>
                         </div>
                       ) : (
@@ -5570,7 +5570,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       {onlineUrlTestStatus && (
                         <div className={`mt-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl border ${
                           onlineUrlTestStatus.success
-                            ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                            ? "bg-[#F0F4FF] text-[#00022E] border-blue-200"
                             : "bg-rose-50 text-rose-800 border-rose-200"
                         }`}>
                           {onlineUrlTestStatus.message}
@@ -5604,7 +5604,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       {manualUrlTestStatus && (
                         <div className={`mt-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl border ${
                           manualUrlTestStatus.success
-                            ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                            ? "bg-[#F0F4FF] text-[#00022E] border-blue-200"
                             : "bg-rose-50 text-rose-800 border-rose-200"
                         }`}>
                           {manualUrlTestStatus.message}
@@ -5617,7 +5617,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   {settingsSaveToast && (
                     <div className={`text-xs font-bold p-3 rounded-2xl border flex items-center gap-2 ${
                       settingsSaveToast.success
-                        ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                        ? "bg-[#F0F4FF] text-[#00022E] border-blue-200"
                         : "bg-rose-50 text-rose-800 border-rose-200"
                     }`}>
                       <span>{settingsSaveToast.message}</span>
@@ -5640,7 +5640,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                         href={onlineBookingSheetUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 text-xs font-black shadow-md transition-all active:scale-95"
+                        className="inline-flex items-center gap-2 rounded-2xl bg-[#00022E] hover:bg-[#00044A] text-white px-4 py-3 text-xs font-black shadow-md transition-all active:scale-95"
                       >
                         <ExternalLink className="h-4 w-4" />
                         Open Active Sheet 📊
@@ -5738,7 +5738,7 @@ function doPost(e) {
                           setIsScriptCopied(true);
                           setTimeout(() => setIsScriptCopied(false), 2500);
                         }}
-                        className="px-3.5 py-1.5 rounded-xl bg-brand-green hover:bg-emerald-600 text-white text-[11px] font-sans font-extrabold transition cursor-pointer shadow-md active:scale-95"
+                        className="px-3.5 py-1.5 rounded-xl bg-brand-green hover:bg-[#00022E] text-white text-[11px] font-sans font-extrabold transition cursor-pointer shadow-md active:scale-95"
                       >
                         {isScriptCopied ? "Copied to Clipboard! ✅" : "Copy Apps Script Code 📋"}
                       </button>
@@ -5813,7 +5813,7 @@ function doPost(e) {
                       type="button"
                       onClick={handlePushAllToGoogleSheet}
                       disabled={isSyncing || !googleSheetWebhookUrl}
-                      className="w-full sm:w-auto flex-1 text-center py-3 px-5 rounded-2xl bg-brand-green text-white font-black hover:bg-emerald-700 disabled:bg-slate-300 text-xs shadow-md transition cursor-pointer active:scale-95"
+                      className="w-full sm:w-auto flex-1 text-center py-3 px-5 rounded-2xl bg-brand-green text-white font-black hover:bg-[#00022E] disabled:bg-slate-300 text-xs shadow-md transition cursor-pointer active:scale-95"
                     >
                       {isSyncing ? "Pushing to Sheet..." : "⚡ Push All Bookings to Live Google Sheet Now"}
                     </button>
@@ -5829,8 +5829,8 @@ function doPost(e) {
                 </div>
 
                 {formSuccessMessage && (
-                  <div className="text-xs font-bold text-emerald-700 bg-emerald-50 p-3 rounded-2xl border border-emerald-200 flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 shrink-0 text-emerald-600" />
+                  <div className="text-xs font-bold text-[#00022E] bg-[#F0F4FF] p-3 rounded-2xl border border-blue-200 flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 shrink-0 text-[#00022E]" />
                     <span>{formSuccessMessage}</span>
                   </div>
                 )}
@@ -5933,7 +5933,7 @@ function doPost(e) {
                   <span className="flex items-center gap-1.5 text-brand-green">
                     <Layers className="h-4 w-4" /> Live Floor & Room Customizer
                   </span>
-                  <span className="text-[11px] font-extrabold text-emerald-700 bg-emerald-100/70 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                  <span className="text-[11px] font-extrabold text-[#00022E] bg-[#F0F4FF]/70 border border-blue-200 px-2.5 py-0.5 rounded-full">
                     {getTotalRoomsForBuilding({ floors: newBuildingFloors, roomsPerFloor: newBuildingRoomsPerFloor, floorRoomCounts: newFloorRoomCounts })} Total PG Rooms
                   </span>
                 </div>
@@ -5995,7 +5995,7 @@ function doPost(e) {
                               <button
                                 type="button"
                                 onClick={() => setNewFloorRoomCounts((prev) => ({ ...prev, 0: newBuildingRoomsPerFloor || 4 }))}
-                                className="text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-lg border border-emerald-200 transition cursor-pointer shrink-0"
+                                className="text-[10px] font-bold text-[#00022E] bg-[#F0F4FF] hover:bg-[#F0F4FF] px-2 py-0.5 rounded-lg border border-blue-200 transition cursor-pointer shrink-0"
                               >
                                 Restore GF Rooms
                               </button>
@@ -6108,7 +6108,7 @@ function doPost(e) {
                   <span className="flex items-center gap-1.5 text-brand-green">
                     <Layers className="h-4 w-4" /> Customize PG Rooms per Floor
                   </span>
-                  <span className="text-[11px] font-extrabold text-emerald-700 bg-emerald-100/70 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                  <span className="text-[11px] font-extrabold text-[#00022E] bg-[#F0F4FF]/70 border border-blue-200 px-2.5 py-0.5 rounded-full">
                     {getTotalRoomsForBuilding(editingBuilding)} Total PG Rooms
                   </span>
                 </div>
@@ -6378,7 +6378,7 @@ function doPost(e) {
                       ))}
                       <button
                         onClick={() => setIsAddBuildingModalOpen(true)}
-                        className="rounded-full px-3 py-1 text-xs font-bold bg-emerald-50 text-brand-green border border-brand-green/30 hover:bg-brand-green hover:text-white transition-all flex items-center gap-1 cursor-pointer"
+                        className="rounded-full px-3 py-1 text-xs font-bold bg-[#F0F4FF] text-brand-green border border-brand-green/30 hover:bg-brand-green hover:text-white transition-all flex items-center gap-1 cursor-pointer"
                       >
                         <Plus className="h-3 w-3" /> Add Building
                       </button>
@@ -6429,7 +6429,7 @@ function doPost(e) {
                 {/* BOOKMYSHOW-STYLE LEGEND BAR WITH RED FULLY OCCUPIED INDICATOR */}
                 <div className="flex items-center justify-center gap-5 py-2.5 rounded-2xl bg-slate-100/70 border border-slate-200/60 text-[11px] font-extrabold text-slate-700 flex-wrap">
                   <span className="flex items-center gap-2">
-                    <span className="h-3.5 w-3.5 rounded-md border-2 border-emerald-500 bg-emerald-100 shadow-2xs" /> Available
+                    <span className="h-3.5 w-3.5 rounded-md border-2 border-[#00022E] bg-[#F0F4FF] shadow-2xs" /> Available
                   </span>
                   <span className="flex items-center gap-2">
                     <span className="h-3.5 w-3.5 rounded-md border-2 border-rose-400 bg-rose-100 shadow-2xs" /> Fully Occupied (Red)
@@ -6488,12 +6488,12 @@ function doPost(e) {
                         className={`relative flex flex-col items-center justify-center p-2.5 rounded-2xl border-2 font-black transition-all ${rmState.isFull
                             ? "bg-rose-50 border-rose-300 text-rose-700 cursor-not-allowed opacity-90"
                             : isSelected
-                              ? "bg-brand-green text-white border-brand-green shadow-lg shadow-brand-green/30 scale-[1.03]"
-                              : "bg-emerald-50/70 border-emerald-300 hover:border-brand-green text-emerald-900 hover:bg-emerald-100 hover:scale-[1.02] shadow-2xs"
+                              ? "bg-brand-green text-white border-brand-green shadow-lg shadow-[#00022E]/30 scale-[1.03]"
+                              : "bg-[#F0F4FF] border-blue-200 hover:border-brand-green text-[#00022E] hover:bg-[#F0F4FF] hover:scale-[1.02] shadow-2xs"
                           }`}
                       >
                         <span className="text-xs font-black tracking-tight">Room {roomNo}</span>
-                        <span className={`text-[9px] font-extrabold mt-0.5 ${isSelected ? "text-white/90" : rmState.isFull ? "text-rose-700" : "text-emerald-700"}`}>
+                        <span className={`text-[9px] font-extrabold mt-0.5 ${isSelected ? "text-white/90" : rmState.isFull ? "text-rose-700" : "text-[#00022E]"}`}>
                           {rmState.isFull ? "FULL" : `${rmState.freeCount}/${rmState.capacity} Free`}
                         </span>
 
@@ -6581,14 +6581,14 @@ function doPost(e) {
                               ? "bg-rose-50 border-rose-300 text-rose-700 opacity-90 cursor-not-allowed"
                               : isBedSelected
                                 ? "bg-indigo-600 text-white border-indigo-600 shadow-md scale-105"
-                                : "bg-emerald-50 border-emerald-300 text-emerald-900 hover:border-indigo-600 hover:bg-emerald-100"
+                                : "bg-[#F0F4FF] border-blue-200 text-[#00022E] hover:border-indigo-600 hover:bg-[#F0F4FF]"
                             }`}
                         >
                           <div className="flex items-center gap-1.5">
                             {b.isOccupied ? <Lock className="h-3.5 w-3.5 text-rose-600" /> : <Bed className="h-3.5 w-3.5" />}
                             <span className="text-xs font-black">{b.bedName}</span>
                           </div>
-                          <span className={`text-[10px] mt-0.5 font-extrabold ${isBedSelected ? "text-white/90" : b.isOccupied ? "text-rose-700 font-bold" : "text-emerald-700"}`}>
+                          <span className={`text-[10px] mt-0.5 font-extrabold ${isBedSelected ? "text-white/90" : b.isOccupied ? "text-rose-700 font-bold" : "text-[#00022E]"}`}>
                             {b.isOccupied ? `Occupied (${b.occupantName})` : isBedSelected ? "Selected ✅" : "Available ⚡"}
                           </span>
                         </button>
@@ -6665,7 +6665,7 @@ function doPost(e) {
                     <button
                       type="button"
                       onClick={() => setBmsDepositStatus("paid")}
-                      className={`px-3 py-1 rounded-full text-xs font-extrabold transition ${bmsDepositStatus === "paid" ? "bg-emerald-600 text-white shadow-xs" : "bg-white text-slate-600 border border-slate-200"}`}
+                      className={`px-3 py-1 rounded-full text-xs font-extrabold transition ${bmsDepositStatus === "paid" ? "bg-[#00022E] text-white shadow-xs" : "bg-white text-slate-600 border border-slate-200"}`}
                     >
                       Paid ✅ (₹{bmsDepositAmount})
                     </button>
@@ -6803,7 +6803,7 @@ function doPost(e) {
                       console.warn("Backend allocation sync notice:", err);
                     }
                   }}
-                  className="rounded-full bg-brand-green hover:bg-brand-gold text-white px-6 py-2.5 text-xs font-black shadow-lg shadow-brand-green/30 transition-all active:scale-95 cursor-pointer"
+                  className="rounded-full bg-brand-green hover:bg-brand-gold text-white px-6 py-2.5 text-xs font-black shadow-lg shadow-[#00022E]/30 transition-all active:scale-95 cursor-pointer"
                 >
                   Confirm & Allocate {bmsBed}
                 </button>
@@ -6820,7 +6820,7 @@ function doPost(e) {
         <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in">
           <div className="relative w-full max-w-lg rounded-[2.5rem] bg-white p-6 sm:p-8 shadow-2xl border border-slate-200 animate-in zoom-in-95 text-slate-900 space-y-5">
             <div className="flex items-center gap-3">
-              <div className="p-3 rounded-2xl bg-emerald-500 text-white font-bold">
+              <div className="p-3 rounded-2xl bg-[#F0F4FF]0 text-white font-bold">
                 <KeyRound className="h-6 w-6" />
               </div>
               <div>
@@ -6855,9 +6855,9 @@ function doPost(e) {
                   <span className="text-[10px] text-slate-400 uppercase font-black">Customer User ID</span>
                   <p className="text-base font-black text-brand-navy mt-0.5">{allotmentSuccessData.customerId}</p>
                 </div>
-                <div className="bg-white p-3.5 rounded-xl border border-emerald-300 bg-emerald-50/50 shadow-2xs">
-                  <span className="text-[10px] text-emerald-700 uppercase font-black">Generated Password</span>
-                  <p className="text-base font-black text-emerald-800 tracking-wider mt-0.5">{allotmentSuccessData.customerPassword}</p>
+                <div className="bg-white p-3.5 rounded-xl border border-blue-200 bg-[#F0F4FF] shadow-2xs">
+                  <span className="text-[10px] text-[#00022E] uppercase font-black">Generated Password</span>
+                  <p className="text-base font-black text-[#00022E] tracking-wider mt-0.5">{allotmentSuccessData.customerPassword}</p>
                 </div>
               </div>
             </div>
@@ -6869,7 +6869,7 @@ function doPost(e) {
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl text-xs font-black text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/30 transition cursor-pointer"
+                className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl text-xs font-black text-white bg-[#00022E] hover:bg-[#00044A] shadow-lg shadow-emerald-600/30 transition cursor-pointer"
               >
                 <PhoneCall className="h-4 w-4" />
                 <span>Send Credentials via WhatsApp</span>
@@ -6885,7 +6885,7 @@ function doPost(e) {
                 }}
                 className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl text-xs font-extrabold text-slate-700 bg-slate-100 hover:bg-slate-200 transition cursor-pointer"
               >
-                {copiedCredentialText ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                {copiedCredentialText ? <Check className="h-4 w-4 text-[#00022E]" /> : <Copy className="h-4 w-4" />}
                 <span>{copiedCredentialText ? "Credentials Copied to Clipboard!" : "Copy Credentials & Portal Link"}</span>
               </button>
 
@@ -6931,7 +6931,7 @@ function doPost(e) {
               </div>
               <div className="flex justify-between items-center pt-1 border-t border-slate-200">
                 <span className="text-slate-500">Security Deposit Collected:</span>
-                <span className="text-emerald-700 font-black text-sm">₹{(checkoutCustomer.paidDepositAmount !== undefined ? checkoutCustomer.paidDepositAmount : (checkoutCustomer.depositAmount || 5000)).toLocaleString()}</span>
+                <span className="text-[#00022E] font-black text-sm">₹{(checkoutCustomer.paidDepositAmount !== undefined ? checkoutCustomer.paidDepositAmount : (checkoutCustomer.depositAmount || 5000)).toLocaleString()}</span>
               </div>
             </div>
 
@@ -6971,9 +6971,9 @@ function doPost(e) {
               )}
 
               {/* Net Refund Calculation Card */}
-              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex justify-between items-center text-emerald-900 font-black">
+              <div className="p-4 rounded-2xl bg-[#F0F4FF] border border-blue-200 flex justify-between items-center text-[#00022E] font-black">
                 <span>Net Refund to Resident:</span>
-                <span className="text-lg text-emerald-700 font-black">
+                <span className="text-lg text-[#00022E] font-black">
                   ₹{Math.max(0, (checkoutCustomer.paidDepositAmount !== undefined ? checkoutCustomer.paidDepositAmount : (checkoutCustomer.depositAmount || 5000)) - checkoutDeductions).toLocaleString()}
                 </span>
               </div>
@@ -7061,7 +7061,7 @@ function doPost(e) {
           <div className="relative w-full max-w-lg rounded-[2.5rem] bg-white p-6 sm:p-8 shadow-2xl border border-slate-200 animate-in zoom-in-95 text-slate-900 space-y-5" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-3">
-                <div className="p-3 rounded-2xl bg-emerald-500 text-white font-bold">
+                <div className="p-3 rounded-2xl bg-[#F0F4FF]0 text-white font-bold">
                   <Receipt className="h-6 w-6" />
                 </div>
                 <div>
@@ -7081,11 +7081,11 @@ function doPost(e) {
               </div>
               <div className="flex justify-between items-center pb-2 border-b border-slate-200">
                 <span className="text-slate-500">Status:</span>
-                <span className="text-emerald-700 text-xs font-black uppercase bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-full">CHECKED OUT & DEPOSIT REFUNDED</span>
+                <span className="text-[#00022E] text-xs font-black uppercase bg-[#F0F4FF] border border-blue-200 px-2.5 py-0.5 rounded-full">CHECKED OUT & DEPOSIT REFUNDED</span>
               </div>
               <div className="flex justify-between items-center pb-2 border-b border-slate-200">
                 <span className="text-slate-500">Security Deposit Refunded:</span>
-                <span className="text-emerald-700 text-base font-black">₹{(checkoutSuccessVoucher.depositRefundDetails?.refundAmount || 0).toLocaleString()}</span>
+                <span className="text-[#00022E] text-base font-black">₹{(checkoutSuccessVoucher.depositRefundDetails?.refundAmount || 0).toLocaleString()}</span>
               </div>
               {checkoutSuccessVoucher.depositRefundDetails?.deductions > 0 && (
                 <div className="flex justify-between items-center pb-2 border-b border-slate-200 text-amber-800">
@@ -7145,7 +7145,7 @@ function doPost(e) {
                   onClick={() => { setRentSetupStayType("monthly"); setRentSetupCheckoutDate(""); }}
                   className={`flex items-center justify-center gap-2 py-3 px-4 rounded-2xl text-xs font-black transition-all cursor-pointer ${
                     rentSetupStayType === "monthly"
-                      ? "bg-brand-green text-white shadow-lg shadow-brand-green/30"
+                      ? "bg-brand-green text-white shadow-lg shadow-[#00022E]/30"
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                   }`}
                 >
@@ -7246,7 +7246,7 @@ function doPost(e) {
                     setIsRentSetupSubmitting(false);
                   }
                 }}
-                className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl text-xs font-black text-white bg-brand-green hover:bg-brand-gold shadow-lg shadow-brand-green/30 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+                className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl text-xs font-black text-white bg-brand-green hover:bg-brand-gold shadow-lg shadow-[#00022E]/30 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
               >
                 <CheckCircle2 className="h-4 w-4" />
                 <span>{isRentSetupSubmitting ? "Saving..." : "Save Rent Details"}</span>
@@ -7310,7 +7310,7 @@ function doPost(e) {
                 <div>
                   <span className="text-[10px] text-slate-400 block mb-0.5">Admitted & Registered By</span>
                   {selectedHistoryResident.createdByRole === "staff" ? (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-black">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#F0F4FF] text-[#00022E] border border-blue-200 text-[10px] font-black">
                       👤 Staff: {selectedHistoryResident.createdBy || "Staff Member"}
                     </span>
                   ) : selectedHistoryResident.createdByRole === "admin" ? (
@@ -7335,7 +7335,7 @@ function doPost(e) {
                     selectedHistoryResident.depositStatus === "refunded"
                       ? "bg-slate-200 text-slate-700 border border-slate-300"
                       : selectedHistoryResident.depositStatus === "paid"
-                      ? "bg-emerald-600 text-white shadow-2xs"
+                      ? "bg-[#00022E] text-white shadow-2xs"
                       : "bg-amber-500 text-white shadow-2xs"
                   }`}>
                     {selectedHistoryResident.depositStatus === "refunded"
@@ -7406,11 +7406,11 @@ function doPost(e) {
                 <div className="space-y-4">
                   {selectedHistoryResident.status === "allocated" ? (
                     <>
-                      <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200/80">
+                      <div className="p-4 rounded-2xl bg-[#F0F4FF] border border-blue-200/80">
                         <div className="flex items-center gap-2 mb-3">
-                          <Building2 className="h-4 w-4 text-emerald-600" />
-                          <h3 className="text-xs font-black text-emerald-900 uppercase tracking-wider">Allocated Room</h3>
-                          <span className="ml-auto text-[9px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">Active</span>
+                          <Building2 className="h-4 w-4 text-[#00022E]" />
+                          <h3 className="text-xs font-black text-[#00022E] uppercase tracking-wider">Allocated Room</h3>
+                          <span className="ml-auto text-[9px] font-bold text-[#00022E] bg-[#F0F4FF] px-2 py-0.5 rounded-full">Active</span>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div className="p-3 bg-white rounded-xl border border-emerald-100">
@@ -7479,7 +7479,7 @@ function doPost(e) {
                               <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black ${
                                 selectedHistoryResident.stayType === "short_stay"
                                   ? "bg-amber-50 text-amber-700 border border-amber-200"
-                                  : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                  : "bg-[#F0F4FF] text-[#00022E] border border-blue-200"
                               }`}>
                                 {selectedHistoryResident.stayType === "short_stay" ? "Short Stay" : "Monthly PG"}
                               </span>
@@ -7492,7 +7492,7 @@ function doPost(e) {
                             ) : (
                               <div className="p-3 bg-white rounded-xl border border-emerald-100">
                                 <span className="text-[10px] text-slate-400 block mb-1">Checkout Status</span>
-                                <span className="text-sm font-black text-emerald-700">Ongoing Stay 🔄</span>
+                                <span className="text-sm font-black text-[#00022E]">Ongoing Stay 🔄</span>
                               </div>
                             )}
                           </div>
@@ -7561,10 +7561,10 @@ function doPost(e) {
                   {smsVerifyStatus && (
                     <div className={`p-3.5 rounded-2xl border text-xs font-bold flex items-start gap-2 animate-in fade-in ${
                       smsVerifyStatus.isMatch
-                        ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                        ? "bg-[#F0F4FF] border-blue-200 text-[#00022E]"
                         : "bg-amber-50 border-amber-200 text-amber-800"
                     }`}>
-                      <CheckCircle className={`h-4 w-4 shrink-0 mt-0.5 ${smsVerifyStatus.isMatch ? "text-emerald-600" : "text-amber-600"}`} />
+                      <CheckCircle className={`h-4 w-4 shrink-0 mt-0.5 ${smsVerifyStatus.isMatch ? "text-[#00022E]" : "text-amber-600"}`} />
                       <div className="flex-1">
                         <span>{smsVerifyStatus.message}</span>
                       </div>
@@ -7747,7 +7747,7 @@ function doPost(e) {
                           key={p.id}
                           className={`p-4 rounded-2xl border transition-all ${
                             p.status === "verified"
-                              ? "bg-emerald-50/50 border-emerald-200"
+                              ? "bg-[#F0F4FF] border-blue-200"
                               : p.status === "rejected"
                               ? "bg-red-50/50 border-red-200"
                               : "bg-amber-50/50 border-amber-200"
@@ -7793,7 +7793,7 @@ function doPost(e) {
                                       notes: `Official Rent Payment Receipt for ${mName} ${p.year}. Payment received & verified successfully.`,
                                     });
                                   }}
-                                  className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-2 py-0.5 rounded-md transition cursor-pointer"
+                                  className="inline-flex items-center gap-1 text-[10px] font-bold text-[#00022E] bg-[#F0F4FF] hover:bg-emerald-200 px-2 py-0.5 rounded-md transition cursor-pointer"
                                   title="View Invoice & Download PDF"
                                 >
                                   <Receipt className="h-3 w-3" />
@@ -7808,8 +7808,8 @@ function doPost(e) {
                             {/* Status Badge */}
                             <div className="text-right space-y-1">
                               {p.status === "verified" && (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 border border-emerald-300 px-3 py-1 text-[10px] font-black text-emerald-800">
-                                  <CheckCircle className="h-3 w-3 text-emerald-600" />
+                                <span className="inline-flex items-center gap-1 rounded-full bg-[#F0F4FF] border border-blue-200 px-3 py-1 text-[10px] font-black text-[#00022E]">
+                                  <CheckCircle className="h-3 w-3 text-[#00022E]" />
                                   Verified ✅
                                 </span>
                               )}
@@ -7833,7 +7833,7 @@ function doPost(e) {
                               <button
                                 type="button"
                                 onClick={() => handleVerifyAndRaiseInvoice(selectedHistoryResident.id, p.id)}
-                                className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white px-3.5 py-1.5 text-xs font-black shadow-xs transition cursor-pointer"
+                                className="inline-flex items-center gap-1.5 rounded-xl bg-[#00022E] hover:bg-[#00044A] text-white px-3.5 py-1.5 text-xs font-black shadow-xs transition cursor-pointer"
                               >
                                 <Receipt className="h-3.5 w-3.5" />
                                 <span>Verify & Raise Invoice</span>
@@ -7912,7 +7912,7 @@ function doPost(e) {
                     <span className={`text-[10px] font-black px-3 py-1 rounded-full ${
                       (selectedHistoryResident.complaintHistory || []).filter((c: any) => c.status !== "resolved").length
                         ? "bg-rose-100 text-rose-700 border border-rose-200"
-                        : "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                        : "bg-[#F0F4FF] text-[#00022E] border border-blue-200"
                     }`}>
                       {selectedHistoryResident.complaintHistory?.length || 0} Total • {(selectedHistoryResident.complaintHistory || []).filter((c: any) => c.status !== "resolved").length} Active
                     </span>
@@ -7931,7 +7931,7 @@ function doPost(e) {
                             key={compId}
                             className={`p-4 rounded-2xl border-2 space-y-3 transition-all ${
                               isResolved
-                                ? "bg-emerald-50/60 border-emerald-200"
+                                ? "bg-[#F0F4FF] border-blue-200"
                                 : isInProgress
                                   ? "bg-blue-50/70 border-blue-200"
                                   : "bg-rose-50/70 border-rose-200"
@@ -7957,7 +7957,7 @@ function doPost(e) {
                               <div className="flex items-center gap-2">
                                 <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${
                                   isResolved
-                                    ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                                    ? "bg-[#F0F4FF] text-[#00022E] border-blue-200"
                                     : isInProgress
                                       ? "bg-blue-100 text-blue-800 border-blue-300"
                                       : "bg-amber-100 text-amber-800 border-amber-300"
@@ -8012,7 +8012,7 @@ function doPost(e) {
                                   type="button"
                                   onClick={() => handleUpdateComplaintStatus(selectedHistoryResident.id, compId, "resolved")}
                                   className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition cursor-pointer ${
-                                    isResolved ? "bg-emerald-600 text-white shadow-2xs" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+                                    isResolved ? "bg-[#00022E] text-white shadow-2xs" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
                                   }`}
                                 >
                                   ✅ Resolved
@@ -8026,7 +8026,7 @@ function doPost(e) {
                                   )}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black transition shadow-2xs cursor-pointer"
+                                  className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-[#00022E] hover:bg-[#00044A] text-white text-[10px] font-black transition shadow-2xs cursor-pointer"
                                 >
                                   <MessageSquare className="h-3 w-3" /> WhatsApp
                                 </a>
@@ -8146,7 +8146,7 @@ function doPost(e) {
               <div className="flex items-center gap-3">
                 <div className={`flex h-11 w-11 items-center justify-center rounded-2xl border ${
                   occupancyExplorerModal.mode === "unoccupied"
-                    ? "bg-emerald-100/80 text-emerald-700 border-emerald-300"
+                    ? "bg-[#F0F4FF]/80 text-[#00022E] border-blue-200"
                     : "bg-rose-100/80 text-rose-600 border-rose-300"
                 }`}>
                   {occupancyExplorerModal.mode === "unoccupied" ? <Bed className="h-6 w-6" /> : <CheckCircle2 className="h-6 w-6" />}
@@ -8177,7 +8177,7 @@ function doPost(e) {
                 onClick={() => setOccupancyExplorerModal({ ...occupancyExplorerModal, mode: "unoccupied" })}
                 className={`flex-1 py-2 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
                   occupancyExplorerModal.mode === "unoccupied"
-                    ? "bg-emerald-600 text-white shadow-md"
+                    ? "bg-[#00022E] text-white shadow-md"
                     : "text-slate-600 hover:bg-slate-200/70"
                 }`}
               >
@@ -8213,7 +8213,7 @@ function doPost(e) {
                       className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
                         isSelected
                           ? occupancyExplorerModal.mode === "unoccupied"
-                            ? "bg-emerald-50 border-emerald-500 shadow-md ring-2 ring-emerald-500/20"
+                            ? "bg-[#F0F4FF] border-[#00022E] shadow-md ring-2 ring-emerald-500/20"
                             : "bg-rose-50 border-rose-500 shadow-md ring-2 ring-rose-500/20"
                           : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50"
                       }`}
@@ -8222,7 +8222,7 @@ function doPost(e) {
                         <span className="font-extrabold text-xs text-slate-900">{bld.name}</span>
                         <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
                           occupancyExplorerModal.mode === "unoccupied"
-                            ? "bg-emerald-100 text-emerald-800"
+                            ? "bg-[#F0F4FF] text-[#00022E]"
                             : "bg-rose-100 text-rose-800"
                         }`}>
                           {countToShow} {occupancyExplorerModal.mode === "unoccupied" ? "Vacant" : "Occupied"}
@@ -8294,7 +8294,7 @@ function doPost(e) {
                                     }}
                                     className={`h-12 min-w-[62px] px-2.5 rounded-xl border-2 font-black text-xs flex flex-col items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95 ${
                                       isGreenVacant
-                                        ? "border-emerald-500 bg-emerald-50 text-emerald-900 hover:bg-emerald-600 hover:text-white shadow-emerald-100"
+                                        ? "border-[#00022E] bg-[#F0F4FF] text-[#00022E] hover:bg-[#00022E] hover:text-white shadow-emerald-100"
                                         : "border-rose-400 bg-rose-50 text-rose-900 hover:bg-rose-600 hover:text-white shadow-rose-100"
                                     }`}
                                   >
@@ -8337,13 +8337,13 @@ function doPost(e) {
                               className={`p-4 rounded-2xl border-2 space-y-2.5 transition-all ${
                                 b.isOccupied
                                   ? "bg-rose-50/70 border-rose-200 text-rose-950 shadow-2xs"
-                                  : "bg-emerald-50/70 border-emerald-300/80 text-emerald-950 shadow-2xs"
+                                  : "bg-[#F0F4FF] border-blue-200/80 text-emerald-950 shadow-2xs"
                               }`}
                             >
                               <div className="flex items-center justify-between font-black">
                                 <span className="flex items-center gap-1.5 text-xs">🛏️ {b.bedName}</span>
                                 <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-black border ${
-                                  b.isOccupied ? "bg-rose-100 text-rose-800 border-rose-200" : "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                  b.isOccupied ? "bg-rose-100 text-rose-800 border-rose-200" : "bg-[#F0F4FF] text-[#00022E] border border-blue-200"
                                 }`}>
                                   {b.isOccupied ? "🔴 Occupied" : "🟢 Vacant"}
                                 </span>
@@ -8420,7 +8420,7 @@ function doPost(e) {
             {isFabMenuOpen && (
               <div className="mb-3 flex flex-col items-end gap-2.5 animate-in slide-in-from-bottom-4 fade-in duration-200">
                 {[
-                  { label: "Add Customer", icon: UserPlus, action: () => { setIsCreateModalOpen(true); setIsFabMenuOpen(false); }, color: "bg-emerald-600" },
+                  { label: "Add Customer", icon: UserPlus, action: () => { setIsCreateModalOpen(true); setIsFabMenuOpen(false); }, color: "bg-[#00022E]" },
                   { label: "Add Building", icon: Building2, action: () => { setIsAddBuildingModalOpen(true); setIsFabMenuOpen(false); }, color: "bg-blue-600" },
                   { label: "Allocate Room", icon: KeyRound, action: () => { handleTabClick("Allocation"); setIsFabMenuOpen(false); }, color: "bg-indigo-600" },
                   { label: "Record Expense", icon: CreditCard, action: () => { resetExpenseForm(); setIsExpenseModalOpen(true); setIsFabMenuOpen(false); }, color: "bg-amber-600" },
@@ -8446,7 +8446,7 @@ function doPost(e) {
             {/* FAB Main Button */}
             <button
               onClick={() => setIsFabMenuOpen(!isFabMenuOpen)}
-              className={`flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-brand-green via-emerald-600 to-emerald-500 text-white shadow-xl shadow-brand-green/40 border-[3px] border-white active:scale-90 transition-all duration-300 cursor-pointer ${
+              className={`flex h-14 w-14 items-center justify-center rounded-full bg-[#00022E] text-white shadow-xl shadow-[#00022E]/40 border-[3px] border-white active:scale-90 transition-all duration-300 cursor-pointer ${
                 isFabMenuOpen ? "rotate-45 scale-110" : "rotate-0"
               }`}
               title="Quick Actions"
@@ -8533,7 +8533,7 @@ function doPost(e) {
                           }}
                           className={`group relative flex w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-bold transition-all duration-200 cursor-pointer ${
                             isActive
-                              ? "bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 text-white shadow-md shadow-blue-900/25"
+                              ? "bg-[#00022E] text-white shadow-md shadow-blue-900/25"
                               : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 active:bg-slate-100"
                           }`}
                         >
@@ -8575,7 +8575,7 @@ function doPost(e) {
                           }}
                           className={`group relative flex w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-bold transition-all duration-200 cursor-pointer ${
                             isActive
-                              ? "bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 text-white shadow-md shadow-blue-900/25"
+                              ? "bg-[#00022E] text-white shadow-md shadow-blue-900/25"
                               : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 active:bg-slate-100"
                           }`}
                         >
@@ -8646,7 +8646,7 @@ function doPost(e) {
                         }}
                         className={`group flex w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-bold transition-all cursor-pointer active:bg-slate-100 ${
                           activeTab === "Settings"
-                            ? "bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 text-white shadow-md shadow-blue-900/25"
+                            ? "bg-[#00022E] text-white shadow-md shadow-blue-900/25"
                             : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                         }`}
                       >
@@ -8738,7 +8738,7 @@ function doPost(e) {
                   {/* Drawer Menu Grid */}
                   <div className="grid grid-cols-3 gap-3 mb-5">
                     {[
-                      { name: "Revenue", icon: Wallet, color: "bg-emerald-100 text-emerald-700", borderColor: "border-emerald-200" },
+                      { name: "Revenue", icon: Wallet, color: "bg-[#F0F4FF] text-[#00022E]", borderColor: "border-blue-200" },
                       { name: "Reports", icon: FileSpreadsheet, color: "bg-blue-100 text-blue-700", borderColor: "border-blue-200" },
                       { name: "Invoice", icon: Receipt, color: "bg-purple-100 text-purple-700", borderColor: "border-purple-200", badge: pendingPaymentsCount },
                       { name: "Allocation", icon: KeyRound, color: "bg-indigo-100 text-indigo-700", borderColor: "border-indigo-200" },
@@ -8779,9 +8779,9 @@ function doPost(e) {
                           setIsStaffModalOpen(true);
                           setIsMoreDrawerOpen(false);
                         }}
-                        className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 hover:bg-emerald-50 transition cursor-pointer active:scale-[0.98]"
+                        className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 hover:bg-[#F0F4FF] transition cursor-pointer active:scale-[0.98]"
                       >
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F0F4FF] text-[#00022E]">
                           <UserCheck className="h-4.5 w-4.5" />
                         </div>
                         <span>Staff & Buildings</span>
@@ -8910,7 +8910,7 @@ function doPost(e) {
             </div>
 
             {paymentSettingsMsg && (
-              <div className={`p-3.5 rounded-2xl border text-xs font-bold ${paymentSettingsMsg.includes("✓") ? "bg-emerald-50 border-emerald-200 text-emerald-800" : "bg-rose-50 border-rose-200 text-rose-800"}`}>
+              <div className={`p-3.5 rounded-2xl border text-xs font-bold ${paymentSettingsMsg.includes("✓") ? "bg-[#F0F4FF] border-blue-200 text-[#00022E]" : "bg-rose-50 border-rose-200 text-rose-800"}`}>
                 {paymentSettingsMsg}
               </div>
             )}
@@ -9079,7 +9079,7 @@ function doPost(e) {
                 <button
                   type="submit"
                   disabled={isSavingPaymentSettings}
-                  className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl text-xs font-black text-white bg-brand-green hover:bg-brand-gold shadow-lg shadow-brand-green/30 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl text-xs font-black text-white bg-brand-green hover:bg-brand-gold shadow-lg shadow-[#00022E]/30 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
                 >
                   <CheckCircle2 className="h-4 w-4" />
                   <span>{isSavingPaymentSettings ? "Saving Settings..." : "Save Payment Details & QR Code"}</span>
@@ -9188,7 +9188,7 @@ function doPost(e) {
                       value={customCategoryInput}
                       onChange={(e) => setCustomCategoryInput(e.target.value)}
                       placeholder="Type custom category name (e.g. Security, Laundry, Generator Fuel)..."
-                      className="w-full rounded-2xl bg-emerald-50/70 border border-emerald-300 px-4 py-3 text-xs font-bold text-slate-800 outline-none focus:border-brand-green focus:bg-white transition"
+                      className="w-full rounded-2xl bg-[#F0F4FF] border border-blue-200 px-4 py-3 text-xs font-bold text-slate-800 outline-none focus:border-brand-green focus:bg-white transition"
                     />
                   )}
                 </div>
@@ -9258,7 +9258,7 @@ function doPost(e) {
 
                 <button
                   type="submit"
-                  className="rounded-2xl bg-brand-green hover:bg-emerald-700 text-white font-extrabold text-xs px-6 py-3 shadow-lg shadow-brand-green/20 transition cursor-pointer active:scale-95"
+                  className="rounded-2xl bg-brand-green hover:bg-[#00022E] text-white font-extrabold text-xs px-6 py-3 shadow-lg shadow-brand-green/20 transition cursor-pointer active:scale-95"
                 >
                   {editingExpId ? "Save Changes" : "Record Expense"}
                 </button>
@@ -9285,10 +9285,10 @@ function doPost(e) {
             </div>
 
             {/* Staff Registration & Assignment Form */}
-            <form onSubmit={handleSaveStaffMember} className="p-4 bg-emerald-50/60 border border-emerald-200/80 rounded-2xl space-y-3.5">
+            <form onSubmit={handleSaveStaffMember} className="p-4 bg-[#F0F4FF] border border-blue-200/80 rounded-2xl space-y-3.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
-                  <UserPlus className="h-4 w-4 text-emerald-700" /> {editingStaffId ? "Edit Staff Member" : "Add New Staff Member"}
+                <span className="text-xs font-black text-[#00022E] uppercase tracking-wider flex items-center gap-1.5">
+                  <UserPlus className="h-4 w-4 text-[#00022E]" /> {editingStaffId ? "Edit Staff Member" : "Add New Staff Member"}
                 </span>
                 {editingStaffId && (
                   <button
@@ -9383,9 +9383,9 @@ function doPost(e) {
                           setNewStaffAssignedBuildings([buildingsList[0]?.name || "PG A"]);
                         }
                       }}
-                      className="h-4 w-4 accent-emerald-600 rounded cursor-pointer"
+                      className="h-4 w-4 accent-[#00022E] rounded cursor-pointer"
                     />
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 font-extrabold text-[11px]">ALL Buildings (Master Access)</span>
+                    <span className="px-2 py-0.5 rounded-full bg-[#F0F4FF] text-[#00022E] font-extrabold text-[11px]">ALL Buildings (Master Access)</span>
                   </label>
 
                   {!newStaffAssignedBuildings.includes("ALL") &&
@@ -9444,7 +9444,7 @@ function doPost(e) {
                       <p className="text-xs text-slate-600 font-bold flex items-center gap-2">
                         <span>📞 {st.phone}</span>
                         <span className="text-slate-300">•</span>
-                        <span className="text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 font-mono text-[11px]">
+                        <span className="text-[#00022E] bg-[#F0F4FF] px-2 py-0.5 rounded-md border border-blue-200 font-mono text-[11px]">
                           ✉️ Login: {st.email}
                         </span>
                         <span className="text-slate-300">•</span>
@@ -9463,7 +9463,7 @@ function doPost(e) {
                       <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
                         <span className="text-[10px] font-bold text-slate-400">Assigned Property:</span>
                         {st.assignedBuildings.includes("ALL") ? (
-                          <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-900 border border-emerald-200">👑 All Buildings</span>
+                          <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-[#F0F4FF] text-[#00022E] border border-blue-200">👑 All Buildings</span>
                         ) : (
                           st.assignedBuildings.map((b) => (
                             <span key={b} className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-800">
@@ -9485,9 +9485,9 @@ function doPost(e) {
                             setCopiedStaffId(st.id);
                             setTimeout(() => setCopiedStaffId(null), 2500);
                           }}
-                          className="px-3 py-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 rounded-xl transition cursor-pointer flex items-center gap-1"
+                          className="px-3 py-1.5 text-xs font-bold text-[#00022E] bg-[#F0F4FF] border border-blue-200 hover:bg-[#F0F4FF] rounded-xl transition cursor-pointer flex items-center gap-1"
                         >
-                          <Copy className="h-3.5 w-3.5 text-emerald-600" />
+                          <Copy className="h-3.5 w-3.5 text-[#00022E]" />
                           <span>{copiedStaffId === st.id ? "Copied!" : "Copy Credentials"}</span>
                         </button>
                         <button
@@ -9604,7 +9604,7 @@ function doPost(e) {
                               : st === "in_progress"
                                 ? "bg-blue-600 text-white shadow-2xs"
                                 : st === "resolved"
-                                  ? "bg-emerald-600 text-white shadow-2xs"
+                                  ? "bg-[#00022E] text-white shadow-2xs"
                                   : "bg-slate-900 text-white shadow-2xs"
                             : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                         }`}
@@ -9720,7 +9720,7 @@ function doPost(e) {
                       key={compId}
                       className={`p-4 sm:p-5 rounded-2xl border-2 space-y-3 transition-all ${
                         isResolved
-                          ? "bg-emerald-50/50 border-emerald-200"
+                          ? "bg-[#F0F4FF] border-blue-200"
                           : isInProgress
                             ? "bg-blue-50/60 border-blue-200 shadow-sm"
                             : "bg-rose-50/60 border-rose-200 shadow-sm"
@@ -9754,7 +9754,7 @@ function doPost(e) {
                         <div className="flex items-center gap-2">
                           <span className={`text-xs font-black px-3 py-1 rounded-full border ${
                             isResolved
-                              ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                              ? "bg-[#F0F4FF] text-[#00022E] border-blue-200"
                               : isInProgress
                                 ? "bg-blue-100 text-blue-800 border-blue-300"
                                 : "bg-amber-100 text-amber-800 border-amber-300"
@@ -9770,7 +9770,7 @@ function doPost(e) {
                       {/* Complaint Title & Description Body */}
                       <div className="space-y-1.5">
                         <h4 className="text-base font-black text-slate-900 flex items-center gap-2">
-                          <AlertCircle className={`h-4 w-4 shrink-0 ${isResolved ? "text-emerald-600" : isInProgress ? "text-blue-600" : "text-rose-600"}`} />
+                          <AlertCircle className={`h-4 w-4 shrink-0 ${isResolved ? "text-[#00022E]" : isInProgress ? "text-blue-600" : "text-rose-600"}`} />
                           {c.title || c.subject || "Issue Report"}
                         </h4>
                         <div className="p-3.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-700 leading-relaxed shadow-2xs">
@@ -9822,7 +9822,7 @@ function doPost(e) {
                             type="button"
                             onClick={() => handleUpdateComplaintStatus(item.bookingId, compId, "resolved", replyText)}
                             className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
-                              isResolved ? "bg-emerald-600 text-white shadow-md scale-105" : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"
+                              isResolved ? "bg-[#00022E] text-white shadow-md scale-105" : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"
                             }`}
                           >
                             ✅ Mark Resolved
@@ -9836,7 +9836,7 @@ function doPost(e) {
                             )}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition shadow-sm cursor-pointer"
+                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#00022E] hover:bg-[#00044A] text-white text-xs font-black transition shadow-sm cursor-pointer"
                           >
                             <MessageSquare className="h-3.5 w-3.5" /> WhatsApp Resident
                           </a>
@@ -9858,14 +9858,14 @@ function doPost(e) {
             {/* Header */}
             <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-emerald-50/70 via-white to-slate-50">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 shadow-sm shrink-0">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F0F4FF] text-[#00022E] shadow-sm shrink-0">
                   <MessageSquare className="h-6 w-6" />
                 </div>
                 <div>
                   <h2 className="text-lg sm:text-xl font-black text-slate-900 flex items-center gap-2 flex-wrap">
                     WhatsApp Automation & Chatbot
                     <span className={`text-xs px-2.5 py-0.5 rounded-full font-black ${
-                      whatsappStatus?.connected ? "bg-emerald-600 text-white" : "bg-amber-500 text-white"
+                      whatsappStatus?.connected ? "bg-[#00022E] text-white" : "bg-amber-500 text-white"
                     }`}>
                       {whatsappStatus?.connected ? "🟢 Online" : isCheckingWhatsApp ? "⏳ Checking..." : "🟡 Offline / Scan QR"}
                     </span>
@@ -9900,7 +9900,7 @@ function doPost(e) {
                 onClick={() => setWaModalTab("overview")}
                 className={`px-4 py-2.5 rounded-t-xl text-xs font-black transition cursor-pointer flex items-center gap-2 border-b-2 ${
                   waModalTab === "overview"
-                    ? "bg-white text-emerald-700 border-emerald-600 shadow-2xs"
+                    ? "bg-white text-[#00022E] border-[#00022E] shadow-2xs"
                     : "text-slate-600 border-transparent hover:text-slate-900"
                 }`}
               >
@@ -9914,7 +9914,7 @@ function doPost(e) {
                 }}
                 className={`px-4 py-2.5 rounded-t-xl text-xs font-black transition cursor-pointer flex items-center gap-2 border-b-2 ${
                   waModalTab === "templates"
-                    ? "bg-white text-emerald-700 border-emerald-600 shadow-2xs"
+                    ? "bg-white text-[#00022E] border-[#00022E] shadow-2xs"
                     : "text-slate-600 border-transparent hover:text-slate-900"
                 }`}
               >
@@ -9928,7 +9928,7 @@ function doPost(e) {
                 }}
                 className={`px-4 py-2.5 rounded-t-xl text-xs font-black transition cursor-pointer flex items-center gap-2 border-b-2 ${
                   waModalTab === "chatbot"
-                    ? "bg-white text-emerald-700 border-emerald-600 shadow-2xs"
+                    ? "bg-white text-[#00022E] border-[#00022E] shadow-2xs"
                     : "text-slate-600 border-transparent hover:text-slate-900"
                 }`}
               >
@@ -9944,7 +9944,7 @@ function doPost(e) {
                 <div className="space-y-5">
                   {/* Connection Status Card */}
                   <div className={`p-4 sm:p-5 rounded-2xl border-2 space-y-3 ${
-                    whatsappStatus?.connected ? "bg-emerald-50/70 border-emerald-300" : "bg-amber-50/70 border-amber-300"
+                    whatsappStatus?.connected ? "bg-[#F0F4FF] border-blue-200" : "bg-amber-50/70 border-amber-300"
                   }`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -9957,7 +9957,7 @@ function doPost(e) {
                                 : "WhatsApp Authentication Required"}
                             </h4>
                             {whatsappStatus?.phone && (
-                              <span className="px-2.5 py-0.5 rounded-full bg-emerald-600 text-white font-mono text-[11px] font-black tracking-wide shadow-xs">
+                              <span className="px-2.5 py-0.5 rounded-full bg-[#00022E] text-white font-mono text-[11px] font-black tracking-wide shadow-xs">
                                 +{whatsappStatus.phone}
                               </span>
                             )}
@@ -9983,7 +9983,7 @@ function doPost(e) {
                           <button
                             type="button"
                             onClick={handleStartWhatsAppSession}
-                            className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition cursor-pointer shadow-sm active:scale-95"
+                            className="px-4 py-2 rounded-xl bg-[#00022E] hover:bg-[#00044A] text-white text-xs font-black transition cursor-pointer shadow-sm active:scale-95"
                           >
                             ⚡ Start Session & Get QR
                           </button>
@@ -10005,7 +10005,7 @@ function doPost(e) {
                     <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider">Automated WhatsApp Workflows</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
                       <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-start gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                        <CheckCircle2 className="h-4 w-4 text-[#00022E] shrink-0 mt-0.5" />
                         <div>
                           <p className="text-xs font-black text-slate-900">Room Allotment</p>
                           <p className="text-[11px] text-slate-500">Auto-sends ID, Password, Wi-Fi to new resident</p>
@@ -10013,7 +10013,7 @@ function doPost(e) {
                       </div>
 
                       <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-start gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                        <CheckCircle2 className="h-4 w-4 text-[#00022E] shrink-0 mt-0.5" />
                         <div>
                           <p className="text-xs font-black text-slate-900">Invoices & Dues</p>
                           <p className="text-[11px] text-slate-500">Sends PDF invoice link & UPI payment QR</p>
@@ -10021,7 +10021,7 @@ function doPost(e) {
                       </div>
 
                       <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-start gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                        <CheckCircle2 className="h-4 w-4 text-[#00022E] shrink-0 mt-0.5" />
                         <div>
                           <p className="text-xs font-black text-slate-900">Service Complaints</p>
                           <p className="text-[11px] text-slate-500">Notifies resident on status update & warden notes</p>
@@ -10029,7 +10029,7 @@ function doPost(e) {
                       </div>
 
                       <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-start gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                        <CheckCircle2 className="h-4 w-4 text-[#00022E] shrink-0 mt-0.5" />
                         <div>
                           <p className="text-xs font-black text-slate-900">Location Chatbot</p>
                           <p className="text-[11px] text-slate-500">Auto-replies with Wakad, Chinchwad, Hinjewadi details</p>
@@ -10053,7 +10053,7 @@ function doPost(e) {
                           placeholder="e.g. 9876543210"
                           value={waTestPhone}
                           onChange={(e) => setWaTestPhone(e.target.value)}
-                          className="w-full rounded-xl bg-white border border-slate-200 p-2.5 text-xs font-bold text-slate-900 outline-none focus:border-emerald-600"
+                          className="w-full rounded-xl bg-white border border-slate-200 p-2.5 text-xs font-bold text-slate-900 outline-none focus:border-[#00022E]"
                         />
                       </div>
 
@@ -10065,7 +10065,7 @@ function doPost(e) {
                           placeholder="Message content..."
                           value={waTestMessage}
                           onChange={(e) => setWaTestMessage(e.target.value)}
-                          className="w-full rounded-xl bg-white border border-slate-200 p-2.5 text-xs font-medium text-slate-900 outline-none focus:border-emerald-600"
+                          className="w-full rounded-xl bg-white border border-slate-200 p-2.5 text-xs font-medium text-slate-900 outline-none focus:border-[#00022E]"
                         />
                       </div>
                     </div>
@@ -10074,7 +10074,7 @@ function doPost(e) {
                       <button
                         type="submit"
                         disabled={isSendingWaTest}
-                        className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-black text-xs transition cursor-pointer shadow-md active:scale-95 flex items-center gap-2"
+                        className="px-5 py-2.5 rounded-xl bg-[#00022E] hover:bg-[#00044A] disabled:opacity-50 text-white font-black text-xs transition cursor-pointer shadow-md active:scale-95 flex items-center gap-2"
                       >
                         <span>{isSendingWaTest ? "Sending..." : "Send Test WhatsApp"}</span>
                         <span>📨</span>
@@ -10089,7 +10089,7 @@ function doPost(e) {
                 <div className="space-y-4">
                   {isLoadingWaTemplates ? (
                     <div className="p-12 text-center text-slate-500 font-bold text-sm">
-                      <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-emerald-600" />
+                      <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-[#00022E]" />
                       Loading customizable templates...
                     </div>
                   ) : waTemplates ? (
@@ -10101,7 +10101,7 @@ function doPost(e) {
                           onClick={() => setActiveTemplateType("invoice")}
                           className={`p-2.5 rounded-xl text-xs font-black transition cursor-pointer border flex flex-col items-center gap-1 ${
                             activeTemplateType === "invoice"
-                              ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                              ? "bg-[#00022E] text-white border-[#00022E] shadow-sm"
                               : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
                           }`}
                         >
@@ -10114,7 +10114,7 @@ function doPost(e) {
                           onClick={() => setActiveTemplateType("complaint")}
                           className={`p-2.5 rounded-xl text-xs font-black transition cursor-pointer border flex flex-col items-center gap-1 ${
                             activeTemplateType === "complaint"
-                              ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                              ? "bg-[#00022E] text-white border-[#00022E] shadow-sm"
                               : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
                           }`}
                         >
@@ -10127,7 +10127,7 @@ function doPost(e) {
                           onClick={() => setActiveTemplateType("payment")}
                           className={`p-2.5 rounded-xl text-xs font-black transition cursor-pointer border flex flex-col items-center gap-1 ${
                             activeTemplateType === "payment"
-                              ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                              ? "bg-[#00022E] text-white border-[#00022E] shadow-sm"
                               : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
                           }`}
                         >
@@ -10140,7 +10140,7 @@ function doPost(e) {
                           onClick={() => setActiveTemplateType("welcome")}
                           className={`p-2.5 rounded-xl text-xs font-black transition cursor-pointer border flex flex-col items-center gap-1 ${
                             activeTemplateType === "welcome"
-                              ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                              ? "bg-[#00022E] text-white border-[#00022E] shadow-sm"
                               : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
                           }`}
                         >
@@ -10194,7 +10194,7 @@ function doPost(e) {
                                 });
                                 showToast(`Inserted ${tag}`, "info");
                               }}
-                              className="px-2 py-1 rounded-lg bg-white border border-slate-300 hover:border-emerald-500 hover:bg-emerald-50 text-[11px] font-mono font-bold text-slate-700 transition cursor-pointer active:scale-95"
+                              className="px-2 py-1 rounded-lg bg-white border border-slate-300 hover:border-[#00022E] hover:bg-[#F0F4FF] text-[11px] font-mono font-bold text-slate-700 transition cursor-pointer active:scale-95"
                             >
                               + {tag}
                             </button>
@@ -10234,7 +10234,7 @@ function doPost(e) {
                                 [currentKey]: e.target.value,
                               });
                             }}
-                            className="w-full rounded-2xl bg-white border border-slate-300 p-3.5 text-xs font-mono text-slate-900 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 leading-relaxed resize-y"
+                            className="w-full rounded-2xl bg-white border border-slate-300 p-3.5 text-xs font-mono text-slate-900 outline-none focus:border-[#00022E] focus:ring-2 focus:ring-emerald-100 leading-relaxed resize-y"
                           />
                         </div>
 
@@ -10301,7 +10301,7 @@ function doPost(e) {
                           type="button"
                           onClick={handleSaveWhatsAppTemplates}
                           disabled={isSavingWaTemplates}
-                          className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-black text-xs transition cursor-pointer shadow-md active:scale-95 flex items-center gap-2"
+                          className="px-6 py-2.5 rounded-xl bg-[#00022E] hover:bg-[#00044A] disabled:opacity-50 text-white font-black text-xs transition cursor-pointer shadow-md active:scale-95 flex items-center gap-2"
                         >
                           <Save className="h-4 w-4" />
                           <span>{isSavingWaTemplates ? "Saving Changes..." : "Save All Templates"}</span>
@@ -10317,15 +10317,15 @@ function doPost(e) {
                 <div className="space-y-5">
                   {isLoadingWaTemplates ? (
                     <div className="p-12 text-center text-slate-500 font-bold text-sm">
-                      <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-emerald-600" />
+                      <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-[#00022E]" />
                       Loading chatbot configuration...
                     </div>
                   ) : waTemplates ? (
                     <div className="space-y-5">
                       {/* Chatbot Master Switch */}
-                      <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 flex items-center justify-between">
+                      <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-blue-200 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-xs">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#00022E] text-white shadow-xs">
                             <Bot className="h-5 w-5" />
                           </div>
                           <div>
@@ -10341,7 +10341,7 @@ function doPost(e) {
                           onClick={() => setWaTemplates({ ...waTemplates, chatbotEnabled: !waTemplates.chatbotEnabled })}
                           className={`px-4 py-2 rounded-full text-xs font-black transition cursor-pointer shadow-xs ${
                             waTemplates.chatbotEnabled
-                              ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                              ? "bg-[#00022E] text-white hover:bg-[#00022E]"
                               : "bg-slate-300 text-slate-700 hover:bg-slate-400"
                           }`}
                         >
@@ -10353,13 +10353,13 @@ function doPost(e) {
                       <div className="space-y-2 p-4 rounded-2xl bg-slate-50 border border-slate-200">
                         <label className="block text-xs font-black text-slate-900 uppercase tracking-wider flex items-center justify-between">
                           <span>1. Greeting & Welcome Message (Triggered on "hii", "hello", "pg")</span>
-                          <span className="text-[11px] text-emerald-700 font-mono">Use tag: &#123;locationsList&#125;</span>
+                          <span className="text-[11px] text-[#00022E] font-mono">Use tag: &#123;locationsList&#125;</span>
                         </label>
                         <textarea
                           rows={4}
                           value={waTemplates.chatbotGreetingMessage}
                           onChange={(e) => setWaTemplates({ ...waTemplates, chatbotGreetingMessage: e.target.value })}
-                          className="w-full rounded-xl bg-white border border-slate-300 p-3 text-xs font-mono text-slate-900 outline-none focus:border-emerald-600 leading-relaxed"
+                          className="w-full rounded-xl bg-white border border-slate-300 p-3 text-xs font-mono text-slate-900 outline-none focus:border-[#00022E] leading-relaxed"
                           placeholder="Greeting message..."
                         />
                       </div>
@@ -10369,7 +10369,7 @@ function doPost(e) {
                         <div className="flex items-center justify-between">
                           <div>
                             <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                              <MapPin className="h-4 w-4 text-emerald-600" />
+                              <MapPin className="h-4 w-4 text-[#00022E]" />
                               2. Configured PG Branches & Auto-Reply Locations ({waTemplates.chatbotLocations?.length || 0})
                             </h4>
                             <p className="text-[11px] text-slate-500">
@@ -10393,7 +10393,7 @@ function doPost(e) {
                               });
                               setIsBranchModalOpen(true);
                             }}
-                            className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition cursor-pointer shadow-sm flex items-center gap-1.5"
+                            className="px-3.5 py-1.5 rounded-xl bg-[#00022E] hover:bg-[#00044A] text-white text-xs font-black transition cursor-pointer shadow-sm flex items-center gap-1.5"
                           >
                             <Plus className="h-3.5 w-3.5" />
                             <span>Add New Location</span>
@@ -10403,10 +10403,10 @@ function doPost(e) {
                         {/* Location Cards Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           {waTemplates.chatbotLocations?.map((branch, idx) => (
-                            <div key={branch.id || idx} className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-2 relative group hover:border-emerald-400 transition">
+                            <div key={branch.id || idx} className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-2 relative group hover:border-blue-300 transition">
                               <div className="flex items-start justify-between">
                                 <div className="flex items-center gap-2">
-                                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800 text-xs font-black">
+                                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-[#F0F4FF] text-[#00022E] text-xs font-black">
                                     {idx + 1}
                                   </span>
                                   <div>
@@ -10461,7 +10461,7 @@ function doPost(e) {
                           rows={3}
                           value={waTemplates.chatbotDefaultReply}
                           onChange={(e) => setWaTemplates({ ...waTemplates, chatbotDefaultReply: e.target.value })}
-                          className="w-full rounded-xl bg-white border border-slate-300 p-3 text-xs font-mono text-slate-900 outline-none focus:border-emerald-600 leading-relaxed"
+                          className="w-full rounded-xl bg-white border border-slate-300 p-3 text-xs font-mono text-slate-900 outline-none focus:border-[#00022E] leading-relaxed"
                           placeholder="Default auto-reply..."
                         />
                       </div>
@@ -10480,7 +10480,7 @@ function doPost(e) {
                           type="button"
                           onClick={handleSaveWhatsAppTemplates}
                           disabled={isSavingWaTemplates}
-                          className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-black text-xs transition cursor-pointer shadow-md active:scale-95 flex items-center gap-2"
+                          className="px-6 py-2.5 rounded-xl bg-[#00022E] hover:bg-[#00044A] disabled:opacity-50 text-white font-black text-xs transition cursor-pointer shadow-md active:scale-95 flex items-center gap-2"
                         >
                           <Save className="h-4 w-4" />
                           <span>{isSavingWaTemplates ? "Saving Changes..." : "Save Chatbot Settings"}</span>
@@ -10501,7 +10501,7 @@ function doPost(e) {
           <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200 p-5 sm:p-6 space-y-4 animate-in zoom-in-95" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-emerald-600" />
+                <MapPin className="h-5 w-5 text-[#00022E]" />
                 <span>{editingBranch.name ? "Edit Branch Location" : "Add New PG Location"}</span>
               </h3>
               <button
@@ -10523,7 +10523,7 @@ function doPost(e) {
                     placeholder="e.g. Wakad Luxury Branch"
                     value={editingBranch.name}
                     onChange={(e) => setEditingBranch({ ...editingBranch, name: e.target.value })}
-                    className="w-full rounded-xl bg-slate-50 border border-slate-200 p-2.5 font-bold text-slate-900 outline-none focus:border-emerald-600"
+                    className="w-full rounded-xl bg-slate-50 border border-slate-200 p-2.5 font-bold text-slate-900 outline-none focus:border-[#00022E]"
                   />
                 </div>
                 <div>
@@ -10534,7 +10534,7 @@ function doPost(e) {
                     placeholder="e.g. wakad"
                     value={editingBranch.keyword}
                     onChange={(e) => setEditingBranch({ ...editingBranch, keyword: e.target.value.toLowerCase().trim() })}
-                    className="w-full rounded-xl bg-slate-50 border border-slate-200 p-2.5 font-mono font-bold text-slate-900 outline-none focus:border-emerald-600"
+                    className="w-full rounded-xl bg-slate-50 border border-slate-200 p-2.5 font-mono font-bold text-slate-900 outline-none focus:border-[#00022E]"
                   />
                 </div>
               </div>
@@ -10547,7 +10547,7 @@ function doPost(e) {
                   placeholder="e.g. Near Dutta Mandir & Phoenix Mall, Wakad, Pune"
                   value={editingBranch.address}
                   onChange={(e) => setEditingBranch({ ...editingBranch, address: e.target.value })}
-                  className="w-full rounded-xl bg-slate-50 border border-slate-200 p-2.5 font-medium text-slate-900 outline-none focus:border-emerald-600"
+                  className="w-full rounded-xl bg-slate-50 border border-slate-200 p-2.5 font-medium text-slate-900 outline-none focus:border-[#00022E]"
                 />
               </div>
 
@@ -10559,7 +10559,7 @@ function doPost(e) {
                     placeholder="e.g. 1, 2, 3 Sharing AC & Non-AC"
                     value={editingBranch.rooms}
                     onChange={(e) => setEditingBranch({ ...editingBranch, rooms: e.target.value })}
-                    className="w-full rounded-xl bg-slate-50 border border-slate-200 p-2.5 font-medium text-slate-900 outline-none focus:border-emerald-600"
+                    className="w-full rounded-xl bg-slate-50 border border-slate-200 p-2.5 font-medium text-slate-900 outline-none focus:border-[#00022E]"
                   />
                 </div>
                 <div>
@@ -10569,7 +10569,7 @@ function doPost(e) {
                     placeholder="e.g. ₹7,000 - ₹12,500 / month"
                     value={editingBranch.rentRange}
                     onChange={(e) => setEditingBranch({ ...editingBranch, rentRange: e.target.value })}
-                    className="w-full rounded-xl bg-slate-50 border border-slate-200 p-2.5 font-medium text-slate-900 outline-none focus:border-emerald-600"
+                    className="w-full rounded-xl bg-slate-50 border border-slate-200 p-2.5 font-medium text-slate-900 outline-none focus:border-[#00022E]"
                   />
                 </div>
               </div>
@@ -10581,7 +10581,7 @@ function doPost(e) {
                   placeholder="e.g. 3-Time Food, 200Mbps Wi-Fi, RO Water, Auto Washing Machine, Daily Cleaning"
                   value={editingBranch.amenities}
                   onChange={(e) => setEditingBranch({ ...editingBranch, amenities: e.target.value })}
-                  className="w-full rounded-xl bg-slate-50 border border-slate-200 p-2.5 font-medium text-slate-900 outline-none focus:border-emerald-600"
+                  className="w-full rounded-xl bg-slate-50 border border-slate-200 p-2.5 font-medium text-slate-900 outline-none focus:border-[#00022E]"
                 />
               </div>
 
@@ -10593,7 +10593,7 @@ function doPost(e) {
                     placeholder="https://maps.google.com/?q=..."
                     value={editingBranch.mapLink}
                     onChange={(e) => setEditingBranch({ ...editingBranch, mapLink: e.target.value })}
-                    className="w-full rounded-xl bg-slate-50 border border-slate-200 p-2.5 font-mono text-[11px] text-slate-900 outline-none focus:border-emerald-600"
+                    className="w-full rounded-xl bg-slate-50 border border-slate-200 p-2.5 font-mono text-[11px] text-slate-900 outline-none focus:border-[#00022E]"
                   />
                 </div>
                 <div>
@@ -10603,7 +10603,7 @@ function doPost(e) {
                     placeholder="e.g. +91 98765 43210"
                     value={editingBranch.contactPhone}
                     onChange={(e) => setEditingBranch({ ...editingBranch, contactPhone: e.target.value })}
-                    className="w-full rounded-xl bg-slate-50 border border-slate-200 p-2.5 font-bold text-slate-900 outline-none focus:border-emerald-600"
+                    className="w-full rounded-xl bg-slate-50 border border-slate-200 p-2.5 font-bold text-slate-900 outline-none focus:border-[#00022E]"
                   />
                 </div>
               </div>
@@ -10620,7 +10620,7 @@ function doPost(e) {
               <button
                 type="button"
                 onClick={() => handleSaveBranch(editingBranch)}
-                className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition cursor-pointer shadow-md active:scale-95"
+                className="px-5 py-2 rounded-xl bg-[#00022E] hover:bg-[#00044A] text-white text-xs font-black transition cursor-pointer shadow-md active:scale-95"
               >
                 Save Branch
               </button>
@@ -10636,13 +10636,13 @@ function doPost(e) {
             {/* Modal Header */}
             <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-emerald-50 via-white to-slate-50">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 shadow-sm shrink-0">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#F0F4FF] text-[#00022E] shadow-sm shrink-0">
                   <Receipt className="h-5 w-5" />
                 </div>
                 <div>
                   <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
                     Payment Receipt & Invoice
-                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#F0F4FF] text-[#00022E] border border-blue-200">
                       PAID ✅
                     </span>
                   </h3>
@@ -10697,7 +10697,7 @@ function doPost(e) {
                   <p className="text-[11px] text-slate-400">Pune, Maharashtra • +91 84469 82438</p>
                 </div>
                 <div className="text-right">
-                  <div className="text-xl font-black text-emerald-700">
+                  <div className="text-xl font-black text-[#00022E]">
                     ₹{(viewingAdminInvoiceData.paidAmount || viewingAdminInvoiceData.rentAmount || 0).toLocaleString("en-IN")}
                   </div>
                   <span className="text-[10px] font-black uppercase text-slate-400">Total Received</span>
@@ -10737,12 +10737,12 @@ function doPost(e) {
                         ₹{(viewingAdminInvoiceData.rentAmount || 0).toLocaleString("en-IN")}
                       </td>
                     </tr>
-                    <tr className="bg-emerald-50/50">
-                      <td className="p-3 font-bold text-emerald-900 flex items-center gap-1.5">
-                        <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
+                    <tr className="bg-[#F0F4FF]">
+                      <td className="p-3 font-bold text-[#00022E] flex items-center gap-1.5">
+                        <CheckCircle className="h-3.5 w-3.5 text-[#00022E]" />
                         <span>Amount Paid (via {(viewingAdminInvoiceData.paymentModes?.[0] || "CASH").toUpperCase()})</span>
                       </td>
-                      <td className="p-3 text-right font-black text-emerald-700">
+                      <td className="p-3 text-right font-black text-[#00022E]">
                         ₹{(viewingAdminInvoiceData.paidAmount || 0).toLocaleString("en-IN")}
                       </td>
                     </tr>
@@ -10757,7 +10757,7 @@ function doPost(e) {
               {/* Verified Stamp & Footer */}
               <div className="pt-2 flex items-center justify-between gap-3 text-[11px] text-slate-500 border-t border-slate-100">
                 <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                  <span className="h-2 w-2 rounded-full bg-[#F0F4FF]0" />
                   <span>Computer Generated Verified Receipt • No signature required</span>
                 </div>
                 {viewingAdminInvoiceData.contact && (
@@ -10767,7 +10767,7 @@ function doPost(e) {
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+                    className="px-3.5 py-1.5 rounded-xl bg-[#00022E] hover:bg-[#00044A] text-white font-black text-xs transition flex items-center gap-1.5 shadow-sm cursor-pointer"
                   >
                     <MessageSquare className="h-3.5 w-3.5" />
                     <span>Send on WhatsApp</span>

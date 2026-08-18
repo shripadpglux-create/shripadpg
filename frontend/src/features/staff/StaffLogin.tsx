@@ -66,7 +66,7 @@ export function StaffLogin() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 text-slate-900 flex flex-col justify-between py-8 sm:py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden font-sans">
       {/* Background Soft Color Accents */}
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-brand-green/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-[#F0F4FF]0/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Top Header Navigation Link (Centered Pill) */}
       <div className="w-full max-w-md mx-auto flex items-center justify-center z-10 mb-5">
@@ -90,8 +90,8 @@ export function StaffLogin() {
           />
         </div>
 
-        <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-50 text-emerald-900 border border-emerald-200 text-xs font-black uppercase tracking-wider mb-2 shadow-2xs">
-          <UserCheck className="h-3.5 w-3.5 text-emerald-600" />
+        <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#F0F4FF] text-[#00022E] border border-blue-200 text-xs font-black uppercase tracking-wider mb-2 shadow-2xs">
+          <UserCheck className="h-3.5 w-3.5 text-[#00022E]" />
           <span>Shripad PG Staff Portal</span>
         </div>
 

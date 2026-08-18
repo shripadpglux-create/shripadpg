@@ -190,7 +190,7 @@ export function CustomerLogin() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center items-center gap-2.5 py-4 px-6 rounded-2xl text-sm font-black text-white bg-gradient-to-r from-brand-green via-emerald-600 to-brand-green shadow-xl shadow-brand-green/30 hover:shadow-brand-green/40 hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50 cursor-pointer"
+                className="w-full flex justify-center items-center gap-2.5 py-4 px-6 rounded-2xl text-sm font-black text-white bg-gradient-to-r from-brand-green via-emerald-600 to-brand-green shadow-xl shadow-[#00022E]/30 hover:shadow-[#00022E]/40 hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50 cursor-pointer"
               >
                 {isLoading ? (
                   <span>Authenticating...</span>

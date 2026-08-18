@@ -31,7 +31,7 @@ export function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col bg-[#F8FAFC] font-sans selection:bg-brand-green selection:text-white relative overflow-x-hidden">
       {/* Subtle Background Glow Elements */}
-      <div className="fixed top-0 left-1/4 w-96 h-96 bg-emerald-100/50 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="fixed top-0 left-1/4 w-96 h-96 bg-[#F0F4FF]/50 rounded-full blur-3xl pointer-events-none -z-10" />
       <div className="fixed bottom-0 right-1/4 w-96 h-96 bg-brand-green-light/40 rounded-full blur-3xl pointer-events-none -z-10" />
 
       {/* Header */}
@@ -52,7 +52,7 @@ export function LandingPage() {
 
             <Link
               to="/login"
-              className="inline-flex items-center gap-2 rounded-2xl bg-brand-green hover:bg-emerald-700 text-white font-extrabold text-xs px-4 py-2.5 shadow-md shadow-brand-green/20 transition cursor-pointer active:scale-95"
+              className="inline-flex items-center gap-2 rounded-2xl bg-brand-green hover:bg-[#00022E] text-white font-extrabold text-xs px-4 py-2.5 shadow-md shadow-brand-green/20 transition cursor-pointer active:scale-95"
             >
               <LogIn className="h-4 w-4" />
               <span>Portal Login</span>
@@ -66,8 +66,8 @@ export function LandingPage() {
         <div className="mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-2 lg:gap-12">
           {/* Left content */}
           <div className="order-2 space-y-6 lg:order-1">
-            <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3.5 py-1 text-xs font-black text-emerald-800 border border-emerald-200/80 shadow-2xs">
-              <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#F0F4FF] px-3.5 py-1 text-xs font-black text-[#00022E] border border-blue-200/80 shadow-2xs">
+              <Sparkles className="h-3.5 w-3.5 text-[#00022E]" />
               <span>Executive Luxury PG Living in Pune</span>
             </div>
 
@@ -86,9 +86,9 @@ export function LandingPage() {
                 href="https://docs.google.com/forms/d/e/1FAIpQLSdujAzzMdDMDcO5hZJHTmALxO1eq02TpSD_1_rWFWX535AZqA/viewform?usp=header"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-2xl bg-brand-green hover:bg-emerald-700 px-6 py-3.5 text-xs sm:text-sm font-black text-white shadow-lg shadow-brand-green/25 transition-all active:scale-95"
+                className="inline-flex items-center gap-2 rounded-2xl bg-brand-green hover:bg-[#00022E] px-6 py-3.5 text-xs sm:text-sm font-black text-white shadow-lg shadow-[#00022E]/25 transition-all active:scale-95"
               >
-                <FileText className="h-4 w-4 text-emerald-200" />
+                <FileText className="h-4 w-4 text-blue-200" />
                 <span>Book Room via Google Form</span>
                 <ExternalLink className="h-3.5 w-3.5 opacity-80 ml-0.5" />
               </a>
@@ -99,13 +99,13 @@ export function LandingPage() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-2xl border border-slate-200/90 bg-white hover:bg-slate-50 px-5 py-3.5 text-xs sm:text-sm font-bold text-slate-800 shadow-xs transition-all active:scale-95"
               >
-                <MessageCircle className="h-4 w-4 text-emerald-600" />
+                <MessageCircle className="h-4 w-4 text-[#00022E]" />
                 <span>WhatsApp Inquiry</span>
               </a>
             </div>
 
-            <div className="rounded-2xl bg-emerald-50/70 p-3.5 border border-emerald-200/70 text-xs text-slate-600 font-semibold flex items-start gap-2.5">
-              <Sparkles className="h-4 w-4 text-emerald-700 shrink-0 mt-0.5" />
+            <div className="rounded-2xl bg-[#F0F4FF] p-3.5 border border-blue-200/70 text-xs text-slate-600 font-semibold flex items-start gap-2.5">
+              <Sparkles className="h-4 w-4 text-[#00022E] shrink-0 mt-0.5" />
               <p>
                 ⚡ <strong className="text-slate-900">Direct Online Admission:</strong> Once you submit the Google Form link above, our admissions team will verify your application and send your resident portal login credentials via WhatsApp!
               </p>
@@ -114,8 +114,8 @@ export function LandingPage() {
             {/* Feature Badges Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
               {featureBadges.map((badge) => (
-                <div key={badge.title} className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs space-y-1.5 hover:border-emerald-300 transition">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                <div key={badge.title} className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs space-y-1.5 hover:border-blue-200 transition">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F0F4FF] text-[#00022E] border border-blue-200/60">
                     <badge.icon className="h-4 w-4" />
                   </div>
                   <div>

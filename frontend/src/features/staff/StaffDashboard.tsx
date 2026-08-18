@@ -301,7 +301,7 @@ export default function StaffDashboard() {
           <div>
             <div className="flex items-center gap-2">
               <span className="font-black text-sm text-white tracking-wide">STAFF PORTAL</span>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-extrabold text-[10px] border border-emerald-500/30">
+              <span className="px-2 py-0.5 rounded-full bg-[#F0F4FF]0/20 text-emerald-400 font-extrabold text-[10px] border border-[#00022E]/30">
                 🏢 {assignedBuildings.join(", ")}
               </span>
             </div>
@@ -343,7 +343,7 @@ export default function StaffDashboard() {
 
           <button
             onClick={() => setIsLoginModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-black transition cursor-pointer shadow-xs active:scale-95"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#00022E] hover:bg-[#00022E] text-white text-xs font-black transition cursor-pointer shadow-xs active:scale-95"
           >
             <UserCheck className="h-3.5 w-3.5" />
             <span>Staff Login</span>
@@ -388,7 +388,7 @@ export default function StaffDashboard() {
           <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500 uppercase">Assigned Property</span>
-              <div className="p-2 rounded-xl bg-emerald-50 text-brand-green"><Building2 className="h-4 w-4" /></div>
+              <div className="p-2 rounded-xl bg-[#F0F4FF] text-brand-green"><Building2 className="h-4 w-4" /></div>
             </div>
             <p className="text-xl sm:text-2xl font-black text-slate-900">{assignedBuildings.join(", ")}</p>
             <p className="text-[11px] text-slate-400 font-semibold">Active Management Scope</p>
@@ -400,7 +400,7 @@ export default function StaffDashboard() {
               <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600"><Users className="h-4 w-4" /></div>
             </div>
             <p className="text-xl sm:text-2xl font-black text-slate-900">{activeResidents.length} Residents</p>
-            <p className="text-[11px] text-emerald-600 font-bold">{occupancyRate}% Occupancy</p>
+            <p className="text-[11px] text-[#00022E] font-bold">{occupancyRate}% Occupancy</p>
           </div>
 
           <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-2">
@@ -415,7 +415,7 @@ export default function StaffDashboard() {
           <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500 uppercase">Monthly Rent Roll</span>
-              <div className="p-2 rounded-xl bg-emerald-50 text-emerald-700"><IndianRupee className="h-4 w-4" /></div>
+              <div className="p-2 rounded-xl bg-[#F0F4FF] text-[#00022E]"><IndianRupee className="h-4 w-4" /></div>
             </div>
             <p className="text-xl sm:text-2xl font-black text-slate-900">₹{totalMonthlyRevenue.toLocaleString("en-IN")}</p>
             <p className="text-[11px] text-slate-400 font-semibold">Expected Rent Revenue</p>
@@ -474,7 +474,7 @@ export default function StaffDashboard() {
                           <p className="text-xs text-slate-500 font-semibold">📞 {res.phone}</p>
                         </div>
                       </div>
-                      <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-black text-xs">
+                      <span className="px-3 py-1 rounded-full bg-[#F0F4FF] text-[#00022E] font-black text-xs">
                         {res.roomNo || "Room 101"} (Bed {res.bedSeat || "1"})
                       </span>
                     </div>
