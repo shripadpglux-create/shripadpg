@@ -1,4 +1,9 @@
-import ExcelJS from "exceljs";
+import type ExcelJS from "exceljs";
+
+async function createWorkbook(): Promise<ExcelJS.Workbook> {
+  const { default: ExcelJS } = await import("exceljs");
+  return new ExcelJS.Workbook();
+}
 
 export interface BookingReportData {
   id: string;
@@ -292,7 +297,7 @@ function styleDataRows(
 // 1. CONTACT REPORT GENERATOR
 // ============================================================================
 export async function generateContactReport(bookings: BookingReportData[]) {
-  const workbook = new ExcelJS.Workbook();
+  const workbook = await createWorkbook();
   workbook.creator = "Shripad PG Portal";
   const worksheet = workbook.addWorksheet("Contact Directory");
 
@@ -374,7 +379,7 @@ export async function generateAllocationReport(
   bookings: BookingReportData[],
   buildings: BuildingReportData[]
 ) {
-  const workbook = new ExcelJS.Workbook();
+  const workbook = await createWorkbook();
   workbook.creator = "Shripad PG Portal";
   const worksheet = workbook.addWorksheet("Room & Bed Allocations");
 
@@ -442,7 +447,7 @@ export async function generateBuildingReport(
   buildings: BuildingReportData[],
   bookings: BookingReportData[]
 ) {
-  const workbook = new ExcelJS.Workbook();
+  const workbook = await createWorkbook();
   workbook.creator = "Shripad PG Portal";
   const worksheet = workbook.addWorksheet("Building Occupancy Summary");
 
@@ -570,7 +575,7 @@ export async function generateBuildingReport(
 // 4. REVENUE REPORT GENERATOR
 // ============================================================================
 export async function generateRevenueReport(bookings: BookingReportData[]) {
-  const workbook = new ExcelJS.Workbook();
+  const workbook = await createWorkbook();
   workbook.creator = "Shripad PG Portal";
   const worksheet = workbook.addWorksheet("Revenue Transactions");
 
@@ -716,7 +721,7 @@ export async function generateMasterReport(
   bookings: BookingReportData[],
   buildings: BuildingReportData[]
 ) {
-  const workbook = new ExcelJS.Workbook();
+  const workbook = await createWorkbook();
   workbook.creator = "Shripad PG Portal";
 
   // --- SHEET 1: REVENUE ---

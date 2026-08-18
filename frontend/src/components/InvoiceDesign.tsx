@@ -1,8 +1,6 @@
 import { API_BASE_URL } from "../lib/apiConfig";
 import React, { useState, useEffect } from "react";
 import { CustomConfirmModal } from "./CustomConfirmModal";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 import {
   User,
   CreditCard,
@@ -207,6 +205,11 @@ export function InvoiceDesign({
     setIsDownloadingPdf(true);
 
     try {
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ]);
+
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,

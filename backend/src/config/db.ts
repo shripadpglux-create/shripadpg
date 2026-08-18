@@ -19,7 +19,13 @@ export const connectDB = async () => {
       }
     }
 
-    const conn = await mongoose.connect(finalUri);
+    const conn = await mongoose.connect(finalUri, {
+      maxPoolSize: 15, // Optimal connection pool size for MongoDB Atlas M0 free tier
+      minPoolSize: 2,  // Keep warm connections ready for low-latency queries
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+      family: 4, // Force IPv4 for fast, reliable DNS lookups on cloud hosting
+    });
     console.log(`🍃 MongoDB Connected to Atlas: ${conn.connection.host} / Database: ${conn.connection.name}`);
 
     // Trigger Production Database Optimization & Compound Index Synchronization
