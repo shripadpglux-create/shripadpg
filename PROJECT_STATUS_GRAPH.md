@@ -2,6 +2,125 @@
 
 ---
 
+### 📍 Version 8.79 — Production System Complete Feature Pipeline (Features 0 to 12) 🏆🚀💎
+
+```mermaid
+flowchart TD
+    subgraph AppShellMobile ["Mobile Navigation & FAB Layer (Feature 0 & 5)"]
+        BottomNav["5-Item Dock: 🏠 Dashboard | 👥 Customers | 🏢 Buildings | 💳 Payments | ☰ More"]
+        FABDial["⚡ Floating Action Button: + Customer, + Building, + Room, Allocate, + Expense, + Invoice"]
+        MoreDrawer["☰ More Drawer: Revenue, Reports, Invoice, Allocation, Staff & Buildings, Payment & QR"]
+    end
+
+    subgraph CoreOperations ["Core Daily Operations (Features 1, 2, 3, 4, 6)"]
+        Dashboard["1. Dashboard: Symmetrical 4-Card Responsive KPI Grid & Admissions Feed"]
+        Customers["2. Customers: Search, Building & Status Filtered Directory + Quick Allocation"]
+        Buildings["3. Buildings: Infrastructure KPIs, Live Bed Occupancy Bars & Accordions"]
+        Payments["4. Payments: Dual-Mode Financial Analytics & Tenant Collections Audit Trail"]
+        Allocation["6. Allocation: Status Chips, Sheet Sync & Bed Matrix Modal"]
+    end
+
+    subgraph BusinessSuite ["Executive Business Suite (Features 7, 8, 9, 10, 11)"]
+        Invoice["7. Invoice: A4 Locked-Ratio Interactive Studio, PDF & WhatsApp Dispatch"]
+        Revenue["8. Revenue: Unified into Payments Hub with Profit Margins & Expense Tracking"]
+        Reports["9. Reports: Centered Header Excel Hub & 4 Specialized .xlsx Exports"]
+        StaffBuildings["10. Staff & Buildings: Scoped Property Roles, Access Control & Building Assignment"]
+        PaymentQR["11. Payment & QR: UPI ID, QR Code & Dynamic Gateway Configuration"]
+    end
+
+    AppShellMobile --> CoreOperations
+    CoreOperations --> BusinessSuite
+```
+
+---
+
+### 📍 Version 8.78 — Reports & Executive Excel Export Center (Feature 9) 📊📑✨
+
+```mermaid
+flowchart TD
+    subgraph HeaderMasterCTA ["Executive Reports Hub Banner"]
+        BannerTitle["Excel (.xlsx) Center with SHRIPAD PG Centered Header Branding"]
+        MasterExport["⚡ Master All-In-One Export (Combined Sheets & Summary)"]
+        BannerTitle --> MasterExport
+    end
+
+    subgraph FilterEngine ["Live Filter & Search Toolbar"]
+        SearchFilter["Resident Name, Phone, Room, Txn ID Search"]
+        BuildingFilter["PG Building Selector (All, PG A, PG B, PG C)"]
+    end
+
+    subgraph ExportCardsGrid ["4 Specialized Styled Excel Export Cards"]
+        C1["👥 Contact Directory Report (Phone, Guardian, Emergency contacts)"]
+        C2["🔑 Allocation & Occupancy Report (Building, Room, Bed allocations)"]
+        C3["🏢 Property Infrastructure Report (Rooms, Floors, Capacity)"]
+        C4["💰 Revenue & Financial Audit Report (Rent collections, Invoices, Deposits)"]
+    end
+
+    HeaderMasterCTA --> FilterEngine
+    FilterEngine --> ExportCardsGrid
+```
+
+---
+
+### 📍 Version 8.77 — Invoice Generation & Receipt Verification Pipeline (Feature 7) 📄✨
+
+```mermaid
+flowchart TD
+    subgraph InvoiceEditor ["A4 Locked-Ratio Interactive Invoice Studio"]
+        ResidentSelector["Resident Selector with Auto-Filled Building, Room & Rent"]
+        LineItemsEditor["Dynamic Line Items (Rent, Food, Maintenance, Electricity, Custom)"]
+        A4LivePreview["Pixel-Perfect A4 Fixed Proportion Preview with Stamp & QR"]
+    end
+
+    subgraph OutputChannels ["Multi-Channel Export & Dispatch"]
+        PDFExport["High-Res PDF Download (jsPDF + html2canvas engine)"]
+        WhatsAppDispatch["Instant WhatsApp Share with Pre-filled Receipt Text & Link"]
+        PrintDispatch["Browser Native Clean Print Formatting"]
+    end
+
+    subgraph VerificationEngine ["Pending Payments & Verification Engine"]
+        PaymentAuditQueue["Tenant Payment Submissions Queue"]
+        ApproveAction["Verify Payment & Auto-Generate Official Receipt"]
+        RejectAction["Reject Payment with Reason Notification"]
+    end
+
+    InvoiceEditor --> OutputChannels
+    VerificationEngine --> InvoiceEditor
+```
+
+---
+
+### 📍 Version 8.76 — Customer Allocation & Bed Assignment Pipeline (Feature 6) 🔑🛏️✨
+
+```mermaid
+flowchart TD
+    subgraph AllocationKPIs ["Allocation Status Grid"]
+        PendingCard["Pending Allocation (Amber) + Manual / Online Source Chips"]
+        AllocatedCard["Allocated Residents (Emerald) + Active Count & Filtering"]
+    end
+
+    subgraph CandidateDirectory ["Allocation Candidate Directory"]
+        SearchToolbar["Search Query, Status Tabs & Google Sheet Real-time Sync"]
+        CandidateCards["Candidate Cards with Document Status & Deposit Tags"]
+        
+        SearchToolbar --> CandidateCards
+    end
+
+    subgraph AssignmentModal ["Interactive Bed Assignment Engine"]
+        ModalHeader["Resident Profile & Building Selector"]
+        BedMatrix["Floor & Room Matrix with Clickable Visual Bed Chips (Bed 1..3)"]
+        FinancialSetup["Rent Amount, Security Deposit & Start Date Setup"]
+        
+        ModalHeader --> BedMatrix
+        BedMatrix --> FinancialSetup
+    end
+
+    AllocationKPIs --> CandidateDirectory
+    CandidateDirectory --> AssignmentModal
+```
+
+---
+
 ### 📍 Version 8.75 — Quick Actions & Create Pipeline (Feature 5) ⚡➕🚀
 
 ```mermaid
