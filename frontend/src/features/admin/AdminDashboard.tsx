@@ -2886,10 +2886,10 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
                     {scopedBuildingsList.map((bldg) => {
-                      const bldgRooms = roomConfigs.filter((r) => r.buildingName === bldg.name);
-                      const totalBeds = bldgRooms.reduce((acc, r) => acc + (r.beds?.length || 0), 0);
-                      const occBeds = bldgRooms.reduce((acc, r) => acc + (r.beds?.filter((b) => b.status === "occupied")?.length || 0), 0);
-                      const unoccBeds = Math.max(0, totalBeds - occBeds);
+                      const stats = getBuildingOccupancyDetails(bldg.name);
+                      const totalBeds = stats.totalBeds;
+                      const occBeds = stats.occupiedBedsCount;
+                      const unoccBeds = stats.vacantBedsCount;
                       const occRate = totalBeds > 0 ? Math.round((occBeds / totalBeds) * 100) : 0;
 
                       return (
