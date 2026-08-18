@@ -2076,6 +2076,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     }
   };
 
+  // Immediate WhatsApp status fetch on mount + 10s heartbeat poll to ensure navbar indicator is 100% accurate at all times
+  useEffect(() => {
+    fetchWhatsAppStatus();
+    const interval = setInterval(fetchWhatsAppStatus, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
   const fetchBookings = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/bookings`);
@@ -2407,16 +2414,30 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   fetchWhatsAppStatus();
                   fetchWhatsAppTemplates();
                 }}
-                className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-xs font-black transition cursor-pointer shadow-sm active:scale-95 border ${
+                className={`flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-black transition cursor-pointer shadow-sm active:scale-95 border ${
                   whatsappStatus?.connected
-                    ? "bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700"
-                    : "bg-emerald-50 text-emerald-900 border-emerald-200 hover:bg-emerald-100"
+                    ? "bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700 shadow-emerald-600/20"
+                    : whatsappStatus === null
+                    ? "bg-emerald-50/80 text-emerald-900 border-emerald-200 hover:bg-emerald-100"
+                    : "bg-amber-50 text-amber-950 border-amber-300 hover:bg-amber-100"
                 }`}
-                title="WhatsApp Baileys Automation Center (Auto-Credentials, Invoices & Chatbot)"
+                title={
+                  whatsappStatus?.connected
+                    ? `WhatsApp Multi-Device Baileys Online (${whatsappStatus.phone || "Active"})`
+                    : "WhatsApp Automation Center (Offline / Scan QR to Connect)"
+                }
               >
                 <span className="text-xs">💬</span>
-                <span className="text-[11px] sm:text-xs">WhatsApp</span>
-                <span className={`h-2 w-2 rounded-full ${whatsappStatus?.connected ? "bg-white animate-pulse" : "bg-amber-500"}`} />
+                <span className="text-[11px] sm:text-xs font-black">WhatsApp</span>
+                <span
+                  className={`h-2 w-2 rounded-full ${
+                    whatsappStatus?.connected
+                      ? "bg-white shadow-xs animate-pulse ring-2 ring-emerald-300/50"
+                      : whatsappStatus === null
+                      ? "bg-emerald-400 animate-pulse"
+                      : "bg-amber-500"
+                  }`}
+                />
               </button>
 
               {/* Complaints Center Quick Access Notification Button */}
