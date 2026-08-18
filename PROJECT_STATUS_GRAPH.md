@@ -2,6 +2,51 @@
 
 ---
 
+### 📍 Version 9.19 — End-to-End Real-Time Data Flow Pipeline & Synchronization Engine 🌊⚡🔄
+
+```mermaid
+flowchart TD
+    subgraph IngestionSources ["1. Multi-Channel Data Ingestion"]
+        OnlineApplicant["🌐 Online Website Form (Tenant Application)"]
+        ManualAdmin["✍️ Admin / Staff Manual Admission Modal"]
+        WhatsAppLead["💬 WhatsApp AI Chatbot (OpenWA Microservice)"]
+        BankSMS["📱 Bank UPI SMS Auto-Verification Webhook"]
+    end
+
+    subgraph BackendProcessing ["2. Backend Core & Storage Tier (Port 5000)"]
+        ExpressAPI["🚀 Express REST API Controller"]
+        DB[(🗄️ SQLite Database: database.sqlite)]
+        GSheetEngine["📊 Google Sheets Apps Script Webhook Engine"]
+        DriveEngine["📁 Google Drive Resident Document Uploader"]
+    end
+
+    subgraph DataPipeline ["3. Unified Data Pipeline & Normalization (dataPipeline.ts)"]
+        Extractor["🧹 extractFloorData() & extractRoomData()"]
+        Normalizer["🔄 normalizeResident() -> Standardized Schema"]
+        Cache["⚡ ResidentPipelineCache (O(1) In-Memory Lookups)"]
+    end
+
+    subgraph RealTimeSync ["4. Real-Time UI Hydration & Bed Aggregator"]
+        Poller["⏱️ Visibility-Aware Polling (25s + window.focus)"]
+        BedMatrix["🛏️ Custom Room Bed Sharing Matrix (1-8 Beds)"]
+        LiveKPIs["📊 Live Dashboard KPIs: Total Beds, Occupied, Vacant, Revenue"]
+    end
+
+    IngestionSources --> ExpressAPI
+    ExpressAPI --> DB
+    ExpressAPI --> GSheetEngine
+    ExpressAPI --> DriveEngine
+
+    DB --> Poller
+    Poller --> Extractor
+    Extractor --> Normalizer
+    Normalizer --> Cache
+    Cache --> BedMatrix
+    BedMatrix --> LiveKPIs
+```
+
+---
+
 ### 📍 Version 9.18 — Admin & Staff Settings Route & Alias Routing Resolution ⚙️🛣️✅
 
 ```mermaid

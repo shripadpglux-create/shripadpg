@@ -1,0 +1,48 @@
+{
+  "invoiceMessage": "🧾 *SHRIPAD LUXURY PG - INVOICE NOTIFICATION* 🏢\nDear *{customerName}*,\n\nHere is your accommodation invoice details for *{month}*:\n💰 *Amount Due:* ₹{amount}\n🚪 *Room / Bed:* Room {room}, Bed {bed}\n🏢 *Building:* {building}\n📅 *Due Date:* 5th of {month}\n\n📲 *Download / View Official PDF Invoice:*\n{invoiceLink}\n\n💳 *Pay Instantly via UPI:*\n• UPI ID: `{upiId}`\n• Account Name: {accountName}\n\nAfter payment, please send screenshot or submit in the Resident Portal:\nhttps://shripadpg.pages.dev/my-rooms\n\nThank you for choosing Shripad Luxury Living! ✨",
+  "complaintUpdateMessage": "📢 *SHRIPAD PG - SERVICE TICKET UPDATE* 🛠️\nHello *{residentName}*,\n\nYour service request status has been updated:\n📌 *Ticket Title:* {complaintTitle}\n📂 *Category:* {category}\n🔄 *Current Status:* *{status}*\n💬 *Admin / Warden Note:* {adminComment}\n\n🏢 *Building:* {building} | *Room:* {room}\n\nWe are committed to providing you with a comfortable living experience.\nFor urgent assistance, please contact PG Warden: {wardenPhone}",
+  "paymentConfirmationMessage": "💳 *SHRIPAD PG - PAYMENT CONFIRMATION RECEIPT* ✅\nDear *{customerName}*,\n\nWe have received your payment!\n💰 *Amount Paid:* ₹{amountPaid}\n🧾 *Receipt / Invoice Ref:* {invoiceNo}\n🏢 *Building & Room:* {building} - Room {room} (Bed {bed})\n📅 *Payment Date:* {paymentDate}\n💳 *Mode of Payment:* {paymentMode}\n\n📲 View your updated account ledger & download receipts:\nhttps://shripadpg.pages.dev/my-rooms\n\nThank you! 🙏",
+  "welcomeAllotmentMessage": "🏠 *WELCOME TO SHRIPAD LUXURY PG!* 🎉\nDear *{customerName}*, your room has been successfully allocated!\n\n🏢 *Building:* {building}\n🚪 *Room Number:* {room}\n🛏️ *Bed:* {bed}\n💰 *Monthly Rent:* ₹{rentAmount}\n\n🔐 *Your Resident Portal Login Credentials:*\n• *Customer ID / Phone:* `{customerId}` or `{phone}`\n• *Password:* `{customerPassword}`\n\n📶 *High-Speed PG Wi-Fi:*\n• *SSID:* ShripadPG_HighSpeed\n• *Password:* pgwifi@2026\n\n📲 *Resident Portal:*\nhttps://shripadpg.pages.dev/login\nLogin to view invoices, download payment receipts, and submit service requests.\n\nFor any help, contact Manager: {adminPhone}",
+  "chatbotEnabled": true,
+  "chatbotGreetingMessage": "👋 *Hello! Welcome to Shripad Luxury PG!* 🏢✨\n\nWe provide premium, fully-furnished PG accommodations with hygienic food, high-speed Wi-Fi, and 24/7 security in Pune.\n\n📍 *Please choose your preferred location:*\n{locationsList}\n\n👉 *Reply with the Number or Area Name* (e.g. *1* or *Wakad*) to view room types, rent pricing, amenities, and location map!",
+  "chatbotLocations": [
+    {
+      "id": "1",
+      "name": "Wakad Luxury Branch",
+      "keyword": "wakad",
+      "address": "Near Dutta Mandir & Phoenix Mall, Wakad, Pune",
+      "rooms": "1, 2, 3 Sharing (AC & Non-AC)",
+      "rentRange": "₹7,000 - ₹12,500 / month",
+      "amenities": "3-Time Food (Veg/Non-Veg), 200Mbps Wi-Fi, RO Water, Auto Washing Machine, Daily Housekeeping, Biometric Access",
+      "mapLink": "https://maps.google.com/?q=Wakad+Pune",
+      "contactPhone": "+91 98765 43210"
+    },
+    {
+      "id": "2",
+      "name": "Chinchwad Central Branch",
+      "keyword": "chinchwad",
+      "address": "Near Railway Station & Elpro City Square, Chinchwad, Pune",
+      "rooms": "1, 2, 3, 4 Sharing Options",
+      "rentRange": "₹6,000 - ₹10,000 / month",
+      "amenities": "Pure Veg/Non-Veg Meals, High-Speed Wi-Fi, Geyser, Lift, 24x7 Power Backup, CCTV Security",
+      "mapLink": "https://maps.google.com/?q=Chinchwad+Pune",
+      "contactPhone": "+91 98765 43210"
+    },
+    {
+      "id": "3",
+      "name": "Hinjewadi IT Park Branch",
+      "keyword": "hinjewadi",
+      "address": "Phase 1, Near Infosys & Wipro Circle, Hinjewadi, Pune",
+      "rooms": "Single, 2-Sharing, 3-Sharing Deluxe",
+      "rentRange": "₹7,500 - ₹14,000 / month",
+      "amenities": "IT-friendly 300Mbps Fiber Wi-Fi, 3 Meals with Weekend Special, Fridge, Gym, 24/7 Hot Water, Dedicated Parking",
+      "mapLink": "https://maps.google.com/?q=Hinjewadi+Pune",
+      "contactPhone": "+91 98765 43210"
+    }
+  ],
+  "chatbotDefaultReply": "👋 Thank you for reaching out to *Shripad Luxury PG*! 🏢\n\nTo explore our branches and available rooms:\n👉 Reply with *HII* to view our list of PG locations (Wakad, Chinchwad, Hinjewadi, Baner).\n👉 Or call our manager directly at *+91 98765 43210* for immediate booking & visit scheduling!",
+  "_id": "6a81b1c96a41aa2660bd002a",
+  "id": "global_whatsapp_templates",
+  "createdAt": "2026-08-16T12:49:13.271Z",
+  "updatedAt": "2026-08-16T12:49:13.271Z"
+}
