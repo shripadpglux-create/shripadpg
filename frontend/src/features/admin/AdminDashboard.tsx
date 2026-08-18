@@ -1261,7 +1261,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const setBuildingAllBedCapacity = (bldName: string, bedsCount: number) => {
     const bldObj = buildingsList.find((b) => b.name === bldName) || { floors: 4, roomsPerFloor: 4 };
     const updated = { ...customRoomSharing };
-    for (let f = 0; f < bldObj.floors; f++) {
+    const indices = getBuildingFloorIndices(bldObj);
+    for (const f of indices) {
       const rCount = getFloorRoomCount(bldObj, f);
       for (let r = 1; r <= rCount; r++) {
         const rNo = f === 0 ? `G${r.toString().padStart(2, "0")}` : `${f}${r.toString().padStart(2, "0")}`;
@@ -1317,7 +1318,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       // Initialize room bed sharing for this new building with custom per-room overrides
       const updatedSharing = { ...customRoomSharing };
       const bldObj = { floors: Number(newBuildingFloors) || 1, roomsPerFloor: Number(newBuildingRoomsPerFloor) || 1, floorRoomCounts: { ...newFloorRoomCounts } };
-      for (let f = 0; f < bldObj.floors; f++) {
+      const indices = getBuildingFloorIndices(bldObj);
+      for (const f of indices) {
         const rCount = getFloorRoomCount(bldObj, f);
         for (let r = 1; r <= rCount; r++) {
           const rNo = f === 0 ? `G${r.toString().padStart(2, "0")}` : `${f}${r.toString().padStart(2, "0")}`;
@@ -1930,7 +1932,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     let occupiedBedsCount = 0;
     let vacantBedsCount = 0;
 
-    for (let f = 0; f < bldObj.floors; f++) {
+    const indices = getBuildingFloorIndices(bldObj);
+    for (const f of indices) {
       const rCount = getFloorRoomCount(bldObj, f);
       totalRooms += rCount;
 

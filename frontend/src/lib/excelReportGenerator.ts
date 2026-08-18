@@ -440,6 +440,35 @@ export async function generateAllocationReport(
   await downloadWorkbook(workbook, `Shripad_PG_Allocation_Report_${Date.now()}.xlsx`);
 }
 
+function getBuildingCapacityAndRooms(bld: BuildingReportData): { totalRooms: number; totalCapacity: number } {
+  const gfExcluded = Boolean(bld.floorRoomCounts && bld.floorRoomCounts[0] === 0);
+  const maxFl = gfExcluded ? bld.floors : Math.max(0, bld.floors - 1);
+  let totalRooms = 0;
+  let totalCapacity = 0;
+
+  let customSharing: Record<string, number> = {};
+  if (typeof window !== "undefined") {
+    try {
+      const saved = localStorage.getItem("shripad_custom_room_sharing");
+      if (saved) customSharing = JSON.parse(saved);
+    } catch {
+      // ignore
+    }
+  }
+
+  for (let f = 0; f <= maxFl; f++) {
+    const rCount = bld.floorRoomCounts && bld.floorRoomCounts[f] !== undefined ? bld.floorRoomCounts[f]! : bld.roomsPerFloor;
+    totalRooms += rCount;
+    for (let r = 1; r <= rCount; r++) {
+      const rNo = f === 0 ? `G${r.toString().padStart(2, "0")}` : `${f}${r.toString().padStart(2, "0")}`;
+      const cap = customSharing[`${bld.name}_${rNo}`] || 2;
+      totalCapacity += cap;
+    }
+  }
+
+  return { totalRooms, totalCapacity: totalCapacity || totalRooms * 2 };
+}
+
 // ============================================================================
 // 3. BUILDING REPORT GENERATOR
 // ============================================================================
@@ -453,16 +482,7 @@ export async function generateBuildingReport(
 
   // Helper to compute room/bed stats per building
   const buildingStats = buildings.map((bld) => {
-    let totalRooms = 0;
-    for (let f = 0; f < bld.floors; f++) {
-      if (bld.floorRoomCounts && bld.floorRoomCounts[f] !== undefined) {
-        totalRooms += bld.floorRoomCounts[f]!;
-      } else {
-        totalRooms += bld.roomsPerFloor;
-      }
-    }
-    // Capacity estimation: average 2 beds per room
-    const totalCapacity = totalRooms * 2;
+    const { totalRooms, totalCapacity } = getBuildingCapacityAndRooms(bld);
 
     // Occupied count
     const occupiedCount = bookings.filter(
@@ -808,11 +828,7 @@ export async function generateMasterReport(
   styleTableHeader(wsBld, 8, 7);
 
   buildings.forEach((b, idx) => {
-    let totalRooms = 0;
-    for (let f = 0; f < b.floors; f++) {
-      totalRooms += b.floorRoomCounts && b.floorRoomCounts[f] !== undefined ? b.floorRoomCounts[f]! : b.roomsPerFloor;
-    }
-    const cap = totalRooms * 2;
+    const { totalRooms, totalCapacity: cap } = getBuildingCapacityAndRooms(b);
     const occ = bookings.filter((bk) => bk.status === "allocated" && (bk.allocatedBuilding === b.name || bk.building === b.name)).length;
 
     const row = wsBld.getRow(9 + idx);

@@ -2,6 +2,37 @@
 
 ---
 
+### 📍 Version 9.21 — Deep QA Mathematical Harmonization & Cross-System Data Verification 🧪📊🔍
+
+```mermaid
+flowchart TD
+    subgraph QAIntegrityMatrix ["Deep QA Tester & Mathematical Verification Suite"]
+        BuildingRoom["1. Building, Floor & Room Math:
+        • getBuildingFloorIndices(b) ➔ Full ground floor & N-floor sweep
+        • Custom room beds (1-8 beds/room) synchronized across UI & Excel"]
+
+        OccupancyEngine["2. Bed Occupancy & Matrix Verification:
+        • Total Capacity = ∑ (Floors × Rooms × CustomRoomBeds)
+        • Occupied Beds = Confirmed Allotments (Bed A..L with 0-duplicate guard)
+        • Vacant Beds = Total Beds - Occupied Beds (Reconciled safety net)"]
+
+        FinancialLedger["3. Revenue & Financial Integrity:
+        • Gross Revenue = ∑ Verified Txns (Fallback to confirmed advance)
+        • Net Profit = Gross Collections - Scoped Monthly Expenses
+        • Pending Verifications = Scan of all unverified paymentHistory items"]
+
+        ReportSync["4. Multi-Format Report Alignment:
+        • excelReportGenerator.ts inherits exact custom bed capacities
+        • 100% data parity between Dashboard KPIs, Matrix & Excel Exports"]
+
+        BuildingRoom --> OccupancyEngine
+        OccupancyEngine --> FinancialLedger
+        FinancialLedger --> ReportSync
+    end
+```
+
+---
+
 ### 📍 Version 9.20 — OpenWA Live Gateway & Real-Time Session Status Reconnection 💬🟢⚡
 
 ```mermaid
