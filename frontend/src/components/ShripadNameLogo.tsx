@@ -25,7 +25,7 @@ export function ShripadNameLogo({
       {/* PG Divider Row */}
       <div className="flex items-center justify-center gap-2 my-1 w-full max-w-[170px]">
         <div className="h-[2.5px] flex-1 rounded-full bg-[#D49A3B]" />
-        <span className="text-base font-black tracking-wider text-[#16a34a]">PG</span>
+        <span className="text-base font-black tracking-wider text-[#1e3a8a]">PG</span>
         <div className="h-[2.5px] flex-1 rounded-full bg-[#D49A3B]" />
       </div>
 

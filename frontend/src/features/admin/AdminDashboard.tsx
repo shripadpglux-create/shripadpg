@@ -2269,11 +2269,11 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
             <ShripadNameLogo />
           </div>
           <div className="flex items-center justify-between px-1">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-black text-emerald-800 border border-emerald-200/80">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-0.5 text-[10px] font-black text-blue-900 border border-blue-200/80">
+              <span className="h-1.5 w-1.5 rounded-full bg-blue-600 animate-pulse" />
               {isStaffMode ? "🏢 Staff Portal" : "👑 Super Admin"}
             </span>
-            <span className="text-[10px] font-bold text-slate-400 font-mono">v9.10</span>
+            <span className="text-[10px] font-bold text-slate-400 font-mono">v9.12</span>
           </div>
         </div>
 
@@ -2295,13 +2295,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   onClick={() => handleTabClick(item.name)}
                   className={`group relative flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-xs font-bold transition-all duration-200 cursor-pointer ${
                     isActive
-                      ? "bg-gradient-to-r from-emerald-700 via-brand-green to-emerald-600 text-white shadow-md shadow-emerald-700/20"
+                      ? "bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 text-white shadow-md shadow-blue-900/25"
                       : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 active:scale-[0.98]"
                   }`}
                 >
                   <div
                     className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl transition-colors ${
-                      isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-700"
+                      isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-700"
                     }`}
                   >
                     <item.icon className="h-4 w-4" />
@@ -2334,13 +2334,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   onClick={() => handleTabClick(item.name)}
                   className={`group relative flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-xs font-bold transition-all duration-200 cursor-pointer ${
                     isActive
-                      ? "bg-gradient-to-r from-emerald-700 via-brand-green to-emerald-600 text-white shadow-md shadow-emerald-700/20"
+                      ? "bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 text-white shadow-md shadow-blue-900/25"
                       : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 active:scale-[0.98]"
                   }`}
                 >
                   <div
                     className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl transition-colors ${
-                      isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-700"
+                      isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-700"
                     }`}
                   >
                     <item.icon className="h-4 w-4" />
@@ -2359,9 +2359,9 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 setIsCreateModalOpen(true);
                 setIsMobileMenuOpen(false);
               }}
-              className="group flex w-full items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100/80 px-3 py-2.5 text-xs font-black text-emerald-900 shadow-2xs transition-all active:scale-[0.98] cursor-pointer"
+              className="group flex w-full items-center gap-3 rounded-2xl border border-blue-200 bg-blue-50/70 hover:bg-blue-100/80 px-3 py-2.5 text-xs font-black text-blue-950 shadow-2xs transition-all active:scale-[0.98] cursor-pointer"
             >
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-xs group-hover:scale-110 transition-transform">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-blue-700 text-white shadow-xs group-hover:scale-110 transition-transform">
                 <Plus className="h-4 w-4 stroke-[3]" />
               </div>
               <span>+ New Admission</span>
@@ -2379,7 +2379,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 }}
                 className="group flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 transition-all cursor-pointer active:scale-[0.98]"
               >
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-700 transition-colors">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-700 transition-colors">
                   <UserCheck className="h-4 w-4" />
                 </div>
                 <span>Staff & Access</span>
@@ -2392,7 +2392,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 }}
                 className="group flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 transition-all cursor-pointer active:scale-[0.98]"
               >
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-700 transition-colors">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-700 transition-colors">
                   <QrCode className="h-4 w-4" />
                 </div>
                 <span>Payment QR Code</span>
@@ -2402,13 +2402,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 onClick={() => handleTabClick("Settings")}
                 className={`group flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-xs font-bold transition-all cursor-pointer active:scale-[0.98] ${
                   activeTab === "Settings"
-                    ? "bg-gradient-to-r from-emerald-700 via-brand-green to-emerald-600 text-white shadow-md shadow-emerald-700/20"
+                    ? "bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 text-white shadow-md shadow-blue-900/25"
                     : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
                 }`}
               >
                 <div
                   className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl transition-colors ${
-                    activeTab === "Settings" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-700"
+                    activeTab === "Settings" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-700"
                   }`}
                 >
                   <Settings className="h-4 w-4" />
@@ -2420,7 +2420,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
         </nav>
 
         {/* Shripad PG Logo Showcase Footer */}
-        <div className="mt-3 rounded-2xl bg-gradient-to-br from-emerald-50/80 via-white to-slate-50 p-3 border border-emerald-200/60 text-center space-y-1 shadow-xs shrink-0">
+        <div className="mt-3 rounded-2xl bg-gradient-to-br from-blue-50/80 via-white to-slate-50 p-3 border border-blue-200/60 text-center space-y-1 shadow-xs shrink-0">
           <div className="mx-auto flex justify-center py-0.5">
             <img
               src={brandLogo}
@@ -2433,7 +2433,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
               SHRIPAD PG PORTAL
             </p>
             <p className="text-[9px] font-semibold text-slate-500 flex items-center justify-center gap-1 leading-none">
-              <ShieldCheck className="h-3 w-3 text-brand-green" /> Premium Living & Care
+              <ShieldCheck className="h-3 w-3 text-blue-700" /> Premium Living & Care
             </p>
           </div>
         </div>
@@ -8504,11 +8504,11 @@ function doPost(e) {
                     </button>
                   </div>
                   <div className="flex items-center justify-between px-0.5">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-black text-emerald-800 border border-emerald-200/80">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-0.5 text-[10px] font-black text-blue-900 border border-blue-200/80">
+                      <span className="h-1.5 w-1.5 rounded-full bg-blue-600 animate-pulse" />
                       {isStaffMode ? "🏢 Staff Portal" : "👑 Super Admin"}
                     </span>
-                    <span className="text-[10px] font-bold text-slate-400 font-mono">v9.10</span>
+                    <span className="text-[10px] font-bold text-slate-400 font-mono">v9.12</span>
                   </div>
                 </div>
 
@@ -8533,13 +8533,13 @@ function doPost(e) {
                           }}
                           className={`group relative flex w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-bold transition-all duration-200 cursor-pointer ${
                             isActive
-                              ? "bg-gradient-to-r from-emerald-700 via-brand-green to-emerald-600 text-white shadow-md shadow-emerald-700/20"
+                              ? "bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 text-white shadow-md shadow-blue-900/25"
                               : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 active:bg-slate-100"
                           }`}
                         >
                           <div
                             className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl transition-colors ${
-                              isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-700"
+                              isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-700"
                             }`}
                           >
                             <item.icon className="h-4 w-4" />
@@ -8575,13 +8575,13 @@ function doPost(e) {
                           }}
                           className={`group relative flex w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-bold transition-all duration-200 cursor-pointer ${
                             isActive
-                              ? "bg-gradient-to-r from-emerald-700 via-brand-green to-emerald-600 text-white shadow-md shadow-emerald-700/20"
+                              ? "bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 text-white shadow-md shadow-blue-900/25"
                               : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 active:bg-slate-100"
                           }`}
                         >
                           <div
                             className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl transition-colors ${
-                              isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-700"
+                              isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-700"
                             }`}
                           >
                             <item.icon className="h-4 w-4" />
@@ -8600,9 +8600,9 @@ function doPost(e) {
                         setIsCreateModalOpen(true);
                         setIsMobileMenuOpen(false);
                       }}
-                      className="group flex w-full items-center gap-2.5 rounded-2xl border border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100/80 px-3 py-2.5 text-xs font-black text-emerald-900 shadow-2xs transition-all active:scale-[0.98] cursor-pointer"
+                      className="group flex w-full items-center gap-2.5 rounded-2xl border border-blue-200 bg-blue-50/70 hover:bg-blue-100/80 px-3 py-2.5 text-xs font-black text-blue-950 shadow-2xs transition-all active:scale-[0.98] cursor-pointer"
                     >
-                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-xs group-hover:scale-110 transition-transform">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-blue-700 text-white shadow-xs group-hover:scale-110 transition-transform">
                         <Plus className="h-4 w-4 stroke-[3]" />
                       </div>
                       <span>+ New Admission</span>
@@ -8620,7 +8620,7 @@ function doPost(e) {
                         }}
                         className="group flex w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all cursor-pointer active:bg-slate-100"
                       >
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-700 transition-colors">
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-700 transition-colors">
                           <UserCheck className="h-4 w-4" />
                         </div>
                         <span>Staff & Access</span>
@@ -8633,7 +8633,7 @@ function doPost(e) {
                         }}
                         className="group flex w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all cursor-pointer active:bg-slate-100"
                       >
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-700 transition-colors">
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-700 transition-colors">
                           <QrCode className="h-4 w-4" />
                         </div>
                         <span>Payment QR Code</span>
@@ -8646,13 +8646,13 @@ function doPost(e) {
                         }}
                         className={`group flex w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-bold transition-all cursor-pointer active:bg-slate-100 ${
                           activeTab === "Settings"
-                            ? "bg-gradient-to-r from-emerald-700 via-brand-green to-emerald-600 text-white shadow-md shadow-emerald-700/20"
+                            ? "bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 text-white shadow-md shadow-blue-900/25"
                             : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                         }`}
                       >
                         <div
                           className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl transition-colors ${
-                            activeTab === "Settings" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-700"
+                            activeTab === "Settings" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-700"
                           }`}
                         >
                           <Settings className="h-4 w-4" />
@@ -8664,7 +8664,7 @@ function doPost(e) {
                 </nav>
 
                 {/* Shripad PG Logo Showcase Footer */}
-                <div className="mt-2 rounded-2xl bg-gradient-to-br from-emerald-50/80 via-white to-slate-50 p-2.5 border border-emerald-200/60 text-center space-y-1 shadow-xs shrink-0">
+                <div className="mt-2 rounded-2xl bg-gradient-to-br from-blue-50/80 via-white to-slate-50 p-2.5 border border-blue-200/60 text-center space-y-1 shadow-xs shrink-0">
                   <div className="mx-auto flex justify-center py-0.5">
                     <img
                       src={brandLogo}
@@ -8677,7 +8677,7 @@ function doPost(e) {
                       SHRIPAD PG PORTAL
                     </p>
                     <p className="text-[8.5px] font-semibold text-slate-500 flex items-center justify-center gap-1 leading-none">
-                      <ShieldCheck className="h-3 w-3 text-brand-green" /> Premium Living & Care
+                      <ShieldCheck className="h-3 w-3 text-blue-700" /> Premium Living & Care
                     </p>
                   </div>
                 </div>
