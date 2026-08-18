@@ -76,41 +76,66 @@ export class WhatsAppService {
     pushName?: string | null;
     connected: boolean;
   } | null> {
-    try {
-      const url = `${this.getApiBaseUrl()}/api/sessions`;
-      const res = await axios.get(url, {
-        headers: this.getHeaders(),
-        timeout: 5000,
-      });
+    const urlsToTry = [
+      this.getApiBaseUrl(),
+      "https://shripad-openwa-gateway.onrender.com",
+    ];
 
-      const list: any[] = Array.isArray(res.data) ? res.data : [];
-      if (list.length === 0) return null;
+    // Remove duplicates while preserving order
+    const distinctUrls = Array.from(new Set(urlsToTry));
 
-      const targetName = this.getSessionName();
-      const match = list.find(s => s.name === targetName || s.name === "shripad-pg") || list[0];
+    for (const baseUrl of distinctUrls) {
+      try {
+        const url = `${baseUrl}/api/sessions`;
+        const res = await axios.get(url, {
+          headers: this.getHeaders(),
+          timeout: 8000,
+        });
 
-      if (match) {
-        this.cachedSessionId = match.id;
-        const isConnected =
-          match.status === "ready" ||
-          match.status === "CONNECTED" ||
-          match.status === "authenticated" ||
-          match.connected === true;
+        let list: any[] = [];
+        if (Array.isArray(res.data)) {
+          list = res.data;
+        } else if (res.data && Array.isArray(res.data.sessions)) {
+          list = res.data.sessions;
+        } else if (res.data && Array.isArray(res.data.data)) {
+          list = res.data.data;
+        }
 
-        return {
-          id: match.id,
-          name: match.name,
-          status: match.status,
-          phone: match.phone || null,
-          pushName: match.pushName || null,
-          connected: isConnected,
-        };
+        if (list.length === 0) continue;
+
+        const targetName = this.getSessionName();
+        // Look for exact session name, or 'shripad-pg', or any session that is ready / has a phone
+        const match =
+          list.find(s => s.name === targetName || s.name === "shripad-pg" || s.name === "shripad_pg_main") ||
+          list.find(s => s.status === "ready" || s.status === "CONNECTED" || !!s.phone) ||
+          list[0];
+
+        if (match) {
+          this.cachedSessionId = match.id;
+          const statusLower = String(match.status || "").toLowerCase();
+          const isConnected =
+            statusLower === "ready" ||
+            statusLower === "connected" ||
+            statusLower === "authenticated" ||
+            statusLower === "active" ||
+            match.connected === true ||
+            (match.engineLoaded === true && !!match.phone);
+
+          return {
+            id: match.id,
+            name: match.name,
+            status: match.status || (isConnected ? "ready" : "disconnected"),
+            phone: match.phone || null,
+            pushName: match.pushName || null,
+            connected: isConnected,
+          };
+        }
+      } catch (err: any) {
+        console.warn(`[WhatsApp getActiveSession Notice for ${baseUrl}]:`, err?.response?.data || err.message);
       }
-      return null;
-    } catch (err: any) {
-      console.warn("[WhatsApp getActiveSession Notice]:", err?.response?.data || err.message);
-      return null;
     }
+
+    return null;
   }
 
   /**

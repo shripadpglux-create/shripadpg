@@ -2,6 +2,31 @@
 
 ---
 
+### 📍 Version 9.20 — OpenWA Live Gateway & Real-Time Session Status Reconnection 💬🟢⚡
+
+```mermaid
+flowchart TD
+    subgraph WhatsAppGatewayArchitecture ["Live OpenWA Gateway & Session Synchronization"]
+        OpenWARender["🌐 OpenWA Production Microservice (https://shripad-openwa-gateway.onrender.com)
+        • Session Name: 'shripad-pg' (Status: 'ready' / Connected)
+        • Connected Admin Phone: +91 84469 82438 (Push Name: 'Sk')"]
+
+        BackendService["⚙️ Backend WhatsAppService (whatsappService.ts)
+        • Automatic multi-tier endpoint fallback (Render Cloud URL + local)
+        • Dynamic session matcher (shripad-pg UUID resolution: d829479e-0891-447b-8002-a92bf4994c0d)
+        • GET /api/whatsapp/status ➔ { connected: true, status: 'CONNECTED', phone: '918446982438' }"]
+
+        FrontendHeader["📱 Admin UI Header Pill & Automation Modal
+        • Pill updates dynamically to: 💬 WhatsApp [🟢 Active White/Emerald Pulse]
+        • Auto-dispatches Allotment Credentials, PDF Invoices, Dues Reminders & AI Chatbot"]
+
+        OpenWARender -->|Live REST API| BackendService
+        BackendService -->|Real-Time Status JSON| FrontendHeader
+    end
+```
+
+---
+
 ### 📍 Version 9.19 — End-to-End Real-Time Data Flow Pipeline & Synchronization Engine 🌊⚡🔄
 
 ```mermaid
