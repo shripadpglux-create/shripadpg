@@ -572,11 +572,11 @@ export function InvoiceDesign({
     <div className="space-y-6">
       {/* Sub-Navigation Header Tabs (Admin / Staff Only) */}
       {!isEffectiveHideTabs && (
-        <div className="no-print mx-auto flex w-full max-w-[210mm] items-center justify-between gap-2 border-b border-slate-200 pb-3">
-          <div className="flex items-center gap-2">
+        <div className="no-print mx-auto flex w-full max-w-[210mm] items-center justify-between gap-2 border-b border-slate-200 pb-3 overflow-hidden">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none w-full max-w-full pb-1 flex-nowrap">
             <button
               onClick={() => setActiveSubTab("editor")}
-              className={`flex items-center gap-2 rounded-2xl px-5 py-2.5 text-xs font-black transition cursor-pointer ${
+              className={`flex items-center gap-2 rounded-2xl px-3.5 sm:px-5 py-2 sm:py-2.5 text-xs font-black transition cursor-pointer whitespace-nowrap shrink-0 ${
                 activeSubTab === "editor"
                   ? "bg-[#0f1b3d] text-white shadow-md"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -587,7 +587,7 @@ export function InvoiceDesign({
             </button>
             <button
               onClick={() => setActiveSubTab("history")}
-              className={`flex items-center gap-2 rounded-2xl px-5 py-2.5 text-xs font-black transition cursor-pointer ${
+              className={`flex items-center gap-2 rounded-2xl px-3.5 sm:px-5 py-2 sm:py-2.5 text-xs font-black transition cursor-pointer whitespace-nowrap shrink-0 ${
                 activeSubTab === "history"
                   ? "bg-[#0f1b3d] text-white shadow-md"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -601,7 +601,7 @@ export function InvoiceDesign({
             </button>
             <button
               onClick={() => setActiveSubTab("pending")}
-              className={`flex items-center gap-2 rounded-2xl px-5 py-2.5 text-xs font-black transition cursor-pointer ${
+              className={`flex items-center gap-2 rounded-2xl px-3.5 sm:px-5 py-2 sm:py-2.5 text-xs font-black transition cursor-pointer whitespace-nowrap shrink-0 ${
                 activeSubTab === "pending"
                   ? "bg-[#0f1b3d] text-white shadow-md"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -769,8 +769,8 @@ export function InvoiceDesign({
           )}
 
           {/* A4 Printable Invoice Sheet */}
-          <div className="w-full max-w-full overflow-x-auto pb-6 scrollbar-none flex justify-start sm:justify-center">
-            <div className="invoice-sheet mx-auto flex max-w-full flex-col bg-white shadow-2xl rounded-sm border border-slate-200/80 overflow-hidden text-slate-900 shrink-0">
+          <div className="w-full max-w-full overflow-x-auto pb-6 scrollbar-none flex justify-start lg:justify-center">
+            <div className="invoice-sheet mx-auto flex w-[210mm] min-w-[210mm] max-w-[210mm] min-h-[297mm] flex-col bg-white shadow-2xl rounded-sm border border-slate-200/80 overflow-hidden text-slate-900 shrink-0">
             {/* Decorative Top Banner */}
             <header className="relative h-[120px] shrink-0 overflow-hidden bg-white border-b border-slate-100">
               {/* Angular Polygons */}

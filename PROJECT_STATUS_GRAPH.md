@@ -2,6 +2,31 @@
 
 ---
 
+### 📍 Version 8.69 — Fixed A4 Proportions & Allocation Responsive Flow Alignment 📄🔑🎯
+
+```mermaid
+flowchart TD
+    subgraph A4InvoiceSheet ["Official A4 Invoice Proportion Lockdown"]
+        FixedDimensions["Strict w-[210mm] min-w-[210mm] max-w-[210mm] min-h-[297mm]"]
+        HeaderPreservation["Angular polygon header & 'INVOICE / RENT RECEIPT' never clipped"]
+        TableGrid["Bill To & Payment Details maintain side-by-side 2-column tabular alignment"]
+        ScrollContainer["w-full overflow-x-auto scrollbar-none for seamless mobile preview & 100% accurate print"]
+        
+        FixedDimensions --> HeaderPreservation
+        FixedDimensions --> TableGrid
+        FixedDimensions --> ScrollContainer
+    end
+
+    subgraph AllocationMobileFlow ["Allocation Mobile Responsive Polish"]
+        SubTabsFlow["Scrollbar-none subtabs with smooth horizontal scroll"]
+        CardActions["Responsive button wrap: Allocated badge, Change, Check Out & Refund without edge collision"]
+        
+        ScrollContainer --> AllocationMobileFlow
+    end
+```
+
+---
+
 ### 📍 Version 8.68 — Comprehensive Mobile Viewport Responsive Overhaul & 5-Item Native Dock 📱✨🚀
 
 ```mermaid

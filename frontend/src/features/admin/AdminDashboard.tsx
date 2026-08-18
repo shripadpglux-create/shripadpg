@@ -4307,7 +4307,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
               </div>
 
               {/* 2 Main Status Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5">
                 {/* Pending Allocation Card */}
                 <div
                   onClick={() => {
@@ -4318,33 +4318,33 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       setAllocationSourceFilter("all");
                     }
                   }}
-                  className={`rounded-[2rem] border-2 p-6 shadow-sm flex flex-col justify-between space-y-4 cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${
+                  className={`rounded-2xl sm:rounded-[2rem] border-2 p-3.5 sm:p-6 shadow-sm flex flex-col justify-between space-y-4 cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${
                     allocationFilter === "pending"
                       ? "border-amber-400 bg-amber-50/90 ring-2 ring-amber-400/40 shadow-md"
                       : "border-amber-200/80 bg-gradient-to-br from-amber-50/70 via-white to-white hover:border-amber-300"
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 font-bold border border-amber-200">
-                        <Clock className="h-6 w-6" />
+                    <div className="flex items-center gap-2.5 sm:gap-3">
+                      <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl bg-amber-100 text-amber-700 font-bold border border-amber-200 shrink-0">
+                        <Clock className="h-5 w-5 sm:h-6 sm:w-6" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="text-lg font-black text-slate-900">Pending Allocation</h3>
+                          <h3 className="text-base sm:text-lg font-black text-slate-900">Pending Allocation</h3>
                           {allocationFilter === "pending" && allocationSourceFilter === "all" && (
-                            <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500 text-white">Active Filter</span>
+                            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500 text-white">Active</span>
                           )}
                         </div>
-                        <p className="text-xs font-semibold text-slate-500">Awaiting Room/Bed Assignment (Click to filter)</p>
+                        <p className="text-[11px] sm:text-xs font-semibold text-slate-500">Awaiting Room/Bed Assignment</p>
                       </div>
                     </div>
-                    <span className="text-3xl font-black text-amber-600">
+                    <span className="text-2xl sm:text-3xl font-black text-amber-600">
                       {bookings.filter((b) => b.status === "pending").length}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2 pt-2 border-t border-amber-100">
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-2 border-t border-amber-100">
                     <button
                       type="button"
                       onClick={(e) => {
@@ -4357,13 +4357,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                           setAllocationSourceFilter("manual");
                         }
                       }}
-                      className={`rounded-full px-3 py-1 text-xs font-extrabold shadow-2xs transition-all hover:scale-105 active:scale-95 cursor-pointer ${
+                      className={`rounded-full px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-extrabold shadow-2xs transition-all hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap ${
                         allocationFilter === "pending" && allocationSourceFilter === "manual"
                           ? "bg-emerald-600 text-white border border-emerald-700 shadow-sm"
                           : "bg-emerald-100 text-emerald-800 border border-emerald-200 hover:bg-emerald-200"
                       }`}
                     >
-                      Manual Pending: {bookings.filter((b) => b.status === "pending" && b.source === "manual").length}
+                      Manual: {bookings.filter((b) => b.status === "pending" && b.source === "manual").length}
                     </button>
                     <button
                       type="button"
@@ -4377,13 +4377,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                           setAllocationSourceFilter("online");
                         }
                       }}
-                      className={`rounded-full px-3 py-1 text-xs font-extrabold shadow-2xs transition-all hover:scale-105 active:scale-95 cursor-pointer ${
+                      className={`rounded-full px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-extrabold shadow-2xs transition-all hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap ${
                         allocationFilter === "pending" && allocationSourceFilter === "online"
                           ? "bg-indigo-600 text-white border border-indigo-700 shadow-sm"
                           : "bg-indigo-100 text-indigo-800 border border-indigo-200 hover:bg-indigo-200"
                       }`}
                     >
-                      Online Pending: {bookings.filter((b) => b.status === "pending" && b.source === "online").length}
+                      Online: {bookings.filter((b) => b.status === "pending" && b.source === "online").length}
                     </button>
                   </div>
                 </div>
@@ -4398,33 +4398,33 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       setAllocationSourceFilter("all");
                     }
                   }}
-                  className={`rounded-[2rem] border-2 p-6 shadow-sm flex flex-col justify-between space-y-4 cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${
+                  className={`rounded-2xl sm:rounded-[2rem] border-2 p-3.5 sm:p-6 shadow-sm flex flex-col justify-between space-y-4 cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${
                     allocationFilter === "allocated"
                       ? "border-emerald-400 bg-emerald-50/90 ring-2 ring-emerald-400/40 shadow-md"
                       : "border-emerald-200/80 bg-gradient-to-br from-emerald-50/70 via-white to-white hover:border-emerald-300"
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 font-bold border border-emerald-200">
-                        <CheckCircle className="h-6 w-6" />
+                    <div className="flex items-center gap-2.5 sm:gap-3">
+                      <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl bg-emerald-100 text-emerald-700 font-bold border border-emerald-200 shrink-0">
+                        <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="text-lg font-black text-slate-900">Allocated Customers</h3>
+                          <h3 className="text-base sm:text-lg font-black text-slate-900">Allocated Customers</h3>
                           {allocationFilter === "allocated" && allocationSourceFilter === "all" && (
-                            <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-600 text-white">Active Filter</span>
+                            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-600 text-white">Active</span>
                           )}
                         </div>
-                        <p className="text-xs font-semibold text-slate-500">Rooms & Beds Allotted (Click to filter)</p>
+                        <p className="text-[11px] sm:text-xs font-semibold text-slate-500">Rooms & Beds Allotted</p>
                       </div>
                     </div>
-                    <span className="text-3xl font-black text-emerald-600">
+                    <span className="text-2xl sm:text-3xl font-black text-emerald-600">
                       {bookings.filter((b) => b.status === "allocated").length}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2 pt-2 border-t border-emerald-100">
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-2 border-t border-emerald-100">
                     <button
                       type="button"
                       onClick={(e) => {
@@ -4437,13 +4437,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                           setAllocationSourceFilter("manual");
                         }
                       }}
-                      className={`rounded-full px-3 py-1 text-xs font-extrabold shadow-2xs transition-all hover:scale-105 active:scale-95 cursor-pointer ${
+                      className={`rounded-full px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-extrabold shadow-2xs transition-all hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap ${
                         allocationFilter === "allocated" && allocationSourceFilter === "manual"
                           ? "bg-emerald-600 text-white border border-emerald-700 shadow-sm"
                           : "bg-emerald-100 text-emerald-800 border border-emerald-200 hover:bg-emerald-200"
                       }`}
                     >
-                      Manual Allocated: {bookings.filter((b) => b.status === "allocated" && b.source === "manual").length}
+                      Manual: {bookings.filter((b) => b.status === "allocated" && b.source === "manual").length}
                     </button>
                     <button
                       type="button"
@@ -4457,23 +4457,23 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                           setAllocationSourceFilter("online");
                         }
                       }}
-                      className={`rounded-full px-3 py-1 text-xs font-extrabold shadow-2xs transition-all hover:scale-105 active:scale-95 cursor-pointer ${
+                      className={`rounded-full px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-extrabold shadow-2xs transition-all hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap ${
                         allocationFilter === "allocated" && allocationSourceFilter === "online"
                           ? "bg-indigo-600 text-white border border-indigo-700 shadow-sm"
                           : "bg-indigo-100 text-indigo-800 border border-indigo-200 hover:bg-indigo-200"
                       }`}
                     >
-                      Online Allocated: {bookings.filter((b) => b.status === "allocated" && b.source === "online").length}
+                      Online: {bookings.filter((b) => b.status === "allocated" && b.source === "online").length}
                     </button>
                   </div>
                 </div>
               </div>
 
               {/* Filter Toolbar & Directory */}
-              <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm space-y-5">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="rounded-2xl sm:rounded-[2rem] border border-slate-200 bg-white p-3.5 sm:p-6 shadow-sm space-y-4 sm:space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                   {/* Status Tabs */}
-                  <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-100/90 border border-slate-200/80 overflow-x-auto">
+                  <div className="flex items-center gap-1.5 sm:gap-2 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl bg-slate-100/90 border border-slate-200/80 overflow-x-auto scrollbar-none flex-nowrap w-full sm:w-auto">
                     {[
                       { id: "all", label: `All Bookings (${bookings.length})` },
                       { id: "pending", label: `Pending (${bookings.filter((b) => b.status === "pending").length})` },
@@ -4482,7 +4482,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       <button
                         key={tab.id}
                         onClick={() => setAllocationFilter(tab.id as any)}
-                        className={`rounded-xl px-4 py-2 text-xs font-bold transition-all text-center whitespace-nowrap ${allocationFilter === tab.id
+                        className={`flex-1 sm:flex-initial rounded-lg sm:rounded-xl px-2.5 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold transition-all text-center whitespace-nowrap cursor-pointer ${allocationFilter === tab.id
                             ? "bg-white text-brand-green shadow-xs border border-slate-200"
                             : "text-slate-500 hover:text-slate-900"
                           }`}
@@ -4493,13 +4493,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   </div>
 
                   {/* Source Dropdown Filter & Sync */}
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-slate-500">Source:</span>
+                  <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                    <div className="flex items-center gap-1.5 flex-1 sm:flex-initial">
+                      <span className="text-xs font-bold text-slate-500 shrink-0">Source:</span>
                       <select
                         value={allocationSourceFilter}
                         onChange={(e) => setAllocationSourceFilter(e.target.value as any)}
-                        className="rounded-full border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-700 outline-none focus:border-brand-green"
+                        className="rounded-xl sm:rounded-full border border-slate-200 bg-slate-50 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold text-slate-700 outline-none focus:border-brand-green flex-1 sm:flex-initial"
                       >
                         <option value="all">All Sources (Manual + Online)</option>
                         <option value="manual">Manual Admissions Only</option>
@@ -4510,7 +4510,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                     <button
                       onClick={handleManualSync}
                       disabled={isSyncing}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-brand-green hover:bg-brand-gold disabled:bg-slate-300 text-white px-4 py-2 text-xs font-black shadow-sm transition-all cursor-pointer"
+                      className="inline-flex items-center justify-center gap-1.5 rounded-xl sm:rounded-full bg-brand-green hover:bg-brand-gold disabled:bg-slate-300 text-white px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs font-black shadow-sm transition-all cursor-pointer whitespace-nowrap shrink-0"
                     >
                       {isSyncing ? "Syncing..." : "Sync Sheet 🔄"}
                     </button>
@@ -4518,9 +4518,9 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 </div>
 
                 {/* Allocation Customer List */}
-                <div className="space-y-3.5">
+                <div className="space-y-3">
                   {bookings.length === 0 ? (
-                    <div className="p-8 text-center text-slate-400 font-semibold border border-dashed border-slate-200 rounded-3xl">
+                    <div className="p-8 text-center text-slate-400 font-semibold border border-dashed border-slate-200 rounded-2xl sm:rounded-3xl text-xs">
                       No customer bookings found.
                     </div>
                   ) : (
@@ -4541,29 +4541,29 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                           <div
                             key={cust.id}
                             onClick={() => setSelectedHistoryResident(cust)}
-                            className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-slate-50/80 border border-slate-200/70 gap-3 hover:border-slate-300 hover:bg-slate-100/70 transition cursor-pointer active:scale-[0.995]"
+                            className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50/80 border border-slate-200/70 gap-2.5 sm:gap-3 hover:border-slate-300 hover:bg-slate-100/70 transition cursor-pointer active:scale-[0.995]"
                           >
-                            <div className="flex items-center gap-3.5 min-w-0">
-                              <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-green/10 text-brand-green font-black text-sm border border-brand-green/20">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="relative flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-brand-green/10 text-brand-green font-black text-sm border border-brand-green/20">
                                 {cust.name[0]}
                                 <span
-                                  className={`absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-white flex items-center justify-center ${
+                                  className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 sm:h-4 sm:w-4 rounded-full border-2 border-white flex items-center justify-center ${
                                     cust.source === "online" ? "bg-indigo-600" : "bg-emerald-600"
                                   }`}
                                 >
                                   {cust.source === "online" ? (
-                                    <Globe className="h-2.5 w-2.5 text-white" />
+                                    <Globe className="h-2 w-2 sm:h-2.5 sm:w-2.5 text-white" />
                                   ) : (
-                                    <UserCheck className="h-2.5 w-2.5 text-white" />
+                                    <UserCheck className="h-2 w-2 sm:h-2.5 sm:w-2.5 text-white" />
                                   )}
                                 </span>
                               </div>
 
                               <div className="min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <h4 className="text-sm font-black text-slate-900">{cust.name}</h4>
+                                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                                  <h4 className="text-xs sm:text-sm font-black text-slate-900 truncate">{cust.name}</h4>
                                   <span
-                                    className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold ${
+                                    className={`rounded-full px-2 py-0.5 text-[9px] sm:text-[10px] font-extrabold ${
                                       cust.source === "online"
                                         ? "bg-indigo-50 text-indigo-700 border border-indigo-200"
                                         : "bg-emerald-50 text-emerald-700 border border-emerald-200"
@@ -4574,7 +4574,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
                                   {cust.depositAmount !== undefined && (
                                     <span
-                                      className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
+                                      className={`rounded-full px-2 py-0.5 text-[9px] sm:text-[10px] font-extrabold ${
                                         cust.depositStatus === "refunded"
                                           ? "bg-slate-100 text-slate-700 border border-slate-300"
                                           : cust.depositStatus === "paid"
@@ -4586,19 +4586,19 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-xs font-semibold text-slate-500 mt-0.5">
+                                <p className="text-[11px] sm:text-xs font-semibold text-slate-500 mt-0.5 truncate">
                                   {cust.phone} • Registered: {cust.timestamp}
                                 </p>
                               </div>
                             </div>
 
                             {/* Status & Allocation Action Button */}
-                            <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                            <div className="flex flex-wrap items-center gap-1.5 mt-1 sm:mt-0 w-full sm:w-auto justify-start sm:justify-end">
                               {isAllocated ? (
-                                <div className="flex items-center gap-2">
-                                  <span className="rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 px-3 py-1 text-xs font-extrabold flex items-center gap-1">
-                                    <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
-                                    {cust.allocatedBuilding} • Room {cust.allocatedRoom} ({cust.allocatedBed})
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  <span className="rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 px-2.5 py-1 text-[11px] sm:text-xs font-extrabold flex items-center gap-1">
+                                    <CheckCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-600 shrink-0" />
+                                    <span>{cust.allocatedBuilding} • Room {cust.allocatedRoom} ({cust.allocatedBed})</span>
                                   </span>
                                   <button
                                     onClick={(e) => {
@@ -4609,7 +4609,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                                       setBmsDepositStatus(cust.depositStatus === "pending" ? "pending" : "paid");
                                       setBmsRentStartDate(cust.rentStartDate || new Date().toISOString().substring(0, 10));
                                     }}
-                                    className="rounded-full bg-white border border-slate-200 px-3 py-1 text-xs font-bold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+                                    className="rounded-full bg-white border border-slate-200 px-2.5 py-1 text-[11px] sm:text-xs font-bold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
                                   >
                                     Change
                                   </button>
@@ -4622,16 +4622,16 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                                       setCheckoutRefundMethod("cash");
                                       setCheckoutTxnId("");
                                     }}
-                                    className="rounded-full bg-rose-50 text-rose-700 border border-rose-200 px-3 py-1 text-xs font-black hover:bg-rose-600 hover:text-white transition cursor-pointer flex items-center gap-1 shadow-2xs"
+                                    className="rounded-full bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-1 text-[11px] sm:text-xs font-black hover:bg-rose-600 hover:text-white transition cursor-pointer flex items-center gap-1 shadow-2xs"
                                   >
                                     Check Out & Refund 🚪💸
                                   </button>
                                   <button
                                     title="Deallocate Room"
                                     onClick={(e) => handleDeallocateCustomer(cust.id, cust.name, e)}
-                                    className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition cursor-pointer"
+                                    className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition cursor-pointer shrink-0"
                                   >
-                                    <RotateCcw className="h-3.5 w-3.5" />
+                                    <RotateCcw className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                                   </button>
                                 </div>
                               ) : (
