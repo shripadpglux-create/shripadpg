@@ -2,6 +2,32 @@
 
 ---
 
+### 📍 Version 9.18 — Admin & Staff Settings Route & Alias Routing Resolution ⚙️🛣️✅
+
+```mermaid
+flowchart TD
+    subgraph RouteArchitecture ["TanStack Router Comprehensive Admin & Staff Route Matrix"]
+        BrowserURL["Client Browser Request (e.g. /admin/settings, /admin/rooms, /admin/bookings)"]
+
+        BrowserURL --> RouteTree["TanStack Start Route Engine"]
+        RouteTree --> R1["/admin/settings ➔ AdminDashboard (tab='Settings')"]
+        RouteTree --> R2["/admin/rooms ➔ AdminDashboard (tab='Buildings')"]
+        RouteTree --> R3["/admin/bookings ➔ AdminDashboard (tab='Customers')"]
+        RouteTree --> R4["/admin/residents ➔ AdminDashboard (tab='Customers')"]
+        RouteTree --> R5["/admin/finance ➔ AdminDashboard (tab='Revenue')"]
+        RouteTree --> R6["/staff/settings ➔ AdminDashboard (tab='Settings', isStaffMode=true)"]
+
+        R1 --> StateMount["Seamless Tab Hydration & Instant Settings & Sync View Rendering"]
+        R2 --> StateMount
+        R3 --> StateMount
+        R4 --> StateMount
+        R5 --> StateMount
+        R6 --> StateMount
+    end
+```
+
+---
+
 ### 📍 Version 9.17 — Granular Per-Room Bed Decider (Up to 8 Beds) for Existing Buildings 🏢✏️🛏️
 
 ```mermaid
