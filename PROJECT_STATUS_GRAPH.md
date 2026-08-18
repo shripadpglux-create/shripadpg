@@ -2,6 +2,35 @@
 
 ---
 
+### 📍 Version 9.15 — Comprehensive Room Bed Capacity Decider & Manager Architecture 🛏️⚡🏢
+
+```mermaid
+flowchart TD
+    subgraph BedCapacityManagement ["3-Way Admin Bed Decision & Management System"]
+        Method1["1. Building Creation Level (Add New PG Building):
+        • Default Bed Capacity Selector: 1 Bed (Single) | 2 Beds (Double) | 3 Beds (Triple) | 4 Beds (4-Share)
+        • Dynamic live bed calculator: (Rooms × Beds = Total Property Beds)
+        • Automatic initialization of customRoomSharing for all rooms"]
+
+        Method2["2. Infrastructure & Buildings Tab Level:
+        • Floor & Room Layout Accordion with interactive Bed Badges on every room chip
+        • 'Manage Beds' button opening Dedicated Bed Configuration Modal
+        • Quick Bulk Actions: 'Set Floor to X Beds' / 'Set Building to X Beds'
+        • 1-Click interactive chips (1, 2, 3, 4, 5, 6 Beds) per room"]
+
+        Method3["3. Bed Allocation Matrix Level (BMS Grid):
+        • Step 3 Room Capacity Switcher (1 to 10 Beds) per room
+        • Instant live Bed A, B, C, D slot generator"]
+
+        Method1 --> StoragePipeline["localStorage (shripad_custom_room_sharing) & State Sync"]
+        Method2 --> StoragePipeline
+        Method3 --> StoragePipeline
+        StoragePipeline --> LiveKPIs["Instant Overview Dashboard & Occupancy Metrics Recalculation"]
+    end
+```
+
+---
+
 ### 📍 Version 9.14 — Occupied & Available Bed Occupancy Pipeline Synchronization 🛏️📊⚡
 
 ```mermaid

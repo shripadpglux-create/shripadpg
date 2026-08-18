@@ -1150,7 +1150,16 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const [newBuildingName, setNewBuildingName] = useState("");
   const [newBuildingFloors, setNewBuildingFloors] = useState<number>(4);
   const [newBuildingRoomsPerFloor, setNewBuildingRoomsPerFloor] = useState<number>(4);
+  const [newBuildingDefaultBeds, setNewBuildingDefaultBeds] = useState<number>(2);
   const [newFloorRoomCounts, setNewFloorRoomCounts] = useState<Record<number, number>>({});
+
+  // Dedicated Room & Bed Configuration Manager Modal State
+  const [bedConfigModal, setBedConfigModal] = useState<{
+    isOpen: boolean;
+    buildingName: string;
+    selectedFloor?: number;
+    selectedRoom?: string;
+  } | null>(null);
 
   // Helper functions for floor-wise custom room counts & ground floor exclusion
   const isGroundFloorExcluded = (
@@ -1200,6 +1209,49 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     return sum;
   };
 
+  // Bed Capacity Modifier Handlers
+  const setRoomBedCapacity = (bldName: string, roomNo: string, bedsCount: number) => {
+    const cleanRoom = (roomNo || "").toString().replace(/^Room\s+/i, "").trim();
+    const updated = {
+      ...customRoomSharing,
+      [`${bldName}_${cleanRoom}`]: bedsCount,
+    };
+    setCustomRoomSharing(updated);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("shripad_custom_room_sharing", JSON.stringify(updated));
+    }
+  };
+
+  const setFloorBedCapacity = (bldName: string, floorIdx: number, bedsCount: number) => {
+    const bldObj = buildingsList.find((b) => b.name === bldName) || { floors: 4, roomsPerFloor: 4 };
+    const rCount = getFloorRoomCount(bldObj, floorIdx);
+    const updated = { ...customRoomSharing };
+    for (let r = 1; r <= rCount; r++) {
+      const rNo = floorIdx === 0 ? `G${r.toString().padStart(2, "0")}` : `${floorIdx}${r.toString().padStart(2, "0")}`;
+      updated[`${bldName}_${rNo}`] = bedsCount;
+    }
+    setCustomRoomSharing(updated);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("shripad_custom_room_sharing", JSON.stringify(updated));
+    }
+  };
+
+  const setBuildingAllBedCapacity = (bldName: string, bedsCount: number) => {
+    const bldObj = buildingsList.find((b) => b.name === bldName) || { floors: 4, roomsPerFloor: 4 };
+    const updated = { ...customRoomSharing };
+    for (let f = 0; f < bldObj.floors; f++) {
+      const rCount = getFloorRoomCount(bldObj, f);
+      for (let r = 1; r <= rCount; r++) {
+        const rNo = f === 0 ? `G${r.toString().padStart(2, "0")}` : `${f}${r.toString().padStart(2, "0")}`;
+        updated[`${bldName}_${rNo}`] = bedsCount;
+      }
+    }
+    setCustomRoomSharing(updated);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("shripad_custom_room_sharing", JSON.stringify(updated));
+    }
+  };
+
   const handleAddBuilding = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newBuildingName.trim()) {
@@ -1240,11 +1292,27 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
         });
       }
 
+      // Initialize default room bed sharing for this new building
+      const updatedSharing = { ...customRoomSharing };
+      const bldObj = { floors: Number(newBuildingFloors) || 1, roomsPerFloor: Number(newBuildingRoomsPerFloor) || 1, floorRoomCounts: { ...newFloorRoomCounts } };
+      for (let f = 0; f < bldObj.floors; f++) {
+        const rCount = getFloorRoomCount(bldObj, f);
+        for (let r = 1; r <= rCount; r++) {
+          const rNo = f === 0 ? `G${r.toString().padStart(2, "0")}` : `${f}${r.toString().padStart(2, "0")}`;
+          updatedSharing[`${formatted}_${rNo}`] = newBuildingDefaultBeds;
+        }
+      }
+      setCustomRoomSharing(updatedSharing);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("shripad_custom_room_sharing", JSON.stringify(updatedSharing));
+      }
+
       setBmsBuilding(formatted);
       setNewCustomerBuilding(formatted);
       setNewBuildingName("");
       setNewBuildingFloors(4);
       setNewBuildingRoomsPerFloor(4);
+      setNewBuildingDefaultBeds(2);
       setNewFloorRoomCounts({});
       setIsAddBuildingModalOpen(false);
     }
@@ -4389,18 +4457,35 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                               const roomStart = flIdx === 0 ? `G01` : `${flIdx}01`;
                               const roomEnd = flIdx === 0 ? `G${flCount.toString().padStart(2, "0")}` : `${flIdx}${flCount.toString().padStart(2, "0")}`;
                               return (
-                                <div key={flIdx} className="p-2.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-1">
+                                <div key={flIdx} className="p-2.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-2">
                                   <div className="flex items-center justify-between font-bold text-slate-900">
                                     <span>📍 {flName} ({flCount} {flCount === 1 ? "Room" : "Rooms"})</span>
-                                    <span className="text-[11px] font-extrabold text-brand-green">
+                                    <span className="text-[11px] font-extrabold text-[#00022E]">
                                       {flCount === 0 ? "No PG Rooms" : flCount === 1 ? `Room ${roomStart}` : `Rooms ${roomStart} – ${roomEnd}`}
                                     </span>
                                   </div>
-                                  <p className="text-[10px] text-slate-500 font-semibold truncate">
-                                    {Array.from({ length: Math.min(flCount, 6) }, (_, rIdx) => 
-                                      flIdx === 0 ? `G${(rIdx + 1).toString().padStart(2, "0")}` : `${flIdx}${(rIdx + 1).toString().padStart(2, "0")}`
-                                    ).join(", ")}{flCount > 6 ? `... +${flCount - 6} more` : ""}
-                                  </p>
+                                  
+                                  {/* Interactive Room Bed Capacity Chips */}
+                                  <div className="flex flex-wrap gap-1.5 pt-0.5">
+                                    {Array.from({ length: flCount }, (_, rIdx) => {
+                                      const rNo = flIdx === 0 ? `G${(rIdx + 1).toString().padStart(2, "0")}` : `${flIdx}${(rIdx + 1).toString().padStart(2, "0")}`;
+                                      const rmState = getRoomBedState(b.name, rNo);
+                                      return (
+                                        <button
+                                          key={rNo}
+                                          type="button"
+                                          onClick={() => setBedConfigModal({ isOpen: true, buildingName: b.name, selectedFloor: flIdx, selectedRoom: rNo })}
+                                          className="inline-flex items-center gap-1.5 text-[10px] font-extrabold px-2 py-1 rounded-lg bg-slate-50 hover:bg-[#F0F4FF] hover:border-blue-300 text-slate-800 border border-slate-200 transition cursor-pointer"
+                                          title={`Room ${rNo}: ${rmState.capacity} Beds (${rmState.occupiedCount} Occupied, ${rmState.freeCount} Free) - Click to customize bed count`}
+                                        >
+                                          <span>Room {rNo}</span>
+                                          <span className="bg-white px-1.5 py-0.2 rounded font-black text-[#00022E] border border-blue-200/80 shadow-2xs">
+                                            🛏️ {rmState.capacity} {rmState.capacity === 1 ? "Bed" : "Beds"}
+                                          </span>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
                                 </div>
                               );
                             })}
@@ -4409,20 +4494,21 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       </div>
 
                       {/* Revenue & Action Footer */}
-                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-bold">
+                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-bold gap-2 flex-wrap">
                         <div>
                           <span className="text-[10px] uppercase text-slate-400 block font-extrabold">Collected Revenue</span>
                           <span className="text-sm font-black text-slate-900">₹{bldRevenue.toLocaleString("en-IN")}</span>
                         </div>
-                        <button
-                          onClick={() => {
-                            setBmsBuilding(b.name);
-                            handleTabClick("Allocation");
-                          }}
-                          className="inline-flex items-center gap-1 text-xs font-extrabold text-brand-green hover:underline cursor-pointer"
-                        >
-                          Manage Beds →
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setBedConfigModal({ isOpen: true, buildingName: b.name })}
+                            className="inline-flex items-center gap-1 text-xs font-black px-3 py-1.5 rounded-xl bg-[#00022E] text-white hover:bg-[#00044A] transition shadow-2xs cursor-pointer active:scale-95"
+                          >
+                            <Bed className="h-3.5 w-3.5" />
+                            <span>Manage Beds ({stats.totalBeds})</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
@@ -5972,6 +6058,45 @@ function doPost(e) {
                     className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 text-slate-800 outline-none focus:border-brand-green focus:bg-white transition"
                   />
                 </div>
+              </div>
+
+              {/* DEFAULT ROOM BED SHARING SELECTOR */}
+              <div className="space-y-2 p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200/80">
+                <div className="flex items-center justify-between text-slate-700">
+                  <label className="font-extrabold text-xs flex items-center gap-1.5 text-indigo-950">
+                    <Bed className="h-4 w-4 text-indigo-600" /> Default Bed Capacity per Room *
+                  </label>
+                  <span className="text-[11px] font-black text-[#00022E] bg-[#F0F4FF] border border-blue-200 px-2.5 py-0.5 rounded-full shadow-2xs">
+                    {getTotalRoomsForBuilding({ floors: newBuildingFloors, roomsPerFloor: newBuildingRoomsPerFloor, floorRoomCounts: newFloorRoomCounts }) * newBuildingDefaultBeds} Total Beds
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { beds: 1, label: "1 Bed", sub: "Single Room" },
+                    { beds: 2, label: "2 Beds", sub: "Double Sharing" },
+                    { beds: 3, label: "3 Beds", sub: "Triple Sharing" },
+                    { beds: 4, label: "4 Beds", sub: "Four Sharing" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.beds}
+                      type="button"
+                      onClick={() => setNewBuildingDefaultBeds(opt.beds)}
+                      className={`p-2.5 rounded-2xl border text-center transition-all cursor-pointer ${
+                        newBuildingDefaultBeds === opt.beds
+                          ? "bg-[#00022E] text-white border-[#00022E] shadow-md scale-[1.02]"
+                          : "bg-white text-slate-700 border-indigo-100 hover:bg-indigo-50 hover:border-indigo-200"
+                      }`}
+                    >
+                      <span className="block text-xs font-black">🛏️ {opt.label}</span>
+                      <span className={`block text-[9px] font-semibold mt-0.5 ${newBuildingDefaultBeds === opt.beds ? "text-indigo-200" : "text-slate-400"}`}>
+                        {opt.sub}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[10px] text-indigo-700 font-medium pt-0.5">
+                  💡 Tip: You can also adjust beds for any individual room anytime from the Building card or Bed Matrix.
+                </p>
               </div>
 
               {/* LIVE ACCORDION FLOOR & ROOM PREVIEW WITH PER-FLOOR CUSTOMIZER */}
@@ -8442,6 +8567,227 @@ function doPost(e) {
                 </div>
               );
             })()}
+          </div>
+        </div>
+      )}
+
+      {/* ROOM & BED CAPACITY CONFIGURATION MANAGER MODAL */}
+      {bedConfigModal && bedConfigModal.isOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in"
+          onClick={() => setBedConfigModal(null)}
+        >
+          <div
+            className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] bg-white p-5 sm:p-7 shadow-2xl border border-slate-200/90 space-y-5 animate-in zoom-in-95"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#F0F4FF] text-[#00022E] border border-blue-200">
+                  <Bed className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg sm:text-xl font-black text-slate-900 flex items-center gap-2">
+                    Room Bed Capacity Manager 🛏️⚡
+                  </h2>
+                  <p className="text-xs font-semibold text-slate-500">
+                    Decide exactly how many beds (1 to 10) exist in each room of your properties
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setBedConfigModal(null)}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Building Selection & Stats Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black text-slate-700 uppercase tracking-wider">Select PG:</span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {scopedBuildingsList.map((bld) => (
+                    <button
+                      key={bld.name}
+                      type="button"
+                      onClick={() => setBedConfigModal({ ...bedConfigModal, buildingName: bld.name })}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
+                        bedConfigModal.buildingName === bld.name
+                          ? "bg-[#00022E] text-white shadow-md"
+                          : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"
+                      }`}
+                    >
+                      🏢 {bld.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {(() => {
+                const curBld = scopedBuildingsList.find((b) => b.name === bedConfigModal.buildingName) || scopedBuildingsList[0];
+                if (!curBld) return null;
+                const stats = getBuildingOccupancyDetails(curBld.name);
+                return (
+                  <div className="flex items-center gap-2 text-xs font-extrabold shrink-0">
+                    <span className="bg-white border border-slate-200 px-2.5 py-1 rounded-xl text-slate-700">
+                      {stats.totalRooms} Rooms
+                    </span>
+                    <span className="bg-[#F0F4FF] border border-blue-200 px-2.5 py-1 rounded-xl text-[#00022E]">
+                      🛏️ {stats.totalBeds} Total Beds
+                    </span>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Global Bulk Actions */}
+            {(() => {
+              const curBld = scopedBuildingsList.find((b) => b.name === bedConfigModal.buildingName) || scopedBuildingsList[0];
+              if (!curBld) return null;
+
+              return (
+                <div className="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200/70 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-indigo-950 flex items-center gap-1.5">
+                      <Sparkles className="h-4 w-4 text-indigo-600" /> Quick Bulk Set for Entire {curBld.name}:
+                    </span>
+                    <span className="text-[10px] text-indigo-700 font-semibold">Applies to all rooms</span>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {[
+                      { cap: 1, label: "All 1-Bed (Single)" },
+                      { cap: 2, label: "All 2-Beds (Double)" },
+                      { cap: 3, label: "All 3-Beds (Triple)" },
+                      { cap: 4, label: "All 4-Beds (Four-Sharing)" },
+                    ].map((opt) => (
+                      <button
+                        key={opt.cap}
+                        type="button"
+                        onClick={() => setBuildingAllBedCapacity(curBld.name, opt.cap)}
+                        className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-indigo-900 hover:bg-indigo-600 hover:text-white border border-indigo-200 transition shadow-2xs active:scale-95 cursor-pointer"
+                      >
+                        ⚡ {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Floor by Floor Room Bed Configuration Grid */}
+            {(() => {
+              const curBld = scopedBuildingsList.find((b) => b.name === bedConfigModal.buildingName) || scopedBuildingsList[0];
+              if (!curBld) return null;
+
+              return (
+                <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-1">
+                  {getBuildingFloorIndices(curBld)
+                    .filter((flIdx) => getFloorRoomCount(curBld, flIdx) > 0)
+                    .map((flIdx) => {
+                      const flName = flIdx === 0 ? "Ground Floor" : flIdx === 1 ? "1st Floor" : flIdx === 2 ? "2nd Floor" : flIdx === 3 ? "3rd Floor" : `${flIdx}th Floor`;
+                      const flRoomCount = getFloorRoomCount(curBld, flIdx);
+
+                      return (
+                        <div key={flIdx} className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-3">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-black text-slate-800">🏢 {flName}</span>
+                              <span className="text-[11px] font-bold text-slate-500">({flRoomCount} Rooms)</span>
+                            </div>
+
+                            {/* Floor Bulk Action Buttons */}
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-[10px] font-extrabold text-slate-500 uppercase">Set Floor to:</span>
+                              {[1, 2, 3, 4].map((c) => (
+                                <button
+                                  key={c}
+                                  type="button"
+                                  onClick={() => setFloorBedCapacity(curBld.name, flIdx, c)}
+                                  className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-white text-slate-700 hover:bg-[#00022E] hover:text-white border border-slate-200 transition cursor-pointer"
+                                >
+                                  {c} {c === 1 ? "Bed" : "Beds"}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Individual Rooms Grid on this floor */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                            {Array.from({ length: flRoomCount }, (_, rIdx) => {
+                              const rNo = flIdx === 0 ? `G${(rIdx + 1).toString().padStart(2, "0")}` : `${flIdx}${(rIdx + 1).toString().padStart(2, "0")}`;
+                              const rmState = getRoomBedState(curBld.name, rNo);
+                              const isTargetRoom = bedConfigModal.selectedRoom === rNo;
+
+                              return (
+                                <div
+                                  key={rNo}
+                                  className={`p-3 rounded-xl border transition-all space-y-2 ${
+                                    isTargetRoom
+                                      ? "bg-[#F0F4FF] border-[#00022E] ring-2 ring-[#00022E]/20 shadow-md"
+                                      : "bg-white border-slate-200/90 shadow-2xs hover:border-slate-300"
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="font-black text-xs text-slate-900">Room {rNo}</span>
+                                      <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
+                                        rmState.isVacant ? "bg-[#F0F4FF] text-[#00022E]" : rmState.isFull ? "bg-rose-100 text-rose-800" : "bg-amber-100 text-amber-800"
+                                      }`}>
+                                        {rmState.occupiedCount}/{rmState.capacity} Occupied
+                                      </span>
+                                    </div>
+                                    <span className="text-[11px] font-black text-[#00022E]">
+                                      🛏️ {rmState.capacity} Beds
+                                    </span>
+                                  </div>
+
+                                  {/* 1 to 6 Bed Selector Chips */}
+                                  <div className="flex items-center gap-1 flex-wrap pt-0.5">
+                                    {[1, 2, 3, 4, 5, 6].map((bCount) => {
+                                      const isCur = rmState.capacity === bCount;
+                                      return (
+                                        <button
+                                          key={bCount}
+                                          type="button"
+                                          onClick={() => setRoomBedCapacity(curBld.name, rNo, bCount)}
+                                          className={`flex-1 min-w-[28px] py-1 text-center rounded-lg text-[10px] font-black transition-all cursor-pointer ${
+                                            isCur
+                                              ? "bg-[#00022E] text-white shadow-xs scale-105"
+                                              : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/80"
+                                          }`}
+                                          title={`Set Room ${rNo} to ${bCount} Beds`}
+                                        >
+                                          {bCount}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              );
+            })()}
+
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+              <span className="text-[11px] text-slate-500 font-semibold">
+                Changes save instantly to live property matrix & allocation pipelines.
+              </span>
+              <button
+                type="button"
+                onClick={() => setBedConfigModal(null)}
+                className="px-6 py-2.5 rounded-full bg-[#00022E] text-white text-xs font-black shadow-md hover:bg-[#00044A] transition active:scale-95 cursor-pointer"
+              >
+                Done
+              </button>
+            </div>
           </div>
         </div>
       )}
