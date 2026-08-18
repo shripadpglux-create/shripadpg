@@ -1151,6 +1151,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const [newBuildingFloors, setNewBuildingFloors] = useState<number>(4);
   const [newBuildingRoomsPerFloor, setNewBuildingRoomsPerFloor] = useState<number>(4);
   const [newBuildingDefaultBeds, setNewBuildingDefaultBeds] = useState<number>(2);
+  const [newBuildingRoomBeds, setNewBuildingRoomBeds] = useState<Record<string, number>>({});
+  const [expandedFloorBeds, setExpandedFloorBeds] = useState<Record<number, boolean>>({});
   const [newFloorRoomCounts, setNewFloorRoomCounts] = useState<Record<number, number>>({});
 
   // Dedicated Room & Bed Configuration Manager Modal State
@@ -1207,6 +1209,26 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       sum += getFloorRoomCount(b, f);
     }
     return sum;
+  };
+
+  // Helper to compute total beds for the new building with granular room-specific overrides
+  const getTotalBedsForNewBuilding = () => {
+    let total = 0;
+    const bldObj = {
+      floors: Number(newBuildingFloors) || 1,
+      roomsPerFloor: Number(newBuildingRoomsPerFloor) || 1,
+      floorRoomCounts: newFloorRoomCounts,
+    };
+    const indices = getBuildingFloorIndices(bldObj);
+    for (const f of indices) {
+      const rCount = getFloorRoomCount(bldObj, f);
+      for (let r = 1; r <= rCount; r++) {
+        const rNo = f === 0 ? `G${r.toString().padStart(2, "0")}` : `${f}${r.toString().padStart(2, "0")}`;
+        const bedCount = newBuildingRoomBeds[rNo] !== undefined ? newBuildingRoomBeds[rNo] : (newBuildingDefaultBeds || 2);
+        total += bedCount;
+      }
+    }
+    return total;
   };
 
   // Bed Capacity Modifier Handlers
@@ -1292,14 +1314,15 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
         });
       }
 
-      // Initialize default room bed sharing for this new building
+      // Initialize room bed sharing for this new building with custom per-room overrides
       const updatedSharing = { ...customRoomSharing };
       const bldObj = { floors: Number(newBuildingFloors) || 1, roomsPerFloor: Number(newBuildingRoomsPerFloor) || 1, floorRoomCounts: { ...newFloorRoomCounts } };
       for (let f = 0; f < bldObj.floors; f++) {
         const rCount = getFloorRoomCount(bldObj, f);
         for (let r = 1; r <= rCount; r++) {
           const rNo = f === 0 ? `G${r.toString().padStart(2, "0")}` : `${f}${r.toString().padStart(2, "0")}`;
-          updatedSharing[`${formatted}_${rNo}`] = newBuildingDefaultBeds;
+          const customBeds = newBuildingRoomBeds[rNo] !== undefined ? newBuildingRoomBeds[rNo] : (newBuildingDefaultBeds || 2);
+          updatedSharing[`${formatted}_${rNo}`] = customBeds;
         }
       }
       setCustomRoomSharing(updatedSharing);
@@ -1313,6 +1336,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       setNewBuildingFloors(4);
       setNewBuildingRoomsPerFloor(4);
       setNewBuildingDefaultBeds(2);
+      setNewBuildingRoomBeds({});
+      setExpandedFloorBeds({});
       setNewFloorRoomCounts({});
       setIsAddBuildingModalOpen(false);
     }
@@ -6099,29 +6124,35 @@ function doPost(e) {
                 </p>
               </div>
 
-              {/* LIVE ACCORDION FLOOR & ROOM PREVIEW WITH PER-FLOOR CUSTOMIZER */}
+              {/* LIVE ACCORDION FLOOR & ROOM PREVIEW WITH PER-FLOOR & PER-ROOM BED CUSTOMIZER */}
               <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2.5 text-xs">
                 <div className="flex items-center justify-between font-extrabold text-slate-700">
-                  <span className="flex items-center gap-1.5 text-brand-green">
-                    <Layers className="h-4 w-4" /> Live Floor & Room Customizer
+                  <span className="flex items-center gap-1.5 text-[#00022E]">
+                    <Layers className="h-4 w-4" /> Live Floor & Room Bed Customizer
                   </span>
-                  <span className="text-[11px] font-extrabold text-[#00022E] bg-[#F0F4FF]/70 border border-blue-200 px-2.5 py-0.5 rounded-full">
-                    {getTotalRoomsForBuilding({ floors: newBuildingFloors, roomsPerFloor: newBuildingRoomsPerFloor, floorRoomCounts: newFloorRoomCounts })} Total PG Rooms
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[11px] font-extrabold text-slate-700 bg-white border border-slate-200 px-2.5 py-0.5 rounded-full shadow-2xs">
+                      {getTotalRoomsForBuilding({ floors: newBuildingFloors, roomsPerFloor: newBuildingRoomsPerFloor, floorRoomCounts: newFloorRoomCounts })} Rooms
+                    </span>
+                    <span className="text-[11px] font-black text-[#00022E] bg-[#F0F4FF] border border-blue-200 px-2.5 py-0.5 rounded-full shadow-2xs">
+                      🛏️ {getTotalBedsForNewBuilding()} Total Beds
+                    </span>
+                  </div>
                 </div>
                 <p className="text-[11px] text-slate-500 font-medium">
-                  Adjust PG rooms for each floor (e.g., set Ground Floor to 1 room if rest is personal/office use):
+                  Customize rooms per floor, or click <strong className="text-slate-700">"Customize Beds"</strong> to configure exact beds (1 to 8) for each room:
                 </p>
 
-                <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                <div className="max-h-64 overflow-y-auto space-y-2.5 pr-1">
                   {getBuildingFloorIndices({ floors: newBuildingFloors, roomsPerFloor: newBuildingRoomsPerFloor, floorRoomCounts: newFloorRoomCounts }).map((flIdx) => {
                     const flName = flIdx === 0 ? "Ground Floor" : flIdx === 1 ? "1st Floor" : flIdx === 2 ? "2nd Floor" : flIdx === 3 ? "3rd Floor" : `${flIdx}th Floor`;
                     const currentRooms = newFloorRoomCounts[flIdx] !== undefined ? newFloorRoomCounts[flIdx] : newBuildingRoomsPerFloor;
                     const startRoom = flIdx === 0 ? `G01` : `${flIdx}01`;
                     const endRoom = flIdx === 0 ? `G${currentRooms.toString().padStart(2, "0")}` : `${flIdx}${currentRooms.toString().padStart(2, "0")}`;
+                    const isBedsExpanded = !!expandedFloorBeds[flIdx];
 
                     return (
-                      <div key={flIdx} className={`p-3 rounded-xl border transition-all space-y-1.5 shadow-2xs ${currentRooms === 0 ? "bg-amber-50/60 border-amber-200" : "bg-white border-slate-200/80"}`}>
+                      <div key={flIdx} className={`p-3 rounded-2xl border transition-all space-y-2 shadow-2xs ${currentRooms === 0 ? "bg-amber-50/60 border-amber-200" : "bg-white border-slate-200/80"}`}>
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-1.5 min-w-0">
                             <span className="font-bold text-slate-800 text-xs truncate">🏢 {flName}</span>
@@ -6149,31 +6180,110 @@ function doPost(e) {
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-between gap-2 pt-0.5">
-                          <span className={`text-[10px] font-extrabold truncate ${currentRooms === 0 ? "text-amber-800" : "text-brand-green"}`}>
+                        <div className="flex items-center justify-between gap-2 pt-0.5 flex-wrap">
+                          <span className={`text-[10px] font-extrabold truncate ${currentRooms === 0 ? "text-amber-800" : "text-[#00022E]"}`}>
                             {currentRooms === 0 ? "🚫 0 Rooms (Parking / Reception)" : currentRooms === 1 ? `Room ${startRoom}` : `Rooms ${startRoom} – ${endRoom}`}
                           </span>
-                          {flIdx === 0 && (
-                            currentRooms > 0 ? (
+
+                          <div className="flex items-center gap-1.5">
+                            {currentRooms > 0 && (
                               <button
                                 type="button"
-                                onClick={() => setNewFloorRoomCounts((prev) => ({ ...prev, 0: 0 }))}
-                                className="text-[10px] font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 px-2 py-0.5 rounded-lg border border-rose-200 transition cursor-pointer shrink-0"
-                                title="Set Ground Floor to 0 Rooms if used for Parking or Reception"
+                                onClick={() => setExpandedFloorBeds((prev) => ({ ...prev, [flIdx]: !prev[flIdx] }))}
+                                className="text-[10px] font-extrabold text-[#00022E] bg-[#F0F4FF] hover:bg-blue-100 px-2.5 py-1 rounded-lg border border-blue-200 transition cursor-pointer flex items-center gap-1"
                               >
-                                Exclude GF (0 Rooms)
+                                <Bed className="h-3 w-3" />
+                                <span>{isBedsExpanded ? "Hide Room Beds ▲" : "Customize Room Beds ▼"}</span>
                               </button>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => setNewFloorRoomCounts((prev) => ({ ...prev, 0: newBuildingRoomsPerFloor || 4 }))}
-                                className="text-[10px] font-bold text-[#00022E] bg-[#F0F4FF] hover:bg-[#F0F4FF] px-2 py-0.5 rounded-lg border border-blue-200 transition cursor-pointer shrink-0"
-                              >
-                                Restore GF Rooms
-                              </button>
-                            )
-                          )}
+                            )}
+
+                            {flIdx === 0 && (
+                              currentRooms > 0 ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setNewFloorRoomCounts((prev) => ({ ...prev, 0: 0 }))}
+                                  className="text-[10px] font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 px-2 py-0.5 rounded-lg border border-rose-200 transition cursor-pointer shrink-0"
+                                  title="Set Ground Floor to 0 Rooms if used for Parking or Reception"
+                                >
+                                  Exclude GF (0 Rooms)
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => setNewFloorRoomCounts((prev) => ({ ...prev, 0: newBuildingRoomsPerFloor || 4 }))}
+                                  className="text-[10px] font-bold text-[#00022E] bg-[#F0F4FF] hover:bg-[#F0F4FF] px-2 py-0.5 rounded-lg border border-blue-200 transition cursor-pointer shrink-0"
+                                >
+                                  Restore GF Rooms
+                                </button>
+                              )
+                            )}
+                          </div>
                         </div>
+
+                        {/* Granular Per-Room Bed Decider Grid for this Floor (Max 8 Beds) */}
+                        {isBedsExpanded && currentRooms > 0 && (
+                          <div className="pt-2 border-t border-slate-100 space-y-2.5 bg-slate-50/70 p-2.5 rounded-xl animate-in fade-in">
+                            <div className="flex items-center justify-between flex-wrap gap-1">
+                              <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider">
+                                Set Beds per Room (Max 8 Beds):
+                              </span>
+                              <div className="flex items-center gap-1">
+                                <span className="text-[9px] text-slate-500 font-semibold">Set Floor:</span>
+                                {[1, 2, 3, 4, 5, 6, 7, 8].map((bNum) => (
+                                  <button
+                                    key={bNum}
+                                    type="button"
+                                    onClick={() => {
+                                      const updated = { ...newBuildingRoomBeds };
+                                      for (let r = 1; r <= currentRooms; r++) {
+                                        const rNo = flIdx === 0 ? `G${r.toString().padStart(2, "0")}` : `${flIdx}${r.toString().padStart(2, "0")}`;
+                                        updated[rNo] = bNum;
+                                      }
+                                      setNewBuildingRoomBeds(updated);
+                                    }}
+                                    className="px-1.5 py-0.5 rounded bg-white hover:bg-[#00022E] hover:text-white border border-slate-200 text-[9px] font-black text-slate-700 transition cursor-pointer"
+                                    title={`Set all rooms on ${flName} to ${bNum} beds`}
+                                  >
+                                    {bNum}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {Array.from({ length: currentRooms }, (_, rIdx) => {
+                                const rNo = flIdx === 0 ? `G${(rIdx + 1).toString().padStart(2, "0")}` : `${flIdx}${(rIdx + 1).toString().padStart(2, "0")}`;
+                                const roomBedVal = newBuildingRoomBeds[rNo] !== undefined ? newBuildingRoomBeds[rNo] : (newBuildingDefaultBeds || 2);
+
+                                return (
+                                  <div key={rNo} className="p-2 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center justify-between gap-2">
+                                    <div className="min-w-0">
+                                      <span className="font-extrabold text-[11px] text-slate-900 block truncate">Room {rNo}</span>
+                                      <span className="text-[9px] font-bold text-[#00022E]">🛏️ {roomBedVal} {roomBedVal === 1 ? "Bed" : "Beds"}</span>
+                                    </div>
+                                    <div className="flex items-center gap-0.5">
+                                      {[1, 2, 3, 4, 5, 6, 7, 8].map((bCount) => (
+                                        <button
+                                          key={bCount}
+                                          type="button"
+                                          onClick={() => setNewBuildingRoomBeds((prev) => ({ ...prev, [rNo]: bCount }))}
+                                          className={`h-6 w-6 rounded-md text-[10px] font-black flex items-center justify-center transition cursor-pointer ${
+                                            roomBedVal === bCount
+                                              ? "bg-[#00022E] text-white shadow-xs scale-105"
+                                              : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/80"
+                                          }`}
+                                          title={`Set Room ${rNo} to ${bCount} beds`}
+                                        >
+                                          {bCount}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -8656,20 +8766,24 @@ function doPost(e) {
                     </span>
                     <span className="text-[10px] text-indigo-700 font-semibold">Applies to all rooms</span>
                   </div>
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     {[
-                      { cap: 1, label: "All 1-Bed (Single)" },
-                      { cap: 2, label: "All 2-Beds (Double)" },
-                      { cap: 3, label: "All 3-Beds (Triple)" },
-                      { cap: 4, label: "All 4-Beds (Four-Sharing)" },
+                      { cap: 1, label: "1-Bed" },
+                      { cap: 2, label: "2-Beds" },
+                      { cap: 3, label: "3-Beds" },
+                      { cap: 4, label: "4-Beds" },
+                      { cap: 5, label: "5-Beds" },
+                      { cap: 6, label: "6-Beds" },
+                      { cap: 7, label: "7-Beds" },
+                      { cap: 8, label: "8-Beds" },
                     ].map((opt) => (
                       <button
                         key={opt.cap}
                         type="button"
                         onClick={() => setBuildingAllBedCapacity(curBld.name, opt.cap)}
-                        className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-indigo-900 hover:bg-indigo-600 hover:text-white border border-indigo-200 transition shadow-2xs active:scale-95 cursor-pointer"
+                        className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white text-indigo-900 hover:bg-indigo-600 hover:text-white border border-indigo-200 transition shadow-2xs active:scale-95 cursor-pointer"
                       >
-                        ⚡ {opt.label}
+                        ⚡ All {opt.label}
                       </button>
                     ))}
                   </div>
@@ -8699,9 +8813,9 @@ function doPost(e) {
                             </div>
 
                             {/* Floor Bulk Action Buttons */}
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="text-[10px] font-extrabold text-slate-500 uppercase">Set Floor to:</span>
-                              {[1, 2, 3, 4].map((c) => (
+                            <div className="flex items-center gap-1 flex-wrap">
+                              <span className="text-[10px] font-extrabold text-slate-500 uppercase">Set Floor:</span>
+                              {[1, 2, 3, 4, 5, 6, 7, 8].map((c) => (
                                 <button
                                   key={c}
                                   type="button"
@@ -8740,20 +8854,20 @@ function doPost(e) {
                                       </span>
                                     </div>
                                     <span className="text-[11px] font-black text-[#00022E]">
-                                      🛏️ {rmState.capacity} Beds
+                                      🛏️ {rmState.capacity} {rmState.capacity === 1 ? "Bed" : "Beds"}
                                     </span>
                                   </div>
 
-                                  {/* 1 to 6 Bed Selector Chips */}
-                                  <div className="flex items-center gap-1 flex-wrap pt-0.5">
-                                    {[1, 2, 3, 4, 5, 6].map((bCount) => {
+                                  {/* 1 to 8 Bed Selector Chips */}
+                                  <div className="flex items-center gap-0.5 flex-wrap pt-0.5">
+                                    {[1, 2, 3, 4, 5, 6, 7, 8].map((bCount) => {
                                       const isCur = rmState.capacity === bCount;
                                       return (
                                         <button
                                           key={bCount}
                                           type="button"
                                           onClick={() => setRoomBedCapacity(curBld.name, rNo, bCount)}
-                                          className={`flex-1 min-w-[28px] py-1 text-center rounded-lg text-[10px] font-black transition-all cursor-pointer ${
+                                          className={`flex-1 min-w-[24px] py-1 text-center rounded-lg text-[10px] font-black transition-all cursor-pointer ${
                                             isCur
                                               ? "bg-[#00022E] text-white shadow-xs scale-105"
                                               : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/80"

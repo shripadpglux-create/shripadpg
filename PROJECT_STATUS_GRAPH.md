@@ -2,6 +2,36 @@
 
 ---
 
+### 📍 Version 9.16 — Granular Per-Room Bed Decider (Up to 8 Beds) & Live Customizer 🛏️⚡🏢
+
+```mermaid
+flowchart TD
+    subgraph GranularBedCustomization ["Granular Per-Room Bed Control (Max 8 Beds Capacity)"]
+        UI1["1. 'Add New PG Building' Live Customizer:
+        • Expand any floor (e.g. 1st Floor, 2nd Floor... up to 8+ floors)
+        • Individual Room Chips (101, 102, 103, 104...)
+        • 1-Click Bed Selector Buttons: [1][2][3][4][5][6][7][8] Beds per room
+        • Floor Quick-Set Bar: 'Set Floor: [1][2][3][4][5][6][7][8]'
+        • Dynamic Live Bed Aggregator: {Total Rooms} • {Total Beds}"]
+
+        UI2["2. 'Room Bed Capacity Manager' (bedConfigModal):
+        • Quick Bulk Set for Entire Building: [1-Bed] to [8-Beds]
+        • Floor Bulk Set: [1-Bed] to [8-Beds]
+        • Individual Room Chips with active bed pill indicator"]
+
+        UI3["3. BMS Cinema Matrix Allocation (Step 3):
+        • Real-time Room Capacity Selector: 1 to 8+ Beds
+        • Dynamic Bed Slots generation (Bed A through Bed H)"]
+
+        UI1 --> SyncEngine["State Engine: newBuildingRoomBeds + customRoomSharing"]
+        UI2 --> SyncEngine
+        UI3 --> SyncEngine
+        SyncEngine --> Storage["localStorage & Live Occupancy KPI Calculators"]
+    end
+```
+
+---
+
 ### 📍 Version 9.15 — Comprehensive Room Bed Capacity Decider & Manager Architecture 🛏️⚡🏢
 
 ```mermaid
