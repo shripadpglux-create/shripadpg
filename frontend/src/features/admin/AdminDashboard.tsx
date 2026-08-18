@@ -73,6 +73,7 @@ import {
 } from "lucide-react";
 import { ShripadNameLogo } from "@/components/ShripadNameLogo";
 import { InvoiceDesign } from "@/components/InvoiceDesign";
+import { normalizeResident, residentPipelineCache } from "../../lib/dataPipeline";
 import brandLogo from "@/assets/shripad-logo.png";
 import {
   generateContactReport,
@@ -2569,58 +2570,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
           {/* INVOICE TAB */}
           {activeTab === "Invoice" && (
             <InvoiceDesign
-              residentsList={scopedBookings.map((b) => {
-                const roomStr = b.allocatedRoom || b.room || "";
-                let flStr = "";
-                if (b.allocatedFloor !== undefined && b.allocatedFloor !== null && String(b.allocatedFloor).trim() !== "") {
-                  const fVal = String(b.allocatedFloor).trim();
-                  flStr = fVal.toLowerCase().startsWith("floor") ? fVal : `Floor ${fVal}`;
-                } else if (b.floor !== undefined && b.floor !== null && String(b.floor).trim() !== "") {
-                  const fVal = String(b.floor).trim();
-                  flStr = fVal.toLowerCase().startsWith("floor") ? fVal : `Floor ${fVal}`;
-                } else {
-                  const digits = roomStr.replace(/\D/g, "");
-                  flStr = digits.length >= 3 ? `Floor ${digits.charAt(0)}` : "Floor 1";
-                }
-
-                return {
-                  id: b.id,
-                  name: b.name,
-                  phone: b.phone,
-                  email: b.email,
-                  building: b.allocatedBuilding || b.building || "PG A",
-                  floor: flStr,
-                  room: roomStr ? (roomStr.startsWith("Room") ? roomStr : `Room ${roomStr}`) : "",
-                  bed: b.allocatedBed || b.bed || "",
-                  rentAmount: b.rentAmount || 0,
-                };
-              })}
-              initialResident={
-                selectedHistoryResident
-                  ? {
-                      id: selectedHistoryResident.id,
-                      name: selectedHistoryResident.name,
-                      phone: selectedHistoryResident.phone,
-                      email: selectedHistoryResident.email,
-                      building: selectedHistoryResident.allocatedBuilding || selectedHistoryResident.building || "PG A",
-                      floor:
-                        selectedHistoryResident.allocatedFloor !== undefined && selectedHistoryResident.allocatedFloor !== null
-                          ? (String(selectedHistoryResident.allocatedFloor).toLowerCase().startsWith("floor")
-                              ? String(selectedHistoryResident.allocatedFloor)
-                              : `Floor ${selectedHistoryResident.allocatedFloor}`)
-                          : (selectedHistoryResident.floor
-                              ? (String(selectedHistoryResident.floor).toLowerCase().startsWith("floor")
-                                  ? String(selectedHistoryResident.floor)
-                                  : `Floor ${selectedHistoryResident.floor}`)
-                              : (selectedHistoryResident.allocatedRoom
-                                  ? `Floor ${String(selectedHistoryResident.allocatedRoom).replace(/\D/g, "").charAt(0) || "1"}`
-                                  : "Floor 1")),
-                      room: selectedHistoryResident.allocatedRoom || selectedHistoryResident.room || "Room 101",
-                      bed: selectedHistoryResident.allocatedBed || selectedHistoryResident.bed || "Bed A",
-                      rentAmount: selectedHistoryResident.rentAmount || 0,
-                    }
-                  : null
-              }
+              residentsList={scopedBookings.map(normalizeResident)}
+              initialResident={selectedHistoryResident ? normalizeResident(selectedHistoryResident) : null}
               onInvoiceSaved={fetchBookings}
               pendingRequests={pendingPaymentsList}
               onVerifyPayment={handleVerifyAndRaiseInvoice}

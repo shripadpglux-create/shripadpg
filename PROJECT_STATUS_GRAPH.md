@@ -2,6 +2,34 @@
 
 ---
 
+### 📍 Version 8.87 — Centralized dataPipeline.ts Engine & High-Speed O(1) Resident Cache ⚡🔄✨
+
+```mermaid
+flowchart TD
+    subgraph DataPipelineArchitecture ["Centralized Data Pipeline Architecture (frontend/src/lib/dataPipeline.ts)"]
+        RawInputs["Raw Data (Bookings, Customers, Inquiries, Admin DB)"]
+        Normalizer["normalizeResident(raw):
+        • Strict NormalizedResident Interface
+        • Clean Phone (digits only) + Formatted Phone
+        • Extract Floor Data (e.g., Room 202 ➔ Floor 2)
+        • Clean Room & Bed Numbers
+        • Standardized Rent, Paid & Balance Calculations"]
+        Cache["residentPipelineCache:
+        • O(1) idMap Lookup
+        • O(1) phoneMap Lookup
+        • Zero Array Scanning Latency"]
+        ConsumingFeatures["Consuming Components:
+        • AdminDashboard (Customers, Revenue, Allocation)
+        • InvoiceDesign (Invoice Studio, Direct Previews)
+        • CustomerPortal (My Rooms, Payment History)
+        • StaffPortal (Branch Scoped Operations)"]
+        
+        RawInputs --> Normalizer --> Cache --> ConsumingFeatures
+    end
+```
+
+---
+
 ### 📍 Version 8.86 — Single-Source Resident Data Pipeline & Automatic Floor Synchronization 🔄🏢✨
 
 ```mermaid

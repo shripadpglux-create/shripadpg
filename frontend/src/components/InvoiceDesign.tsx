@@ -32,56 +32,16 @@ import {
 } from "lucide-react";
 import brandLogo from "@/assets/shripad-logo.png";
 
-export interface ResidentOption {
-  id: string;
-  name: string;
-  phone: string;
-  email?: string;
-  building?: string;
-  floor?: string;
-  room?: string;
-  bed?: string;
-  rentAmount?: number;
-}
+import {
+  NormalizedResident,
+  normalizeResident,
+  extractFloorData,
+  extractRoomData,
+  residentPipelineCache,
+} from "@/lib/dataPipeline";
 
-// Single-Source-of-Truth Data Pipeline Helper to avoid any data mismatch
-export const resolveResidentPipelineData = (r: any) => {
-  if (!r) return null;
-  const building = r.allocatedBuilding || r.building || "PG A";
-  const room = r.allocatedRoom || r.room || "Room 101";
-  const bed = r.allocatedBed || r.bed || "Bed A";
-
-  // Robust Floor derivation pipeline:
-  let floor = "";
-  if (r.allocatedFloor !== undefined && r.allocatedFloor !== null && String(r.allocatedFloor).trim() !== "") {
-    const flStr = String(r.allocatedFloor).trim();
-    floor = flStr.toLowerCase().startsWith("floor") ? flStr : `Floor ${flStr}`;
-  } else if (r.floor !== undefined && r.floor !== null && String(r.floor).trim() !== "") {
-    const flStr = String(r.floor).trim();
-    floor = flStr.toLowerCase().startsWith("floor") ? flStr : `Floor ${flStr}`;
-  } else {
-    // Pipeline deduction from room number (e.g. "Room 202" or "202" -> Floor 2)
-    const roomDigits = String(room).replace(/\D/g, "");
-    if (roomDigits.length >= 3) {
-      const firstDigit = roomDigits.charAt(0);
-      floor = `Floor ${firstDigit}`;
-    } else {
-      floor = "Floor 1";
-    }
-  }
-
-  return {
-    id: r.id,
-    name: r.name || "",
-    phone: r.phone || "",
-    email: r.email || "",
-    building,
-    floor,
-    room: room.startsWith("Room") ? room : `Room ${room}`,
-    bed: bed.startsWith("Bed") ? bed : `Bed ${bed}`,
-    rentAmount: r.rentAmount || 0,
-  };
-};
+export type ResidentOption = NormalizedResident;
+export const resolveResidentPipelineData = normalizeResident;
 
 export interface SavedInvoice {
   id: string;
