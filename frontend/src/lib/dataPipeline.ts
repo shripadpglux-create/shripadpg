@@ -12,8 +12,10 @@ export interface NormalizedResident {
   cleanPhone: string;
   email: string;
   building: string;
+  floor: string;        // e.g. "Floor 2"
   floorNumber: number;
   floorDisplay: string; // e.g. "Floor 2"
+  room: string;         // e.g. "Room 202"
   roomNumber: string;   // e.g. "202"
   roomDisplay: string;   // e.g. "Room 202"
   bed: string;          // e.g. "Bed A"
@@ -117,8 +119,10 @@ export function normalizeResident(raw: any): NormalizedResident {
     cleanPhone,
     email: String(raw.email || "").trim(),
     building: String(raw.allocatedBuilding || raw.building || "PG A").trim(),
+    floor: floorDisplay,
     floorNumber,
     floorDisplay,
+    room: roomDisplay,
     roomNumber,
     roomDisplay,
     bed,
