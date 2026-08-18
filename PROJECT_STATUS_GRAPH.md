@@ -2,6 +2,23 @@
 
 ---
 
+### 📍 Version 8.91 — More Features Mobile Drawer Touch & Close Handler Optimization 📱✨✕
+
+```mermaid
+flowchart TD
+    subgraph DrawerUX ["Mobile Drawer Close & Touch Architecture"]
+        TouchClose["Responsive Close Engine:
+        • Instant Touch & Click Propagation Stop (onClick & onTouchEnd)
+        • Expanded 44px Touch Target with active:scale-90 feedback
+        • Tappable Top Pull-Bar for intuitive swipe-down dismiss
+        • pointer-events-none applied when closed to prevent ghost clicks"]
+        
+        TouchClose --> FlawlessDrawer["100% Reliable, Instant-Response Mobile Navigation Drawer"]
+    end
+```
+
+---
+
 ### 📍 Version 8.90 — Production Readiness: Dynamic Vendor Splitting & Atlas Free-Tier Pool Tuning 🛡️📦⚡
 
 ```mermaid

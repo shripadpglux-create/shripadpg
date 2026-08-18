@@ -8189,29 +8189,51 @@ function doPost(e) {
       {/* More Drawer Backdrop */}
       {isMoreDrawerOpen && (
         <div
-          onClick={() => setIsMoreDrawerOpen(false)}
-          className="fixed inset-0 z-[55] bg-slate-900/40 backdrop-blur-[2px] transition-opacity lg:hidden"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsMoreDrawerOpen(false);
+          }}
+          onTouchEnd={(e) => {
+            e.stopPropagation();
+            setIsMoreDrawerOpen(false);
+          }}
+          className="fixed inset-0 z-[55] bg-slate-900/50 backdrop-blur-[2px] transition-opacity lg:hidden cursor-pointer"
         />
       )}
 
       {/* More Drawer Sheet */}
       <div className={`fixed bottom-0 left-0 right-0 z-[56] lg:hidden transition-transform duration-300 ease-out ${
-        isMoreDrawerOpen ? "translate-y-0" : "translate-y-full"
+        isMoreDrawerOpen ? "translate-y-0" : "translate-y-full pointer-events-none"
       }`}>
-        <div className="bg-white rounded-t-3xl shadow-2xl border-t border-slate-200 px-5 pt-3 pb-8 max-h-[70vh] overflow-y-auto">
-          {/* Drawer Handle */}
-          <div className="flex justify-center mb-4">
-            <div className="h-1.5 w-12 rounded-full bg-slate-300" />
+        <div className="bg-white rounded-t-3xl shadow-2xl border-t border-slate-200 px-5 pt-3 pb-8 max-h-[75vh] overflow-y-auto">
+          {/* Drawer Handle (Tappable to close) */}
+          <div
+            onClick={() => setIsMoreDrawerOpen(false)}
+            className="flex justify-center py-2 -mt-1 cursor-pointer"
+            title="Tap to close"
+          >
+            <div className="h-1.5 w-12 rounded-full bg-slate-300 hover:bg-slate-400 active:scale-95 transition" />
           </div>
 
           {/* Drawer Title */}
           <div className="flex items-center justify-between mb-5">
             <h3 className="text-base font-black text-slate-900">More Features</h3>
             <button
-              onClick={() => setIsMoreDrawerOpen(false)}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition cursor-pointer"
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsMoreDrawerOpen(false);
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsMoreDrawerOpen(false);
+              }}
+              aria-label="Close More Features"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 active:scale-90 active:bg-slate-300 transition cursor-pointer shadow-xs"
             >
-              <X className="h-4 w-4" />
+              <X className="h-4.5 w-4.5 stroke-[2.5]" />
             </button>
           </div>
 
