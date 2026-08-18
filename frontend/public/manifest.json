@@ -3,6 +3,12 @@
   "name": "SripadPG - Luxury PG Management & Resident Portal",
   "icons": [
     {
+      "src": "/logo.png",
+      "type": "image/png",
+      "sizes": "562x792",
+      "purpose": "any"
+    },
+    {
       "src": "/pwa-192x192.png",
       "type": "image/png",
       "sizes": "192x192",
@@ -17,12 +23,13 @@
     {
       "src": "/apple-touch-icon.png",
       "type": "image/png",
-      "sizes": "180x180"
+      "sizes": "180x180",
+      "purpose": "any"
     }
   ],
   "start_url": "/",
   "background_color": "#ffffff",
-  "theme_color": "#4f46e5",
+  "theme_color": "#1e3a5f",
   "display": "standalone",
   "orientation": "portrait",
   "scope": "/",

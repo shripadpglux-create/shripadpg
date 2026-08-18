@@ -79,7 +79,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" },
       { title: "SripadPG - Luxury PG Management" },
       { name: "description", content: "SripadPG Room Bookings, Tenant Payments, Expenses & Staff Portal" },
-      { name: "theme-color", content: "#4f46e5" },
+      { name: "theme-color", content: "#1e3a5f" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
