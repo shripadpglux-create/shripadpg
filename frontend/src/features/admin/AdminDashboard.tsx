@@ -1,5 +1,6 @@
 import { API_BASE_URL } from "../../lib/apiConfig";
 import React, { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { CustomConfirmModal } from "../../components/CustomConfirmModal";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
@@ -115,6 +116,11 @@ function normalizeTabName(t?: string): string {
 export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab?: string; isStaffMode?: boolean }) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(() => normalizeTabName(tab));
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   useEffect(() => {
     setActiveTab(normalizeTabName(tab));
@@ -208,12 +214,14 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   };
 
   const handleTabClick = (tabName: string) => {
-    setActiveTab(tabName);
+    const normalized = normalizeTabName(tabName);
+    setActiveTab(normalized);
     setIsMobileMenuOpen(false);
+    setIsMoreDrawerOpen(false);
     if (isStaffMode) {
-      navigate({ to: `/staff/${tabName.toLowerCase()}` as any });
+      navigate({ to: `/staff/${normalized.toLowerCase()}` as any });
     } else {
-      navigate({ to: `/admin/${tabName.toLowerCase()}` as any });
+      navigate({ to: `/admin/${normalized.toLowerCase()}` as any });
     }
   };
 
@@ -2394,22 +2402,28 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       </aside>
 
       {/* Main Content Area */}
-      <div className={`flex flex-1 flex-col transition-all duration-300 min-w-0 ${isSidebarCollapsed ? "lg:pl-0" : "lg:pl-72"}`}>
+      <div className={`flex flex-1 flex-col transition-all duration-300 min-w-0 pb-24 lg:pb-8 ${isSidebarCollapsed ? "lg:pl-0" : "lg:pl-72"}`}>
         {/* Centered top navigation bar wrapper aligning perfectly with main layout margins */}
         <div className="sticky top-2 sm:top-4 z-30 w-full px-2 sm:px-6 lg:px-8 mt-2 sm:mt-4 mb-2">
           <header className="mx-auto max-w-7xl rounded-full border border-slate-200/80 bg-white/95 shadow-lg shadow-slate-200/50 backdrop-blur-xl px-2.5 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between gap-2 sm:gap-3 transition-all">
             {/* Left: Menu, Role Scope, WhatsApp & Complaints */}
             <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 flex-nowrap">
+              {/* Mobile Menu Button (Opens More Drawer directly) */}
               <button
-                onClick={() => {
-                  if (typeof window !== "undefined" && window.innerWidth < 1024) {
-                    setIsMoreDrawerOpen(true);
-                  } else {
-                    setIsSidebarCollapsed(!isSidebarCollapsed);
-                  }
-                }}
-                className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full border border-slate-200/80 bg-slate-50 text-slate-600 hover:bg-slate-100 shadow-2xs cursor-pointer active:scale-95"
+                type="button"
+                onClick={() => setIsMoreDrawerOpen(true)}
+                className="flex lg:hidden h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full border border-slate-200/80 bg-slate-50 text-slate-600 hover:bg-slate-100 shadow-2xs cursor-pointer active:scale-95"
                 title="Navigation Menu"
+              >
+                <Menu className="h-4 w-4" />
+              </button>
+
+              {/* Desktop Sidebar Toggle Button */}
+              <button
+                type="button"
+                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                className="hidden lg:flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full border border-slate-200/80 bg-slate-50 text-slate-600 hover:bg-slate-100 shadow-2xs cursor-pointer active:scale-95"
+                title="Toggle Sidebar Navigation"
               >
                 <Menu className="h-4 w-4" />
               </button>
@@ -8153,261 +8167,262 @@ function doPost(e) {
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* FLOATING ACTION BUTTON (FAB) — MOBILE ONLY                       */}
+      {/* MOBILE PORTAL: FAB, MORE DRAWER, BOTTOM NAVIGATION DOCK          */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
-
-      {/* FAB Backdrop */}
-      {isFabMenuOpen && (
-        <div
-          onClick={() => setIsFabMenuOpen(false)}
-          className="fixed inset-0 z-[45] bg-slate-900/40 backdrop-blur-[2px] transition-opacity lg:hidden"
-        />
-      )}
-
-      {/* FAB Expandable Action Menu */}
-      <div className={`fixed right-4 z-[46] lg:hidden transition-all duration-300 ease-out ${
-        isFabMenuOpen ? "bottom-24" : "bottom-20"
-      }`}>
-        {/* Expanded Actions List */}
-        {isFabMenuOpen && (
-          <div className="mb-3 flex flex-col items-end gap-2.5 animate-in slide-in-from-bottom-4 fade-in duration-200">
-            {[
-              { label: "Add Customer", icon: UserPlus, action: () => { setIsCreateModalOpen(true); setIsFabMenuOpen(false); }, color: "bg-emerald-600" },
-              { label: "Add Building", icon: Building2, action: () => { setIsAddBuildingModalOpen(true); setIsFabMenuOpen(false); }, color: "bg-blue-600" },
-              { label: "Allocate Room", icon: KeyRound, action: () => { handleTabClick("Allocation"); setIsFabMenuOpen(false); }, color: "bg-indigo-600" },
-              { label: "Record Expense", icon: CreditCard, action: () => { resetExpenseForm(); setIsExpenseModalOpen(true); setIsFabMenuOpen(false); }, color: "bg-amber-600" },
-              { label: "Create Invoice", icon: Receipt, action: () => { handleTabClick("Invoice"); setIsFabMenuOpen(false); }, color: "bg-purple-600" },
-            ].map((item, i) => (
-              <button
-                key={item.label}
-                onClick={item.action}
-                className="flex items-center gap-2.5 active:scale-95 transition-all cursor-pointer"
-                style={{ animationDelay: `${i * 40}ms` }}
-              >
-                <span className="px-3 py-1.5 rounded-full bg-white text-slate-800 text-xs font-bold shadow-lg border border-slate-200">
-                  {item.label}
-                </span>
-                <span className={`flex h-10 w-10 items-center justify-center rounded-full ${item.color} text-white shadow-lg`}>
-                  <item.icon className="h-4.5 w-4.5" />
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* FAB Main Button */}
-        <button
-          onClick={() => setIsFabMenuOpen(!isFabMenuOpen)}
-          className={`flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-brand-green via-emerald-600 to-emerald-500 text-white shadow-xl shadow-brand-green/40 border-[3px] border-white active:scale-90 transition-all duration-300 cursor-pointer ${
-            isFabMenuOpen ? "rotate-45 scale-110" : "rotate-0"
-          }`}
-          title="Quick Actions"
-        >
-          <Plus className="h-7 w-7 stroke-[3]" />
-        </button>
-      </div>
-
-      {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* MORE DRAWER — SLIDE-UP SHEET (MOBILE ONLY)                       */}
-      {/* ═══════════════════════════════════════════════════════════════════ */}
-
-      {/* More Drawer — Mounted ONLY when isMoreDrawerOpen is true */}
-      {isMoreDrawerOpen && (
+      {hasMounted && typeof document !== "undefined" && createPortal(
         <>
-          {/* Backdrop */}
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsMoreDrawerOpen(false);
-            }}
-            onTouchEnd={(e) => {
-              e.stopPropagation();
-              setIsMoreDrawerOpen(false);
-            }}
-            className="fixed inset-0 z-[55] bg-slate-900/60 backdrop-blur-[2px] animate-in fade-in duration-200 lg:hidden cursor-pointer"
-          />
+          {/* FAB Backdrop */}
+          {isFabMenuOpen && (
+            <div
+              onClick={() => setIsFabMenuOpen(false)}
+              className="fixed inset-0 z-[60] bg-slate-900/40 backdrop-blur-[2px] transition-opacity lg:hidden"
+            />
+          )}
 
-          {/* More Drawer Sheet */}
-          <div className="fixed bottom-0 left-0 right-0 z-[56] lg:hidden animate-in slide-in-from-bottom duration-250 ease-out">
-            <div className="bg-white rounded-t-3xl shadow-2xl border-t border-slate-200 px-5 pt-3 pb-8 max-h-[75vh] overflow-y-auto">
-              {/* Drawer Handle (Tappable to close) */}
-              <div
-                onClick={() => setIsMoreDrawerOpen(false)}
-                className="flex justify-center py-2 -mt-1 cursor-pointer"
-                title="Tap to close"
-              >
-                <div className="h-1.5 w-12 rounded-full bg-slate-300 hover:bg-slate-400 active:scale-95 transition" />
-              </div>
-
-              {/* Drawer Title */}
-              <div className="flex items-center justify-between mb-5">
-                <h3 className="text-base font-black text-slate-900">More Features</h3>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setIsMoreDrawerOpen(false);
-                  }}
-                  onTouchEnd={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setIsMoreDrawerOpen(false);
-                  }}
-                  aria-label="Close More Features"
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 active:scale-90 active:bg-slate-300 transition cursor-pointer shadow-xs"
-                >
-                  <X className="h-4.5 w-4.5 stroke-[2.5]" />
-                </button>
-              </div>
-
-              {/* Drawer Menu Grid */}
-              <div className="grid grid-cols-3 gap-3 mb-5">
+          {/* FAB Expandable Action Menu */}
+          <div className={`fixed right-4 z-[61] lg:hidden transition-all duration-300 ease-out ${
+            isFabMenuOpen ? "bottom-24" : "bottom-20"
+          }`}>
+            {/* Expanded Actions List */}
+            {isFabMenuOpen && (
+              <div className="mb-3 flex flex-col items-end gap-2.5 animate-in slide-in-from-bottom-4 fade-in duration-200">
                 {[
-                  { name: "Revenue", icon: Wallet, color: "bg-emerald-100 text-emerald-700", borderColor: "border-emerald-200" },
-                  { name: "Reports", icon: FileSpreadsheet, color: "bg-blue-100 text-blue-700", borderColor: "border-blue-200" },
-                  { name: "Invoice", icon: Receipt, color: "bg-purple-100 text-purple-700", borderColor: "border-purple-200", badge: pendingPaymentsCount },
-                  { name: "Allocation", icon: KeyRound, color: "bg-indigo-100 text-indigo-700", borderColor: "border-indigo-200" },
-                  { name: "Settings", icon: Settings, color: "bg-slate-100 text-slate-700", borderColor: "border-slate-200" },
-                ].map((item) => (
+                  { label: "Add Customer", icon: UserPlus, action: () => { setIsCreateModalOpen(true); setIsFabMenuOpen(false); }, color: "bg-emerald-600" },
+                  { label: "Add Building", icon: Building2, action: () => { setIsAddBuildingModalOpen(true); setIsFabMenuOpen(false); }, color: "bg-blue-600" },
+                  { label: "Allocate Room", icon: KeyRound, action: () => { handleTabClick("Allocation"); setIsFabMenuOpen(false); }, color: "bg-indigo-600" },
+                  { label: "Record Expense", icon: CreditCard, action: () => { resetExpenseForm(); setIsExpenseModalOpen(true); setIsFabMenuOpen(false); }, color: "bg-amber-600" },
+                  { label: "Create Invoice", icon: Receipt, action: () => { handleTabClick("Invoice"); setIsFabMenuOpen(false); }, color: "bg-purple-600" },
+                ].map((item, i) => (
                   <button
-                    key={item.name}
-                    onClick={() => {
-                      handleTabClick(item.name);
-                      setIsMoreDrawerOpen(false);
-                    }}
-                    className={`relative flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all active:scale-95 cursor-pointer ${
-                      activeTab === item.name
-                        ? `${item.color} ${item.borderColor} shadow-sm`
-                        : `bg-white border-slate-200 hover:bg-slate-50`
-                    }`}
+                    key={item.label}
+                    onClick={item.action}
+                    className="flex items-center gap-2.5 active:scale-95 transition-all cursor-pointer"
+                    style={{ animationDelay: `${i * 40}ms` }}
                   >
-                    <item.icon className={`h-6 w-6 ${
-                      activeTab === item.name ? "" : "text-slate-500"
-                    }`} />
-                    <span className={`text-[11px] font-bold ${
-                      activeTab === item.name ? "" : "text-slate-600"
-                    }`}>{item.name}</span>
-                    {item.badge && item.badge > 0 && (
-                      <span className="absolute top-2 right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 text-[9px] font-black text-white px-1">
-                        {item.badge}
-                      </span>
-                    )}
+                    <span className="px-3 py-1.5 rounded-full bg-white text-slate-800 text-xs font-bold shadow-lg border border-slate-200">
+                      {item.label}
+                    </span>
+                    <span className={`flex h-10 w-10 items-center justify-center rounded-full ${item.color} text-white shadow-lg`}>
+                      <item.icon className="h-4.5 w-4.5" />
+                    </span>
                   </button>
                 ))}
               </div>
+            )}
 
-              {/* Admin-Only Actions Section */}
-              {!isStaffMode && (
-                <div className="border-t border-slate-100 pt-4 space-y-2">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Admin Management</p>
-                  <button
-                    onClick={() => {
-                      setIsStaffModalOpen(true);
-                      setIsMoreDrawerOpen(false);
-                    }}
-                    className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 hover:bg-emerald-50 transition cursor-pointer active:scale-[0.98]"
-                  >
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
-                      <UserCheck className="h-4.5 w-4.5" />
-                    </div>
-                    <span>Staff & Buildings</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsPaymentSettingsModalOpen(true);
-                      setIsMoreDrawerOpen(false);
-                    }}
-                    className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 hover:bg-amber-50 transition cursor-pointer active:scale-[0.98]"
-                  >
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
-                      <QrCode className="h-4.5 w-4.5" />
-                    </div>
-                    <span>Payment & QR</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* BOTTOM NAVIGATION BAR — 5-ITEM DOCK (MOBILE ONLY)                */}
-      {/* ═══════════════════════════════════════════════════════════════════ */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-slate-200/90 px-2 py-1.5 flex lg:hidden shadow-2xl items-center justify-around" style={{ paddingBottom: 'max(0.375rem, env(safe-area-inset-bottom))' }}>
-        {/* Tab 1: Dashboard / Home */}
-        <button
-          onClick={() => handleTabClick("Dashboard")}
-          className={`flex flex-col items-center justify-center py-1 px-3 rounded-2xl transition-all active:scale-90 cursor-pointer ${
-            activeTab === "Dashboard" ? "text-brand-green font-black" : "text-slate-400 hover:text-slate-700"
-          }`}
-        >
-          <LayoutDashboard className={`h-5 w-5 ${activeTab === "Dashboard" ? "stroke-[2.5]" : "stroke-[1.5]"}`} />
-          <span className="text-[10px] font-bold mt-0.5">Home</span>
-          {activeTab === "Dashboard" && <span className="h-1 w-1 rounded-full bg-brand-green mt-0.5" />}
-        </button>
-
-        {/* Tab 2: Customers / Residents */}
-        <button
-          onClick={() => handleTabClick("Customers")}
-          className={`flex flex-col items-center justify-center py-1 px-3 rounded-2xl transition-all active:scale-90 cursor-pointer ${
-            activeTab === "Customers" ? "text-brand-green font-black" : "text-slate-400 hover:text-slate-700"
-          }`}
-        >
-          <Users className={`h-5 w-5 ${activeTab === "Customers" ? "stroke-[2.5]" : "stroke-[1.5]"}`} />
-          <span className="text-[10px] font-bold mt-0.5">Customers</span>
-          {activeTab === "Customers" && <span className="h-1 w-1 rounded-full bg-brand-green mt-0.5" />}
-        </button>
-
-        {/* Tab 3: Buildings */}
-        <button
-          onClick={() => handleTabClick("Buildings")}
-          className={`flex flex-col items-center justify-center py-1 px-3 rounded-2xl transition-all active:scale-90 cursor-pointer ${
-            activeTab === "Buildings" ? "text-brand-green font-black" : "text-slate-400 hover:text-slate-700"
-          }`}
-        >
-          <Building2 className={`h-5 w-5 ${activeTab === "Buildings" ? "stroke-[2.5]" : "stroke-[1.5]"}`} />
-          <span className="text-[10px] font-bold mt-0.5">Buildings</span>
-          {activeTab === "Buildings" && <span className="h-1 w-1 rounded-full bg-brand-green mt-0.5" />}
-        </button>
-
-        {/* Tab 4: Payments */}
-        <button
-          onClick={() => handleTabClick("Revenue")}
-          className={`flex flex-col items-center justify-center py-1 px-3 rounded-2xl transition-all active:scale-90 cursor-pointer ${
-            activeTab === "Revenue" ? "text-brand-green font-black" : "text-slate-400 hover:text-slate-700"
-          }`}
-        >
-          <CreditCard className={`h-5 w-5 ${activeTab === "Revenue" ? "stroke-[2.5]" : "stroke-[1.5]"}`} />
-          <span className="text-[10px] font-bold mt-0.5">Payments</span>
-          {activeTab === "Revenue" && <span className="h-1 w-1 rounded-full bg-brand-green mt-0.5" />}
-        </button>
-
-        {/* Tab 5: More — opens the More Drawer */}
-        {(() => {
-          const moreTabNames = ["Reports", "Invoice", "Allocation", "Settings"];
-          const isOtherActive = moreTabNames.includes(activeTab);
-
-          return (
+            {/* FAB Main Button */}
             <button
-              onClick={() => setIsMoreDrawerOpen(true)}
-              className={`relative flex flex-col items-center justify-center py-1 px-3 rounded-2xl transition-all active:scale-90 cursor-pointer ${
-                isOtherActive || isMoreDrawerOpen ? "text-brand-green font-black" : "text-slate-400 hover:text-slate-700"
+              onClick={() => setIsFabMenuOpen(!isFabMenuOpen)}
+              className={`flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-brand-green via-emerald-600 to-emerald-500 text-white shadow-xl shadow-brand-green/40 border-[3px] border-white active:scale-90 transition-all duration-300 cursor-pointer ${
+                isFabMenuOpen ? "rotate-45 scale-110" : "rotate-0"
+              }`}
+              title="Quick Actions"
+            >
+              <Plus className="h-7 w-7 stroke-[3]" />
+            </button>
+          </div>
+
+          {/* More Drawer — Mounted ONLY when isMoreDrawerOpen is true */}
+          {isMoreDrawerOpen && (
+            <>
+              {/* Backdrop */}
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsMoreDrawerOpen(false);
+                }}
+                onTouchEnd={(e) => {
+                  e.stopPropagation();
+                  setIsMoreDrawerOpen(false);
+                }}
+                className="fixed inset-0 z-[70] bg-slate-900/60 backdrop-blur-[2px] animate-in fade-in duration-200 lg:hidden cursor-pointer"
+              />
+
+              {/* More Drawer Sheet */}
+              <div className="fixed bottom-0 left-0 right-0 z-[71] lg:hidden animate-in slide-in-from-bottom duration-250 ease-out">
+                <div className="bg-white rounded-t-3xl shadow-2xl border-t border-slate-200 px-5 pt-3 pb-8 max-h-[75vh] overflow-y-auto">
+                  {/* Drawer Handle (Tappable to close) */}
+                  <div
+                    onClick={() => setIsMoreDrawerOpen(false)}
+                    className="flex justify-center py-2 -mt-1 cursor-pointer"
+                    title="Tap to close"
+                  >
+                    <div className="h-1.5 w-12 rounded-full bg-slate-300 hover:bg-slate-400 active:scale-95 transition" />
+                  </div>
+
+                  {/* Drawer Title */}
+                  <div className="flex items-center justify-between mb-5">
+                    <h3 className="text-base font-black text-slate-900">More Features</h3>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setIsMoreDrawerOpen(false);
+                      }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setIsMoreDrawerOpen(false);
+                      }}
+                      aria-label="Close More Features"
+                      className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 active:scale-90 active:bg-slate-300 transition cursor-pointer shadow-xs"
+                    >
+                      <X className="h-4.5 w-4.5 stroke-[2.5]" />
+                    </button>
+                  </div>
+
+                  {/* Drawer Menu Grid */}
+                  <div className="grid grid-cols-3 gap-3 mb-5">
+                    {[
+                      { name: "Revenue", icon: Wallet, color: "bg-emerald-100 text-emerald-700", borderColor: "border-emerald-200" },
+                      { name: "Reports", icon: FileSpreadsheet, color: "bg-blue-100 text-blue-700", borderColor: "border-blue-200" },
+                      { name: "Invoice", icon: Receipt, color: "bg-purple-100 text-purple-700", borderColor: "border-purple-200", badge: pendingPaymentsCount },
+                      { name: "Allocation", icon: KeyRound, color: "bg-indigo-100 text-indigo-700", borderColor: "border-indigo-200" },
+                      { name: "Settings", icon: Settings, color: "bg-slate-100 text-slate-700", borderColor: "border-slate-200" },
+                    ].map((item) => (
+                      <button
+                        key={item.name}
+                        onClick={() => {
+                          handleTabClick(item.name);
+                        }}
+                        className={`relative flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all active:scale-95 cursor-pointer ${
+                          activeTab === item.name
+                            ? `${item.color} ${item.borderColor} shadow-sm`
+                            : `bg-white border-slate-200 hover:bg-slate-50`
+                        }`}
+                      >
+                        <item.icon className={`h-6 w-6 ${
+                          activeTab === item.name ? "" : "text-slate-500"
+                        }`} />
+                        <span className={`text-[11px] font-bold ${
+                          activeTab === item.name ? "" : "text-slate-600"
+                        }`}>{item.name}</span>
+                        {item.badge && item.badge > 0 && (
+                          <span className="absolute top-2 right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 text-[9px] font-black text-white px-1">
+                            {item.badge}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Admin-Only Actions Section */}
+                  {!isStaffMode && (
+                    <div className="border-t border-slate-100 pt-4 space-y-2">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Admin Management</p>
+                      <button
+                        onClick={() => {
+                          setIsStaffModalOpen(true);
+                          setIsMoreDrawerOpen(false);
+                        }}
+                        className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 hover:bg-emerald-50 transition cursor-pointer active:scale-[0.98]"
+                      >
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+                          <UserCheck className="h-4.5 w-4.5" />
+                        </div>
+                        <span>Staff & Buildings</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsPaymentSettingsModalOpen(true);
+                          setIsMoreDrawerOpen(false);
+                        }}
+                        className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 hover:bg-amber-50 transition cursor-pointer active:scale-[0.98]"
+                      >
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
+                          <QrCode className="h-4.5 w-4.5" />
+                        </div>
+                        <span>Payment & QR</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* BOTTOM NAVIGATION BAR — 5-ITEM DOCK (MOBILE ONLY) */}
+          <nav
+            aria-label="Mobile Bottom Navigation"
+            className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-slate-200/90 px-2 py-1.5 flex lg:hidden shadow-2xl items-center justify-around"
+            style={{ paddingBottom: 'max(0.375rem, env(safe-area-inset-bottom))' }}
+          >
+            {/* Tab 1: Dashboard / Home */}
+            <button
+              onClick={() => handleTabClick("Dashboard")}
+              className={`flex flex-col items-center justify-center py-1 px-3 rounded-2xl transition-all active:scale-90 cursor-pointer ${
+                activeTab === "Dashboard" ? "text-brand-green font-black" : "text-slate-400 hover:text-slate-700"
               }`}
             >
-              <div className="relative">
-                <Menu className={`h-5 w-5 ${isOtherActive ? "stroke-[2.5]" : "stroke-[1.5]"}`} />
-                {(pendingPaymentsCount > 0 || activeComplaintsCount > 0) && (
-                  <span className="absolute -top-1 -right-1.5 h-2 w-2 rounded-full bg-rose-600 ring-2 ring-white animate-pulse" />
-                )}
-              </div>
-              <span className="text-[10px] font-bold mt-0.5">More</span>
-              {isOtherActive && <span className="h-1 w-1 rounded-full bg-brand-green mt-0.5" />}
+              <LayoutDashboard className={`h-5 w-5 ${activeTab === "Dashboard" ? "stroke-[2.5]" : "stroke-[1.5]"}`} />
+              <span className="text-[10px] font-bold mt-0.5">Home</span>
+              {activeTab === "Dashboard" && <span className="h-1 w-1 rounded-full bg-brand-green mt-0.5" />}
             </button>
-          );
-        })()}
-      </div>
+
+            {/* Tab 2: Customers / Residents */}
+            <button
+              onClick={() => handleTabClick("Customers")}
+              className={`flex flex-col items-center justify-center py-1 px-3 rounded-2xl transition-all active:scale-90 cursor-pointer ${
+                activeTab === "Customers" ? "text-brand-green font-black" : "text-slate-400 hover:text-slate-700"
+              }`}
+            >
+              <Users className={`h-5 w-5 ${activeTab === "Customers" ? "stroke-[2.5]" : "stroke-[1.5]"}`} />
+              <span className="text-[10px] font-bold mt-0.5">Customers</span>
+              {activeTab === "Customers" && <span className="h-1 w-1 rounded-full bg-brand-green mt-0.5" />}
+            </button>
+
+            {/* Tab 3: Buildings */}
+            <button
+              onClick={() => handleTabClick("Buildings")}
+              className={`flex flex-col items-center justify-center py-1 px-3 rounded-2xl transition-all active:scale-90 cursor-pointer ${
+                activeTab === "Buildings" ? "text-brand-green font-black" : "text-slate-400 hover:text-slate-700"
+              }`}
+            >
+              <Building2 className={`h-5 w-5 ${activeTab === "Buildings" ? "stroke-[2.5]" : "stroke-[1.5]"}`} />
+              <span className="text-[10px] font-bold mt-0.5">Buildings</span>
+              {activeTab === "Buildings" && <span className="h-1 w-1 rounded-full bg-brand-green mt-0.5" />}
+            </button>
+
+            {/* Tab 4: Payments */}
+            <button
+              onClick={() => handleTabClick("Revenue")}
+              className={`flex flex-col items-center justify-center py-1 px-3 rounded-2xl transition-all active:scale-90 cursor-pointer ${
+                activeTab === "Revenue" ? "text-brand-green font-black" : "text-slate-400 hover:text-slate-700"
+              }`}
+            >
+              <CreditCard className={`h-5 w-5 ${activeTab === "Revenue" ? "stroke-[2.5]" : "stroke-[1.5]"}`} />
+              <span className="text-[10px] font-bold mt-0.5">Payments</span>
+              {activeTab === "Revenue" && <span className="h-1 w-1 rounded-full bg-brand-green mt-0.5" />}
+            </button>
+
+            {/* Tab 5: More — opens the More Drawer */}
+            {(() => {
+              const moreTabNames = ["Reports", "Invoice", "Allocation", "Settings"];
+              const isOtherActive = moreTabNames.includes(activeTab);
+
+              return (
+                <button
+                  onClick={() => setIsMoreDrawerOpen(true)}
+                  className={`relative flex flex-col items-center justify-center py-1 px-3 rounded-2xl transition-all active:scale-90 cursor-pointer ${
+                    isOtherActive || isMoreDrawerOpen ? "text-brand-green font-black" : "text-slate-400 hover:text-slate-700"
+                  }`}
+                >
+                  <div className="relative">
+                    <Menu className={`h-5 w-5 ${isOtherActive ? "stroke-[2.5]" : "stroke-[1.5]"}`} />
+                    {(pendingPaymentsCount > 0 || activeComplaintsCount > 0) && (
+                      <span className="absolute -top-1 -right-1.5 h-2 w-2 rounded-full bg-rose-600 ring-2 ring-white animate-pulse" />
+                    )}
+                  </div>
+                  <span className="text-[10px] font-bold mt-0.5">More</span>
+                  {isOtherActive && <span className="h-1 w-1 rounded-full bg-brand-green mt-0.5" />}
+                </button>
+              );
+            })()}
+          </nav>
+        </>,
+        document.body
+      )}
 
       {/* REAL PAYMENT DETAILS & QR CODE CONTROL MODAL */}
       {isPaymentSettingsModalOpen && (

@@ -2,6 +2,29 @@
 
 ---
 
+### 📍 Version 8.97 — React Portal Mobile Navigation Dock & Drawer Isolation 📱🚪🚀
+
+```mermaid
+flowchart TD
+    subgraph MobilePortalArchitecture ["React Portal Mobile Engine"]
+        PortalMounting["Direct document.body Portal Mounting:
+        • Mobile Bottom Dock & More Features Drawer mounted via React createPortal directly into document.body
+        • 100% immune to ancestor flex layouts, scroll wrappers, or overflow contexts"]
+
+        SSRHydrationSafety["SSR Hydration Safety:
+        • hasMounted hook prevents server/client markup divergence (React Error #418 eliminated)
+        • Mobile hamburger button cleanly separated from desktop sidebar toggle"]
+
+        ScreenLock["True Viewport Anchoring:
+        • Fixed bottom dock stays permanently at bottom of device screen during scrolling
+        • More Features drawer slides smoothly directly onto active screen"]
+
+        PortalMounting & SSRHydrationSafety --> ScreenLock
+    end
+```
+
+---
+
 ### 📍 Version 8.96 — Fix Body Containing Block & Mobile Fixed Navigation Docking 📱📌✨
 
 ```mermaid
