@@ -2,6 +2,28 @@
 
 ---
 
+### 📍 Version 8.88 — Floor Customizer Overlap Fix & High-Performance Background Engine 🚀⚡🎨
+
+```mermaid
+flowchart TD
+    subgraph OptimizationEngine ["Performance & Layout Architecture Improvements"]
+        UIFix["Floor Customizer 2-Tier Layout:
+        • Top Row: Floor Name + PG Rooms Input
+        • Bottom Row: Clean Room Number Range + 'Exclude GF' Toggle
+        • 100% Collision-Free on Mobile & Compact Modals"]
+        
+        PerfEngine["Smart Background Engine:
+        • Visibility-Aware Polling (Skips when document.hidden)
+        • Window Focus Re-sync
+        • JSON Change-Detection (Zero redundant dashboard re-renders)
+        • Lightweight 25s GET vs aggressive 5s POST loop"]
+        
+        UIFix & PerfEngine --> UltraFastApp["Lag-Free, Snappy, High-Speed Dashboard Experience"]
+    end
+```
+
+---
+
 ### 📍 Version 8.87 — Centralized dataPipeline.ts Engine & High-Speed O(1) Resident Cache ⚡🔄✨
 
 ```mermaid

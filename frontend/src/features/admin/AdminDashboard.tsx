@@ -2076,11 +2076,22 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     }
   };
 
-  // Immediate WhatsApp status fetch on mount + 10s heartbeat poll to ensure navbar indicator is 100% accurate at all times
+  // Optimized WhatsApp status fetch with visibility awareness
   useEffect(() => {
     fetchWhatsAppStatus();
-    const interval = setInterval(fetchWhatsAppStatus, 10000);
-    return () => clearInterval(interval);
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && !document.hidden) {
+        fetchWhatsAppStatus();
+      }
+    }, 20000);
+
+    const onFocus = () => fetchWhatsAppStatus();
+    if (typeof window !== "undefined") window.addEventListener("focus", onFocus);
+
+    return () => {
+      clearInterval(interval);
+      if (typeof window !== "undefined") window.removeEventListener("focus", onFocus);
+    };
   }, []);
 
   const fetchBookings = async () => {
@@ -2088,7 +2099,10 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       const res = await fetch(`${API_BASE_URL}/api/bookings`);
       const data = await res.json();
       if (data.success && Array.isArray(data.bookings)) {
-        setBookings(data.bookings);
+        setBookings((prev) => {
+          if (JSON.stringify(prev) === JSON.stringify(data.bookings)) return prev;
+          return data.bookings;
+        });
         if (typeof window !== "undefined") {
           localStorage.setItem("shripad_cached_bookings", JSON.stringify(data.bookings));
         }
@@ -2138,24 +2152,28 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     }
   };
 
+  // High-Performance Visibility-Aware Polling (eliminates UI lag and unnecessary CPU/memory load)
   useEffect(() => {
     fetchBookings();
 
-    // 5000ms background polling to fetch new online bookings automatically
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/bookings/sync`, { method: "POST" });
-        const data = await res.json();
-        if (data.success && data.bookings) {
-          setBookings(data.bookings);
-        }
-      } catch (err) {
-        // Silent warning when offline or connecting to backend
-        console.warn("Background auto-sync connecting:", err);
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && !document.hidden) {
+        fetchBookings();
       }
-    }, 5000);
+    }, 25000);
 
-    return () => clearInterval(interval);
+    const onFocus = () => {
+      if (typeof document !== "undefined" && !document.hidden) {
+        fetchBookings();
+      }
+    };
+
+    if (typeof window !== "undefined") window.addEventListener("focus", onFocus);
+
+    return () => {
+      clearInterval(interval);
+      if (typeof window !== "undefined") window.removeEventListener("focus", onFocus);
+    };
   }, []);
 
   const getTimeFilteredBookings = () => {
@@ -5660,43 +5678,58 @@ function doPost(e) {
                     const endRoom = flIdx === 0 ? `G${currentRooms.toString().padStart(2, "0")}` : `${flIdx}${currentRooms.toString().padStart(2, "0")}`;
 
                     return (
-                      <div key={flIdx} className={`p-2.5 rounded-xl border transition-all flex items-center justify-between gap-2 shadow-2xs ${currentRooms === 0 ? "bg-amber-50/60 border-amber-200" : "bg-white border-slate-200/80"}`}>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-bold text-slate-800 block truncate">🏢 {flName}</span>
+                      <div key={flIdx} className={`p-3 rounded-xl border transition-all space-y-1.5 shadow-2xs ${currentRooms === 0 ? "bg-amber-50/60 border-amber-200" : "bg-white border-slate-200/80"}`}>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="font-bold text-slate-800 text-xs truncate">🏢 {flName}</span>
                             {flIdx === 0 && currentRooms === 0 && (
-                              <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 border border-amber-300">Ground Floor Excluded</span>
+                              <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 border border-amber-300 shrink-0">
+                                GF Excluded
+                              </span>
                             )}
                           </div>
-                          <span className={`text-[10px] font-extrabold block ${currentRooms === 0 ? "text-amber-800" : "text-brand-green"}`}>
-                            {currentRooms === 0 ? "🚫 0 Rooms (Parking / Commercial / Reception)" : currentRooms === 1 ? `Room ${startRoom}` : `Rooms ${startRoom} – ${endRoom}`}
-                          </span>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="text-[10px] text-slate-500 font-semibold">PG Rooms:</span>
+                            <input
+                              type="number"
+                              min="0"
+                              max="50"
+                              placeholder="0"
+                              value={currentRooms === 0 ? "" : currentRooms}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                const num = val === "" ? 0 : parseInt(val.replace(/^0+/, "") || "0", 10);
+                                setNewFloorRoomCounts((prev) => ({ ...prev, [flIdx]: isNaN(num) ? 0 : num }));
+                              }}
+                              className="w-16 rounded-xl border border-slate-200 bg-slate-50 p-1.5 text-center text-xs font-bold text-slate-900 outline-none focus:border-brand-green focus:bg-white shadow-2xs"
+                            />
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          {flIdx === 0 && currentRooms > 0 && (
-                            <button
-                              type="button"
-                              onClick={() => setNewFloorRoomCounts((prev) => ({ ...prev, 0: 0 }))}
-                              className="text-[10px] font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 px-2 py-1 rounded-lg border border-rose-200 transition cursor-pointer"
-                              title="Set Ground Floor to 0 Rooms if used for Parking or Reception"
-                            >
-                              Exclude GF (0 Rooms)
-                            </button>
+
+                        <div className="flex items-center justify-between gap-2 pt-0.5">
+                          <span className={`text-[10px] font-extrabold truncate ${currentRooms === 0 ? "text-amber-800" : "text-brand-green"}`}>
+                            {currentRooms === 0 ? "🚫 0 Rooms (Parking / Reception)" : currentRooms === 1 ? `Room ${startRoom}` : `Rooms ${startRoom} – ${endRoom}`}
+                          </span>
+                          {flIdx === 0 && (
+                            currentRooms > 0 ? (
+                              <button
+                                type="button"
+                                onClick={() => setNewFloorRoomCounts((prev) => ({ ...prev, 0: 0 }))}
+                                className="text-[10px] font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 px-2 py-0.5 rounded-lg border border-rose-200 transition cursor-pointer shrink-0"
+                                title="Set Ground Floor to 0 Rooms if used for Parking or Reception"
+                              >
+                                Exclude GF (0 Rooms)
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setNewFloorRoomCounts((prev) => ({ ...prev, 0: newBuildingRoomsPerFloor || 4 }))}
+                                className="text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-lg border border-emerald-200 transition cursor-pointer shrink-0"
+                              >
+                                Restore GF Rooms
+                              </button>
+                            )
                           )}
-                          <span className="text-[10px] text-slate-500 font-semibold">PG Rooms:</span>
-                          <input
-                            type="number"
-                            min="0"
-                            max="50"
-                            placeholder="0"
-                            value={currentRooms === 0 ? "" : currentRooms}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              const num = val === "" ? 0 : parseInt(val.replace(/^0+/, "") || "0", 10);
-                              setNewFloorRoomCounts((prev) => ({ ...prev, [flIdx]: isNaN(num) ? 0 : num }));
-                            }}
-                            className="w-16 rounded-xl border border-slate-200 bg-slate-50 p-1.5 text-center text-xs font-bold text-slate-900 outline-none focus:border-brand-green focus:bg-white"
-                          />
                         </div>
                       </div>
                     );
