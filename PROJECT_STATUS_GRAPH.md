@@ -2,6 +2,35 @@
 
 ---
 
+### 📍 Version 8.74 — Payments & Financial Hub Dual-Mode Architecture (Feature 4) 💳💰🚀
+
+```mermaid
+flowchart TD
+    subgraph FinancialKPIGrid ["4-Card Responsive Financial KPI Grid"]
+        K1["Total Collections (₹ Gross Income)"]
+        K2["Total Spend (₹ Logged Expenses)"]
+        K3["Net Profit Margin (₹ Income - Expenses)"]
+        K4["Escrow Deposits Held (₹ Security)"]
+    end
+
+    subgraph DualModeSwitcher ["Dual View-Mode Architecture"]
+        TabAnalytics["💰 Financial Analytics & Expenses:
+        • Building Revenue & Occupancy Matrix
+        • Monthly Spend & Expense Datatable with category tags
+        • '+ Log Expense' Modal Trigger"]
+        TabTransactions["💳 Tenant Collections Audit Trail:
+        • Live verified payment transactions
+        • Filter & Search by Txn ID, Tenant, Phone
+        • Direct link to Invoice & Receipts"]
+        
+        FinancialKPIGrid --> DualModeSwitcher
+        DualModeSwitcher --> TabAnalytics
+        DualModeSwitcher --> TabTransactions
+    end
+```
+
+---
+
 ### 📍 Version 8.73 — Buildings & Infrastructure Management Overhaul (Feature 3) 🏢🚀✨
 
 ```mermaid

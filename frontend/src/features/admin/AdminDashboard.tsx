@@ -191,6 +191,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const [customerDirectorySearch, setCustomerDirectorySearch] = useState("");
   const [customerDirectoryBuilding, setCustomerDirectoryBuilding] = useState("All");
   const [customerDirectoryStatus, setCustomerDirectoryStatus] = useState<"all" | "allocated" | "pending">("all");
+  const [revenueSubTab, setRevenueSubTab] = useState<"analytics" | "transactions">("analytics");
+  const [paymentAuditSearch, setPaymentAuditSearch] = useState("");
   const [timeRange, setTimeRange] = useState("Last 60 Days");
   const [customerTimeFilter, setCustomerTimeFilter] = useState<"24h" | "7d" | "1m" | "custom">("24h");
   const [customStartDate, setCustomStartDate] = useState("2026-08-01");
@@ -2942,389 +2944,417 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
             </div>
           )}
 
-          {/* TAB 2: REVENUE & FINANCIAL INSIGHTS TAB */}
-          {(activeTab === "Revenue" || activeTab === "Analytics") && (
-            <div className="space-y-6 sm:space-y-7">
-              {/* Revenue Header & Time Filter */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          {/* TAB 2: PAYMENTS & FINANCIAL INSIGHTS TAB */}
+          {(activeTab === "Revenue" || activeTab === "Analytics" || activeTab === "Payments") && (
+            <div className="space-y-5 sm:space-y-6 animate-in fade-in duration-300">
+              {/* Header & Subtab Switcher */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-bold text-emerald-700 border border-emerald-200">
-                      <Wallet className="h-3 w-3" /> Financial & Occupancy Analytics
-                    </span>
-                  </div>
-                  <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
-                    Revenue & Financial Insights 💰
+                  <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2">
+                    Payments & Financial Hub 💳💰
                   </h1>
                   <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
-                    Track total revenue, expense breakdowns, net profit, and building performance.
+                    Track collected tenant rents, operational expenses, profit margins, and payment transaction audits.
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3 self-start sm:self-auto">
-                  <select
-                    value={timeRange}
-                    onChange={(e) => setTimeRange(e.target.value)}
-                    className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 outline-none focus:border-brand-green shadow-sm"
+                {/* Subtab View Mode Switcher */}
+                <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100/90 border border-slate-200/80 self-start sm:self-auto shrink-0">
+                  <button
+                    onClick={() => setRevenueSubTab("analytics")}
+                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                      revenueSubTab === "analytics"
+                        ? "bg-white text-brand-green shadow-xs"
+                        : "text-slate-500 hover:text-slate-900"
+                    }`}
                   >
-                    <option>Last 60 Days</option>
-                    <option>Last 30 Days</option>
-                    <option>This Year</option>
-                  </select>
+                    <Wallet className="h-3.5 w-3.5" />
+                    <span>Analytics & Expenses</span>
+                  </button>
+                  <button
+                    onClick={() => setRevenueSubTab("transactions")}
+                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                      revenueSubTab === "transactions"
+                        ? "bg-white text-indigo-600 shadow-xs"
+                        : "text-slate-500 hover:text-slate-900"
+                    }`}
+                  >
+                    <CreditCard className="h-3.5 w-3.5" />
+                    <span>Tenant Collections</span>
+                  </button>
                 </div>
               </div>
 
-              {/* Financial KPI Cards Grid (Total Revenue, Total Expense, Net Profit, Total Deposit Held) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-                {/* 1. Total Revenue */}
-                <div className="rounded-[1.5rem] sm:rounded-[2rem] border border-slate-200/80 bg-white p-4 sm:p-5 lg:p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10">
+              {/* Financial KPI Cards Grid (4 Cards: Gross Revenue, Spend, Net Profit, Escrow Held) */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5">
+                {/* 1. Total Gross Revenue */}
+                <div className="rounded-2xl sm:rounded-3xl border border-emerald-200/80 bg-white p-3.5 sm:p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-emerald-500/10">
                   <div className="flex items-center justify-between">
-                    <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl bg-emerald-100/80 text-emerald-600 border border-emerald-200/60 shadow-2xs">
-                      <Wallet className="h-5 w-5 sm:h-6 sm:w-6" />
+                    <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-xl sm:rounded-2xl bg-emerald-100/80 text-emerald-600 border border-emerald-200/60 shadow-2xs">
+                      <Wallet className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
                     </div>
-                    <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-extrabold text-emerald-700 border border-emerald-200/80">
-                      <ArrowUpRight className="h-3.5 w-3.5" /> Gross Income
+                    <span className="hidden sm:inline-flex items-center gap-0.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-extrabold text-emerald-700 border border-emerald-200/80">
+                      <ArrowUpRight className="h-3 w-3" /> Income
                     </span>
                   </div>
-                  <div className="mt-4 sm:mt-5">
-                    <p className="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400">Total Revenue</p>
-                    <p className="mt-0.5 sm:mt-1 text-xl sm:text-2xl lg:text-3xl font-black text-slate-900">
+                  <div className="mt-3 sm:mt-4">
+                    <p className="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400">Total Collections</p>
+                    <p className="mt-0.5 sm:mt-1 text-lg sm:text-2xl lg:text-3xl font-black text-slate-900">
                       ₹ {totalGrossRevenue.toLocaleString("en-IN")}
                     </p>
-                    <p className="mt-0.5 text-xs font-semibold text-slate-500">
-                      {isStaffMode ? "Scoped Property Gross Revenue" : "Total collected tenant payments"}
+                    <p className="mt-0.5 text-[10px] sm:text-xs font-semibold text-slate-500 truncate">
+                      {isStaffMode ? "Scoped Property Revenue" : "Verified tenant collections"}
                     </p>
                   </div>
                 </div>
 
                 {/* 2. Total Monthly Spend / Expense */}
-                <div className="rounded-[1.5rem] sm:rounded-[2rem] border border-slate-200/80 bg-white p-4 sm:p-5 lg:p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-rose-500/10">
+                <div className="rounded-2xl sm:rounded-3xl border border-rose-200/80 bg-white p-3.5 sm:p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-rose-500/10">
                   <div className="flex items-center justify-between">
-                    <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl bg-rose-100/80 text-rose-600 border border-rose-200/60 shadow-2xs">
-                      <CreditCard className="h-5 w-5 sm:h-6 sm:w-6" />
+                    <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-xl sm:rounded-2xl bg-rose-100/80 text-rose-600 border border-rose-200/60 shadow-2xs">
+                      <CreditCard className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
                     </div>
-                    <span className="inline-flex items-center gap-0.5 rounded-full bg-rose-50 px-2.5 py-1 text-xs font-extrabold text-rose-700 border border-rose-200/80">
-                      <ArrowDownRight className="h-3.5 w-3.5" /> Total Spend
+                    <span className="hidden sm:inline-flex items-center gap-0.5 rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-extrabold text-rose-700 border border-rose-200/80">
+                      <ArrowDownRight className="h-3 w-3" /> Spend
                     </span>
                   </div>
-                  <div className="mt-4 sm:mt-5">
-                    <p className="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400">Monthly Spend / Expenses</p>
-                    <p className="mt-0.5 sm:mt-1 text-xl sm:text-2xl lg:text-3xl font-black text-rose-600">
+                  <div className="mt-3 sm:mt-4">
+                    <p className="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400">Total Spend</p>
+                    <p className="mt-0.5 sm:mt-1 text-lg sm:text-2xl lg:text-3xl font-black text-rose-600">
                       ₹ {totalMonthlySpend.toLocaleString("en-IN")}
                     </p>
-                    <p className="mt-0.5 text-xs font-semibold text-slate-500">
+                    <p className="mt-0.5 text-[10px] sm:text-xs font-semibold text-slate-500 truncate">
                       {scopedExpensesList.length} logged expense entries
                     </p>
                   </div>
                 </div>
 
                 {/* 3. Net Profit */}
-                <div className="rounded-[1.5rem] sm:rounded-[2rem] border border-slate-200/80 bg-white p-4 sm:p-5 lg:p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-green/10">
+                <div className="rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white p-3.5 sm:p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-brand-green/10">
                   <div className="flex items-center justify-between">
-                    <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl bg-amber-100/80 text-amber-600 border border-amber-200/60 shadow-2xs">
-                      <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6" />
+                    <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-xl sm:rounded-2xl bg-amber-100/80 text-amber-600 border border-amber-200/60 shadow-2xs">
+                      <TrendingUp className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
                     </div>
-                    <span className={`inline-flex items-center gap-0.5 rounded-full px-2.5 py-1 text-xs font-extrabold border ${
+                    <span className={`hidden sm:inline-flex items-center gap-0.5 rounded-full px-2.5 py-0.5 text-[11px] font-extrabold border ${
                       netProfit >= 0
                         ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                         : "bg-rose-50 text-rose-700 border-rose-200"
                     }`}>
-                      {netProfit >= 0 ? <ArrowUpRight className="h-3.5 w-3.5" /> : <ArrowDownRight className="h-3.5 w-3.5" />}
                       {netProfit >= 0 ? "Profitable" : "Deficit"}
                     </span>
                   </div>
-                  <div className="mt-4 sm:mt-5">
-                    <p className="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400">Net Profit / Earnings</p>
-                    <p className={`mt-0.5 sm:mt-1 text-xl sm:text-2xl lg:text-3xl font-black ${netProfit >= 0 ? "text-emerald-700" : "text-rose-600"}`}>
+                  <div className="mt-3 sm:mt-4">
+                    <p className="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400">Net Profit</p>
+                    <p className={`mt-0.5 sm:mt-1 text-lg sm:text-2xl lg:text-3xl font-black ${netProfit >= 0 ? "text-emerald-700" : "text-rose-600"}`}>
                       ₹ {netProfit.toLocaleString("en-IN")}
                     </p>
-                    <p className="mt-0.5 text-xs font-semibold text-slate-500">
-                      Calculated as (Gross Revenue - Spend)
+                    <p className="mt-0.5 text-[10px] sm:text-xs font-semibold text-slate-500 truncate">
+                      Gross Revenue - Expenses
                     </p>
                   </div>
                 </div>
 
                 {/* 4. Total Security Deposits Held */}
-                <div className="rounded-[1.5rem] sm:rounded-[2rem] border border-slate-200/80 bg-white p-4 sm:p-5 lg:p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/10">
+                <div className="rounded-2xl sm:rounded-3xl border border-cyan-200/80 bg-white p-3.5 sm:p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/10">
                   <div className="flex items-center justify-between">
-                    <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl bg-cyan-100/80 text-cyan-600 border border-cyan-200/60 shadow-2xs">
-                      <ShieldCheck className="h-5 w-5 sm:h-6 sm:w-6" />
+                    <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-xl sm:rounded-2xl bg-cyan-100/80 text-cyan-600 border border-cyan-200/60 shadow-2xs">
+                      <ShieldCheck className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
                     </div>
-                    <span className="inline-flex items-center gap-0.5 rounded-full bg-cyan-50 px-2.5 py-1 text-xs font-extrabold text-cyan-700 border border-cyan-200/80">
-                      <Lock className="h-3.5 w-3.5" /> Escrow Held
+                    <span className="hidden sm:inline-flex items-center gap-0.5 rounded-full bg-cyan-50 px-2.5 py-0.5 text-[11px] font-extrabold text-cyan-700 border border-cyan-200/80">
+                      Escrow
                     </span>
                   </div>
-                  <div className="mt-4 sm:mt-5">
-                    <p className="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400">Total Security Deposits</p>
-                    <p className="mt-0.5 sm:mt-1 text-xl sm:text-2xl lg:text-3xl font-black text-cyan-700">
+                  <div className="mt-3 sm:mt-4">
+                    <p className="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400">Deposits Held</p>
+                    <p className="mt-0.5 sm:mt-1 text-lg sm:text-2xl lg:text-3xl font-black text-cyan-700">
                       ₹ {totalSecurityDepositHeld.toLocaleString("en-IN")}
                     </p>
-                    <p className="mt-0.5 text-xs font-semibold text-slate-500">
-                      Refundable deposit held for active residents
+                    <p className="mt-0.5 text-[10px] sm:text-xs font-semibold text-slate-500 truncate">
+                      Active tenant deposits
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Top Row Analytics: Revenue Chart (Left 7 cols) & Occupancy Donut (Right 5 cols) */}
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-                {/* Revenue Overview Chart */}
-                <div className="rounded-[2rem] border border-slate-200/80 bg-white p-6 sm:p-7 shadow-sm lg:col-span-7">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
-                      <h3 className="text-lg font-black text-slate-900">Revenue Overview</h3>
-                      <div className="mt-2 flex items-center gap-4 text-xs font-bold">
-                        <span className="flex items-center gap-1.5 text-brand-green">
-                          <span className="h-2.5 w-2.5 rounded-full bg-brand-green"></span> Revenue
-                        </span>
-                        <span className="flex items-center gap-1.5 text-amber-500">
-                          <span className="h-2.5 w-2.5 rounded-full bg-amber-500"></span> Expense
-                        </span>
+              {/* SUBTAB 1: FINANCIAL OVERVIEW & EXPENSES */}
+              {revenueSubTab === "analytics" && (
+                <div className="space-y-5 sm:space-y-6">
+                  {/* Building Performance Matrix Card */}
+                  <div className="rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-6 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                      <div>
+                        <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                          Building Revenue & Occupancy Matrix 🏢
+                        </h3>
+                        <p className="text-xs font-medium text-slate-500">Live property occupancy rates and collections breakdown</p>
                       </div>
+                      <button
+                        onClick={() => handleTabClick("Buildings")}
+                        className="text-xs font-extrabold text-brand-green hover:underline cursor-pointer"
+                      >
+                        Manage Buildings →
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                      {scopedBuildingsList.map((bld) => {
+                        const stats = getBuildingOccupancyDetails(bld.name);
+                        const occPct = stats.totalBeds > 0 ? Math.round((stats.occupiedBedsCount / stats.totalBeds) * 100) : 0;
+                        const bldBookings = scopedBookings.filter((bk) => (bk.allocatedBuilding || bk.building) === bld.name);
+                        let bldRev = 0;
+                        bldBookings.forEach((bk) => {
+                          (bk.paymentHistory || []).forEach((p: any) => {
+                            if (p.status === "verified" || (!p.status && p.transactionId)) {
+                              bldRev += p.amount || 0;
+                            }
+                          });
+                        });
+
+                        return (
+                          <div key={bld.name} className="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-200/70 space-y-2.5">
+                            <div className="flex items-center justify-between font-bold text-xs">
+                              <span className="font-black text-slate-900 text-sm flex items-center gap-1.5">
+                                <Building2 className="h-4 w-4 text-brand-green" />
+                                {bld.name}
+                              </span>
+                              <span className="font-extrabold text-emerald-700">₹{bldRev.toLocaleString("en-IN")}</span>
+                            </div>
+
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
+                                <span>Occupancy</span>
+                                <span className="text-slate-800">{occPct}% ({stats.occupiedBedsCount}/{stats.totalBeds} Beds)</span>
+                              </div>
+                              <div className="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
+                                <div className="h-full bg-brand-green rounded-full transition-all duration-500" style={{ width: `${occPct}%` }} />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 
-                  <div className="mt-7 h-56 w-full relative flex items-end justify-between px-2 pb-6 border-b border-slate-100 overflow-x-auto">
-                    <svg
-                      className="absolute inset-0 h-full w-full overflow-visible"
-                      preserveAspectRatio="none"
-                      viewBox="0 0 500 150"
-                    >
-                      <path
-                        d="M 0 100 Q 50 60, 100 80 T 200 40 T 300 70 T 400 50 T 500 20"
-                        fill="none"
-                        stroke="#1e3a5f"
-                        strokeWidth="4"
-                        strokeLinecap="round"
-                      />
-                      <path
-                        d="M 0 130 Q 50 110, 100 115 T 200 85 T 300 110 T 400 95 T 500 70"
-                        fill="none"
-                        stroke="#f59e0b"
-                        strokeWidth="4"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    {["Jun 29", "Jul 06", "Jul 13", "Jul 20", "Jul 27", "Aug 03", "Aug 10", "Aug 17", "Aug 24"].map(
-                      (label) => (
-                        <span key={label} className="text-[10px] font-bold text-slate-400 z-10">
-                          {label}
-                        </span>
-                      )
+                  {/* EXPENSE & SPEND RECORDS DATATABLE */}
+                  <div className="rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-6 shadow-sm space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                      <div>
+                        <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                          Monthly Spend & Expense Records 💸
+                          <span className="rounded-full bg-rose-100 px-2.5 py-0.5 text-[10px] font-extrabold text-rose-800 border border-rose-200">
+                            {scopedExpensesList.length} Entries
+                          </span>
+                        </h3>
+                        <p className="text-xs font-medium text-slate-500 mt-0.5">
+                          Electricity, catering, salaries, maintenance, and facility operational costs.
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          resetExpenseForm();
+                          setIsExpenseModalOpen(true);
+                        }}
+                        className="inline-flex items-center gap-2 rounded-2xl bg-brand-green hover:bg-emerald-700 text-white font-extrabold text-xs px-4 py-2.5 shadow-md shadow-brand-green/20 transition cursor-pointer active:scale-95 self-start sm:self-auto"
+                      >
+                        <Plus className="h-4 w-4" />
+                        <span>+ Log Expense</span>
+                      </button>
+                    </div>
+
+                    {scopedExpensesList.length === 0 ? (
+                      <div className="text-center py-10 border-2 border-dashed border-slate-200 rounded-2xl space-y-2">
+                        <CreditCard className="h-10 w-10 text-slate-300 mx-auto" />
+                        <p className="text-xs font-bold text-slate-600">No expense records logged yet.</p>
+                        <p className="text-[11px] text-slate-400">Click "+ Log Expense" above to add your first monthly spend entry.</p>
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs">
+                          <thead>
+                            <tr className="border-b border-slate-200 text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                              <th className="py-3 px-3">Date</th>
+                              <th className="py-3 px-3">Expense Title</th>
+                              <th className="py-3 px-3">Category</th>
+                              <th className="py-3 px-3">Building</th>
+                              <th className="py-3 px-3">Amount (₹)</th>
+                              <th className="py-3 px-3">Logged By</th>
+                              <th className="py-3 px-3 text-right">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 font-bold text-slate-700">
+                            {scopedExpensesList.map((exp) => (
+                              <tr key={exp.id} className="hover:bg-slate-50/80 transition">
+                                <td className="py-3 px-3 font-mono text-slate-500">{exp.date}</td>
+                                <td className="py-3 px-3 font-extrabold text-slate-900">{exp.title}</td>
+                                <td className="py-3 px-3">
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-800 border border-slate-200">
+                                    {exp.category}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-3">
+                                  <span className="rounded-lg bg-slate-100 px-2 py-0.5 text-[11px] font-black text-slate-700">{exp.building}</span>
+                                </td>
+                                <td className="py-3 px-3 font-black text-rose-600">₹ {Number(exp.amount).toLocaleString("en-IN")}</td>
+                                <td className="py-3 px-3 text-slate-500">{exp.createdBy || "Admin"}</td>
+                                <td className="py-3 px-3 text-right">
+                                  <div className="flex items-center justify-end gap-1.5">
+                                    <button
+                                      onClick={() => {
+                                        setEditingExpId(exp.id);
+                                        setExpTitle(exp.title);
+                                        setExpCategory(exp.category);
+                                        setExpAmount(String(exp.amount));
+                                        setExpDate(exp.date);
+                                        setExpBuilding(exp.building);
+                                        setExpNotes(exp.notes || "");
+                                        setIsExpenseModalOpen(true);
+                                      }}
+                                      className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer"
+                                      title="Edit Expense"
+                                    >
+                                      <Pencil className="h-3 w-3" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteExpense(exp.id, exp.title)}
+                                      className="flex h-7 w-7 items-center justify-center rounded-full bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition cursor-pointer"
+                                      title="Delete Expense"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     )}
                   </div>
                 </div>
+              )}
 
-                {/* Occupancy Rate Donut Widget */}
-                {(() => {
-                  const totBeds = overallOccupancyStats.totalOccBeds + overallOccupancyStats.totalVacBeds;
-                  const occPct = totBeds > 0 ? Math.round((overallOccupancyStats.totalOccBeds / totBeds) * 100) : 0;
-                  const vacPct = 100 - occPct;
-                  return (
-                    <div className="rounded-[2rem] border border-slate-200/80 bg-white p-6 sm:p-7 shadow-sm lg:col-span-5 flex flex-col justify-between">
-                      <h3 className="text-lg font-black text-slate-900 mb-2">Occupancy Rate</h3>
-                      <div className="relative flex items-center justify-center my-4">
-                        <div className="h-40 w-40 rounded-full border-[16px] border-brand-green border-t-amber-500 flex flex-col items-center justify-center shadow-inner">
-                          <span className="text-3xl font-black text-slate-900">{occPct}%</span>
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                            {isStaffMode ? "Scoped" : "Overall"}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="space-y-2.5 text-xs font-bold">
-                        <div className="flex items-center justify-between">
-                          <span className="flex items-center gap-2 text-slate-600">
-                            <span className="h-3 w-3 rounded-full bg-brand-green"></span> Occupied
-                          </span>
-                          <span className="text-slate-900">{occPct}% ({overallOccupancyStats.totalOccBeds} beds)</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="flex items-center gap-2 text-slate-600">
-                            <span className="h-3 w-3 rounded-full bg-amber-500"></span> Vacant
-                          </span>
-                          <span className="text-slate-900">{vacPct}% ({overallOccupancyStats.totalVacBeds} beds)</span>
-                        </div>
-                      </div>
+              {/* SUBTAB 2: TENANT PAYMENT COLLECTIONS & AUDIT TRAIL */}
+              {revenueSubTab === "transactions" && (
+                <div className="rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-6 shadow-sm space-y-4">
+                  {/* Search Bar for Transactions */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                    <div className="relative flex-1 max-w-md">
+                      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <input
+                        type="text"
+                        value={paymentAuditSearch}
+                        onChange={(e) => setPaymentAuditSearch(e.target.value)}
+                        placeholder="Search by Txn ID, resident name, or phone..."
+                        className="w-full pl-10 pr-9 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-green focus:bg-white transition"
+                      />
+                      {paymentAuditSearch && (
+                        <button
+                          onClick={() => setPaymentAuditSearch("")}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                     </div>
-                  );
-                })()}
-              </div>
 
-              {/* Bottom Row Analytics: Building Overview (Left 6 cols) & Top Buildings (Right 6 cols) */}
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-                <div className="rounded-[2rem] border border-slate-200/80 bg-white p-6 sm:p-7 shadow-sm lg:col-span-6">
-                  <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-lg font-black text-slate-900">Building Overview</h3>
-                    <button className="text-xs font-extrabold text-brand-green hover:underline">View All</button>
-                  </div>
-                  <div className="space-y-4">
-                    {scopedBuildingsList.map((bld) => {
-                      const stats = getBuildingOccupancyDetails(bld.name);
-                      const occPct = stats.totalBeds > 0 ? Math.round((stats.occupiedBedsCount / stats.totalBeds) * 100) : 0;
-                      return (
-                        <div key={bld.name} className="flex items-center gap-3 sm:gap-4">
-                          <span className="w-12 text-xs font-extrabold text-slate-900 shrink-0">{bld.name}</span>
-                          <div className="flex-1 h-2.5 rounded-full bg-slate-100 overflow-hidden">
-                            <div className="h-full bg-brand-green rounded-full transition-all duration-500" style={{ width: `${occPct}%` }}></div>
-                          </div>
-                          <div className="flex items-center gap-2 sm:gap-3 shrink-0 text-xs font-bold">
-                            <span className="text-slate-500">{stats.occupiedBedsCount} / {stats.totalBeds} Beds</span>
-                            <span className="text-slate-900 font-extrabold">{occPct}%</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="rounded-[2rem] border border-slate-200/80 bg-white p-6 sm:p-7 shadow-sm lg:col-span-6">
-                  <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-lg font-black text-slate-900">Top Buildings by Revenue</h3>
-                    <button className="text-xs font-extrabold text-brand-green hover:underline">View All</button>
-                  </div>
-                  <div className="space-y-4">
-                    {scopedBuildingsList.map((bld) => {
-                      const bldBookings = scopedBookings.filter((bk) => (bk.allocatedBuilding || bk.building) === bld.name);
-                      let totalRev = 0;
-                      bldBookings.forEach((bk) => {
-                        (bk.paymentHistory || []).forEach((p: any) => {
-                          if (p.status === "verified" || (!p.status && p.transactionId)) {
-                            totalRev += p.amount || 0;
-                          }
-                        });
-                      });
-                      return (
-                        <div key={bld.name} className="flex items-center gap-3">
-                          <div className="flex h-8.5 w-8.5 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 text-xs font-bold shrink-0 border border-emerald-100">
-                            <Building2 className="h-4 w-4" />
-                          </div>
-                          <span className="w-12 text-xs font-extrabold text-slate-900 shrink-0">{bld.name}</span>
-                          <div className="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
-                            <div className="h-full bg-brand-green rounded-full transition-all duration-500" style={{ width: `${totalRev > 0 ? 85 : 15}%` }}></div>
-                          </div>
-                          <span className="text-xs font-black text-slate-900 shrink-0">₹{totalRev.toLocaleString("en-IN")}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-
-              {/* EXPENSE & SPEND RECORDS DATATABLE */}
-              <div className="rounded-[2rem] border border-slate-200/80 bg-white p-6 sm:p-7 shadow-sm space-y-5">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                  <div>
-                    <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
-                      Monthly Spend & Expense Records 💸
-                      <span className="rounded-full bg-rose-100 px-2.5 py-0.5 text-[10px] font-extrabold text-rose-800 border border-rose-200">
-                        {scopedExpensesList.length} Entries
-                      </span>
-                    </h3>
-                    <p className="text-xs font-medium text-slate-500 mt-0.5">
-                      Detailed breakdown of electricity, catering, salaries, maintenance, and operational expenses.
-                    </p>
+                    <button
+                      onClick={() => handleTabClick("Invoice")}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-green text-white font-bold text-xs shadow-xs hover:bg-emerald-700 transition cursor-pointer active:scale-95"
+                    >
+                      <Receipt className="h-3.5 w-3.5" />
+                      <span>Create / Verify Invoices</span>
+                    </button>
                   </div>
 
-                  <button
-                    onClick={() => {
-                      resetExpenseForm();
-                      setIsExpenseModalOpen(true);
-                    }}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-brand-green hover:bg-emerald-700 text-white font-extrabold text-xs px-5 py-2.5 shadow-md shadow-brand-green/20 transition cursor-pointer active:scale-95 self-start sm:self-auto"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>+ Log Expense</span>
-                  </button>
-                </div>
-
-                {scopedExpensesList.length === 0 ? (
-                  <div className="text-center py-10 border-2 border-dashed border-slate-200 rounded-2xl space-y-2">
-                    <CreditCard className="h-10 w-10 text-slate-300 mx-auto" />
-                    <p className="text-xs font-bold text-slate-600">No expense records logged yet.</p>
-                    <p className="text-[11px] text-slate-400">Click "+ Log Expense" above to add your first monthly spend entry.</p>
-                  </div>
-                ) : (
+                  {/* Transactions Table */}
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
                       <thead>
                         <tr className="border-b border-slate-200 text-[10px] font-black uppercase text-slate-400 tracking-wider">
-                          <th className="py-3 px-3">Date</th>
-                          <th className="py-3 px-3">Expense Title</th>
-                          <th className="py-3 px-3">Category</th>
-                          <th className="py-3 px-3">Building</th>
+                          <th className="py-3 px-3">Txn ID</th>
+                          <th className="py-3 px-3">Resident Name</th>
+                          <th className="py-3 px-3">Building & Room</th>
                           <th className="py-3 px-3">Amount (₹)</th>
-                          <th className="py-3 px-3">Logged By</th>
+                          <th className="py-3 px-3">Payment Method</th>
+                          <th className="py-3 px-3">Status</th>
                           <th className="py-3 px-3 text-right">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 font-bold text-slate-700">
-                        {scopedExpensesList.map((exp) => (
-                          <tr key={exp.id} className="hover:bg-slate-50/80 transition">
-                            <td className="py-3.5 px-3 font-mono text-slate-500">{exp.date}</td>
-                            <td className="py-3.5 px-3 font-extrabold text-slate-900">{exp.title}</td>
-                            <td className="py-3.5 px-3">
-                              {(() => {
-                                const catLower = (exp.category || "").toLowerCase();
-                                if (catLower === "electricity" || catLower.includes("electricity")) {
-                                  return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">⚡ Electricity & Water</span>;
-                                }
-                                if (catLower === "food" || catLower.includes("food") || catLower.includes("mess")) {
-                                  return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-orange-50 text-orange-800 border border-orange-200">🍱 Food / Mess</span>;
-                                }
-                                if (catLower === "maintenance" || catLower.includes("repair")) {
-                                  return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-blue-50 text-blue-800 border border-blue-200">🔧 Maintenance</span>;
-                                }
-                                if (catLower === "salaries" || catLower.includes("salary")) {
-                                  return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-purple-50 text-purple-800 border border-purple-200">💼 Staff Salaries</span>;
-                                }
-                                if (catLower === "rent_lease" || catLower.includes("rent")) {
-                                  return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-indigo-50 text-indigo-800 border border-indigo-200">🏢 Rent & Lease</span>;
-                                }
-                                if (catLower === "wifi_utilities" || catLower.includes("wifi")) {
-                                  return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-teal-50 text-teal-800 border border-teal-200">🌐 Wi-Fi & Water</span>;
-                                }
-                                return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200">✨ {exp.category}</span>;
-                              })()}
-                            </td>
-                            <td className="py-3.5 px-3">
-                              <span className="rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-black text-slate-700">{exp.building}</span>
-                            </td>
-                            <td className="py-3.5 px-3 font-black text-rose-600">₹ {Number(exp.amount).toLocaleString("en-IN")}</td>
-                            <td className="py-3.5 px-3 text-slate-500">{exp.createdBy || "Admin"}</td>
-                            <td className="py-3.5 px-3 text-right">
-                              <div className="flex items-center justify-end gap-1.5">
+                        {(() => {
+                          const allTxns: any[] = [];
+                          scopedBookings.forEach((b) => {
+                            (b.paymentHistory || []).forEach((p: any) => {
+                              const q = paymentAuditSearch.toLowerCase().trim();
+                              const matchesQ =
+                                !q ||
+                                (p.transactionId && p.transactionId.toLowerCase().includes(q)) ||
+                                b.name.toLowerCase().includes(q) ||
+                                b.phone.includes(q) ||
+                                (b.allocatedBuilding && b.allocatedBuilding.toLowerCase().includes(q));
+
+                              if (matchesQ) {
+                                allTxns.push({
+                                  ...p,
+                                  residentName: b.name,
+                                  phone: b.phone,
+                                  building: b.allocatedBuilding || b.building,
+                                  room: b.allocatedRoom,
+                                  bookingId: b.id,
+                                });
+                              }
+                            });
+                          });
+
+                          if (allTxns.length === 0) {
+                            return (
+                              <tr>
+                                <td colSpan={7} className="py-10 text-center text-slate-400 font-semibold">
+                                  No transaction records found matching your query.
+                                </td>
+                              </tr>
+                            );
+                          }
+
+                          return allTxns.map((tx, idx) => (
+                            <tr key={idx} className="hover:bg-slate-50/80 transition">
+                              <td className="py-3.5 px-3 font-mono text-slate-600 font-bold">{tx.transactionId || tx.id || "CASH-TXN"}</td>
+                              <td className="py-3.5 px-3 font-black text-slate-900">{tx.residentName}</td>
+                              <td className="py-3.5 px-3 text-slate-500">
+                                {tx.building} {tx.room ? `• Room ${tx.room}` : ""}
+                              </td>
+                              <td className="py-3.5 px-3 font-black text-emerald-700">₹{Number(tx.amount || 0).toLocaleString("en-IN")}</td>
+                              <td className="py-3.5 px-3">
+                                <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-extrabold text-slate-700 uppercase">
+                                  {tx.paymentMethod || "UPI"}
+                                </span>
+                              </td>
+                              <td className="py-3.5 px-3">
+                                <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-extrabold border ${
+                                  tx.status === "verified"
+                                    ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                                    : "bg-amber-100 text-amber-800 border-amber-200"
+                                }`}>
+                                  {tx.status === "verified" ? "Verified" : "Submitted"}
+                                </span>
+                              </td>
+                              <td className="py-3.5 px-3 text-right">
                                 <button
-                                  onClick={() => {
-                                    setEditingExpId(exp.id);
-                                    setExpTitle(exp.title);
-                                    setExpCategory(exp.category);
-                                    setExpAmount(String(exp.amount));
-                                    setExpDate(exp.date);
-                                    setExpBuilding(exp.building);
-                                    setExpNotes(exp.notes || "");
-                                    setIsExpenseModalOpen(true);
-                                  }}
-                                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
-                                  title="Edit Expense"
+                                  onClick={() => handleTabClick("Invoice")}
+                                  className="text-[11px] font-extrabold text-brand-green hover:underline cursor-pointer"
                                 >
-                                  <Pencil className="h-3.5 w-3.5" />
+                                  View Receipt →
                                 </button>
-                                <button
-                                  onClick={() => handleDeleteExpense(exp.id, exp.title)}
-                                  className="p-1.5 rounded-lg text-rose-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
-                                  title="Delete Expense"
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
+                              </td>
+                            </tr>
+                          ));
+                        })()}
                       </tbody>
                     </table>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           )}
 
