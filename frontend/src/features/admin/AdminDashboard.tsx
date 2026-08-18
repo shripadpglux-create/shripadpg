@@ -2657,14 +2657,21 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
           )}
 
           {/* TAB 1: DASHBOARD TAB */}
+          {/* TAB 1: DASHBOARD TAB (EMERALD EXECUTIVE PROFESSIONAL LIGHT THEME) */}
           {activeTab === "Dashboard" && (
-            <div className="space-y-6 sm:space-y-7">
-              {/* Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-6 sm:space-y-7 animate-in fade-in duration-300">
+              {/* Executive Welcome & Live Operations Banner */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/95 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-slate-200/80 shadow-xs">
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-brand-green-light px-3 py-1 text-[11px] font-bold text-brand-green border border-brand-green/20">
-                      <Sparkles className="h-3 w-3" /> Live Operations Overview
+                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-extrabold text-emerald-800 border border-emerald-200/80 shadow-2xs">
+                      <Sparkles className="h-3.5 w-3.5 text-emerald-600 animate-pulse" /> Live Operations Overview
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100/90 px-3 py-1 text-[11px] font-bold text-slate-700 border border-slate-200 shadow-2xs">
+                      <Building2 className="h-3 w-3 text-slate-500" />
+                      {isStaffMode
+                        ? `Scope: ${activeStaffMember?.assignedBuildings?.join(", ") || "Assigned Property"}`
+                        : "All Properties Live"}
                     </span>
                   </div>
                   <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
@@ -2673,19 +2680,84 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
                     {isStaffMode
                       ? `Managing ${activeStaffMember?.assignedBuildings?.join(", ") || "Assigned Property"} • Scoped Property Dashboard`
-                      : "Here's what's happening in your PG business today."}
+                      : "Real-time occupancy metrics, admissions feed, and daily property insights."}
                   </p>
                 </div>
 
-                <div className="inline-flex items-center gap-2.5 self-start sm:self-auto rounded-full border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm hover:shadow transition">
-                  <Calendar className="h-4 w-4 text-slate-400" />
-                  <span>Today ({new Date().toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" })})</span>
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-200/90 bg-slate-50/80 px-4 py-2.5 text-xs font-bold text-slate-700 shadow-2xs">
+                    <Calendar className="h-4 w-4 text-emerald-600" />
+                    <span>{new Date().toLocaleDateString("en-IN", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}</span>
+                  </div>
+
+                  <button
+                    onClick={() => fetchBookings()}
+                    className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-200/90 bg-white hover:bg-slate-50 p-2.5 text-xs font-bold text-slate-700 shadow-2xs transition active:scale-95 cursor-pointer"
+                    title="Refresh live data"
+                  >
+                    <RefreshCw className="h-4 w-4 text-slate-500" />
+                  </button>
                 </div>
               </div>
 
-              {/* 4 Interactive Operational KPI Summary Cards (2x2 on Mobile, 4x1 on Desktop) */}
+              {/* Quick Actions Command Deck */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3.5">
+                <button
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="flex items-center gap-3 p-3 sm:p-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer group"
+                >
+                  <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-white/20 text-white group-hover:scale-110 transition-transform shrink-0">
+                    <UserPlus className="h-4.5 w-4.5" />
+                  </div>
+                  <div className="text-left min-w-0">
+                    <span className="block leading-tight font-black truncate">+ New Resident</span>
+                    <span className="block text-[10px] text-emerald-100 font-medium truncate">Quick Admission</span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => handleTabClick("Allocation")}
+                  className="flex items-center gap-3 p-3 sm:p-3.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200/80 font-bold text-xs sm:text-sm shadow-xs hover:border-slate-300 active:scale-95 transition-all cursor-pointer group"
+                >
+                  <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 group-hover:scale-110 transition-transform shrink-0">
+                    <KeyRound className="h-4.5 w-4.5" />
+                  </div>
+                  <div className="text-left min-w-0">
+                    <span className="block leading-tight font-black truncate">Room Allotment</span>
+                    <span className="block text-[10px] text-slate-400 font-medium truncate">Bed Matrix</span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => { resetExpenseForm(); setIsExpenseModalOpen(true); }}
+                  className="flex items-center gap-3 p-3 sm:p-3.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200/80 font-bold text-xs sm:text-sm shadow-xs hover:border-slate-300 active:scale-95 transition-all cursor-pointer group"
+                >
+                  <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600 border border-amber-100 group-hover:scale-110 transition-transform shrink-0">
+                    <CreditCard className="h-4.5 w-4.5" />
+                  </div>
+                  <div className="text-left min-w-0">
+                    <span className="block leading-tight font-black truncate">Record Expense</span>
+                    <span className="block text-[10px] text-slate-400 font-medium truncate">Property Utility</span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => handleTabClick("Reports")}
+                  className="flex items-center gap-3 p-3 sm:p-3.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200/80 font-bold text-xs sm:text-sm shadow-xs hover:border-slate-300 active:scale-95 transition-all cursor-pointer group"
+                >
+                  <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 group-hover:scale-110 transition-transform shrink-0">
+                    <FileSpreadsheet className="h-4.5 w-4.5" />
+                  </div>
+                  <div className="text-left min-w-0">
+                    <span className="block leading-tight font-black truncate">Excel Reports</span>
+                    <span className="block text-[10px] text-slate-400 font-medium truncate">Audit & Export</span>
+                  </div>
+                </button>
+              </div>
+
+              {/* 4 Interactive Operational KPI Bento Cards (2x2 Mobile, 4x1 Desktop) */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5">
-                {/* 1. Vacant / Unoccupied Rooms (Green 🟢) */}
+                {/* 1. Vacant / Unoccupied Rooms (Emerald 🟢) */}
                 <div
                   onClick={() =>
                     setOccupancyExplorerModal({
@@ -2694,28 +2766,28 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       selectedBuilding: scopedBuildingsList[0]?.name || "PG A",
                     })
                   }
-                  className="group rounded-2xl sm:rounded-3xl border border-emerald-200/90 bg-gradient-to-br from-emerald-50/40 via-white to-white p-3.5 sm:p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10 cursor-pointer relative overflow-hidden active:scale-[0.99]"
+                  className="group rounded-3xl border border-emerald-200/90 bg-white p-4 sm:p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10 hover:border-emerald-400 cursor-pointer relative overflow-hidden active:scale-[0.99]"
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-xl sm:rounded-2xl bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-2xs group-hover:scale-110 transition-transform">
+                    <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs group-hover:scale-110 transition-transform">
                       <Bed className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
                     </div>
-                    <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-emerald-100/80 px-2.5 py-0.5 text-[11px] font-extrabold text-emerald-800 border border-emerald-300 shadow-2xs">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-emerald-800 border border-emerald-200/80 shadow-2xs">
                       🟢 Available
                     </span>
                   </div>
                   <div className="mt-3 sm:mt-4">
                     <p className="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400">Available Beds</p>
-                    <p className="mt-0.5 sm:mt-1 text-lg sm:text-2xl lg:text-3xl font-black text-emerald-800">
-                      {overallOccupancyStats.totalUnocc} <span className="text-[10px] sm:text-xs font-bold text-slate-400">Beds</span>
+                    <p className="mt-0.5 sm:mt-1 text-xl sm:text-2xl lg:text-3xl font-black text-slate-900">
+                      {overallOccupancyStats.totalUnocc} <span className="text-[11px] sm:text-xs font-bold text-slate-400">Beds</span>
                     </p>
-                    <p className="mt-0.5 text-[10px] sm:text-xs font-bold text-emerald-700 group-hover:underline flex items-center gap-1">
+                    <p className="mt-1 text-[10px] sm:text-xs font-bold text-emerald-700 group-hover:underline flex items-center gap-1">
                       Vacant Matrix →
                     </p>
                   </div>
                 </div>
 
-                {/* 2. Occupied / Booked Rooms (Red 🔴) */}
+                {/* 2. Occupied / Booked Rooms (Rose 🔴) */}
                 <div
                   onClick={() =>
                     setOccupancyExplorerModal({
@@ -2724,22 +2796,22 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       selectedBuilding: scopedBuildingsList[0]?.name || "PG A",
                     })
                   }
-                  className="group rounded-2xl sm:rounded-3xl border border-rose-200/90 bg-gradient-to-br from-rose-50/40 via-white to-white p-3.5 sm:p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-rose-500/10 cursor-pointer relative overflow-hidden active:scale-[0.99]"
+                  className="group rounded-3xl border border-rose-200/90 bg-white p-4 sm:p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-rose-500/10 hover:border-rose-400 cursor-pointer relative overflow-hidden active:scale-[0.99]"
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-xl sm:rounded-2xl bg-rose-100 text-rose-600 border border-rose-200 shadow-2xs group-hover:scale-110 transition-transform">
+                    <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 border border-rose-200/80 shadow-2xs group-hover:scale-110 transition-transform">
                       <CheckCircle2 className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
                     </div>
-                    <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-rose-100/80 px-2.5 py-0.5 text-[11px] font-extrabold text-rose-800 border border-rose-300 shadow-2xs">
-                      🔴 Booked
+                    <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-rose-800 border border-rose-200/80 shadow-2xs">
+                      🔴 Occupied
                     </span>
                   </div>
                   <div className="mt-3 sm:mt-4">
                     <p className="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400">Occupied Beds</p>
-                    <p className="mt-0.5 sm:mt-1 text-lg sm:text-2xl lg:text-3xl font-black text-rose-700">
-                      {overallOccupancyStats.totalOcc} <span className="text-[10px] sm:text-xs font-bold text-slate-400">Beds</span>
+                    <p className="mt-0.5 sm:mt-1 text-xl sm:text-2xl lg:text-3xl font-black text-slate-900">
+                      {overallOccupancyStats.totalOcc} <span className="text-[11px] sm:text-xs font-bold text-slate-400">Beds</span>
                     </p>
-                    <p className="mt-0.5 text-[10px] sm:text-xs font-bold text-rose-600 group-hover:underline flex items-center gap-1">
+                    <p className="mt-1 text-[10px] sm:text-xs font-bold text-rose-600 group-hover:underline flex items-center gap-1">
                       Occupied Matrix →
                     </p>
                   </div>
@@ -2748,51 +2820,132 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 {/* 3. Total Active Residents (Indigo 👥) */}
                 <div
                   onClick={() => handleTabClick("Customers")}
-                  className="group rounded-2xl sm:rounded-3xl border border-indigo-200/90 bg-gradient-to-br from-indigo-50/40 via-white to-white p-3.5 sm:p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10 cursor-pointer relative overflow-hidden active:scale-[0.99]"
+                  className="group rounded-3xl border border-indigo-200/90 bg-white p-4 sm:p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10 hover:border-indigo-400 cursor-pointer relative overflow-hidden active:scale-[0.99]"
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-xl sm:rounded-2xl bg-indigo-100 text-indigo-700 border border-indigo-200 shadow-2xs group-hover:scale-110 transition-transform">
+                    <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-700 border border-indigo-200/80 shadow-2xs group-hover:scale-110 transition-transform">
                       <Users className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
                     </div>
-                    <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-indigo-100/80 px-2.5 py-0.5 text-[11px] font-extrabold text-indigo-800 border border-indigo-300 shadow-2xs">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-indigo-800 border border-indigo-200/80 shadow-2xs">
                       👥 Active
                     </span>
                   </div>
                   <div className="mt-3 sm:mt-4">
                     <p className="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400">Active Residents</p>
-                    <p className="mt-0.5 sm:mt-1 text-lg sm:text-2xl lg:text-3xl font-black text-indigo-900">
-                      {scopedBookings.filter((b) => b.status === "allocated").length} <span className="text-[10px] sm:text-xs font-bold text-slate-400">Tenants</span>
+                    <p className="mt-0.5 sm:mt-1 text-xl sm:text-2xl lg:text-3xl font-black text-slate-900">
+                      {scopedBookings.filter((b) => b.status === "allocated").length} <span className="text-[11px] sm:text-xs font-bold text-slate-400">Tenants</span>
                     </p>
-                    <p className="mt-0.5 text-[10px] sm:text-xs font-bold text-indigo-700 group-hover:underline flex items-center gap-1">
+                    <p className="mt-1 text-[10px] sm:text-xs font-bold text-indigo-700 group-hover:underline flex items-center gap-1">
                       View Residents →
                     </p>
                   </div>
                 </div>
 
-                {/* 4. Total Properties / Buildings (Amber 🏢) */}
+                {/* 4. Total Properties / Branches (Amber 🏢) */}
                 <div
                   onClick={() => handleTabClick("Buildings")}
-                  className="group rounded-2xl sm:rounded-3xl border border-amber-200/80 bg-gradient-to-br from-amber-50/30 via-white to-white p-3.5 sm:p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg cursor-pointer active:scale-[0.99]"
+                  className="group rounded-3xl border border-amber-200/90 bg-white p-4 sm:p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-amber-500/10 hover:border-amber-400 cursor-pointer relative overflow-hidden active:scale-[0.99]"
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-xl sm:rounded-2xl bg-amber-100/80 text-amber-600 border border-amber-200/60 shadow-2xs group-hover:scale-110 transition-transform">
+                    <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 border border-amber-200/80 shadow-2xs group-hover:scale-110 transition-transform">
                       <Building2 className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
                     </div>
-                    <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-extrabold text-amber-700 border border-amber-200/80">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-amber-700 border border-amber-200/80 shadow-2xs">
                       🏢 Branches
                     </span>
                   </div>
                   <div className="mt-3 sm:mt-4">
                     <p className="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400">Total Properties</p>
-                    <p className="mt-0.5 sm:mt-1 text-lg sm:text-2xl lg:text-3xl font-black text-slate-900">{scopedBuildingsList.length}</p>
-                    <p className="mt-0.5 text-[10px] sm:text-xs font-semibold text-slate-500 group-hover:underline">Manage PG →</p>
+                    <p className="mt-0.5 sm:mt-1 text-xl sm:text-2xl lg:text-3xl font-black text-slate-900">
+                      {scopedBuildingsList.length} <span className="text-[11px] sm:text-xs font-bold text-slate-400">PGs</span>
+                    </p>
+                    <p className="mt-1 text-[10px] sm:text-xs font-bold text-amber-700 group-hover:underline flex items-center gap-1">
+                      Manage PG →
+                    </p>
                   </div>
                 </div>
               </div>
 
-              {/* Recent Customers Activity Feed (Full Width) */}
+              {/* Building Capacity & Occupancy Matrix Snapshot */}
+              {scopedBuildingsList.length > 0 && (
+                <div className="rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                    <div>
+                      <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                        Building Capacity & Occupancy Matrix 🏢📊
+                      </h3>
+                      <p className="text-[11px] font-semibold text-slate-400">Live bed utilization across all active properties</p>
+                    </div>
+                    <button
+                      onClick={() => handleTabClick("Buildings")}
+                      className="text-xs font-bold text-brand-green hover:underline self-start sm:self-auto cursor-pointer"
+                    >
+                      Manage Buildings →
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                    {scopedBuildingsList.map((bldg) => {
+                      const bldgRooms = roomConfigs.filter((r) => r.buildingName === bldg.name);
+                      const totalBeds = bldgRooms.reduce((acc, r) => acc + (r.beds?.length || 0), 0);
+                      const occBeds = bldgRooms.reduce((acc, r) => acc + (r.beds?.filter((b) => b.status === "occupied")?.length || 0), 0);
+                      const unoccBeds = Math.max(0, totalBeds - occBeds);
+                      const occRate = totalBeds > 0 ? Math.round((occBeds / totalBeds) * 100) : 0;
+
+                      return (
+                        <div
+                          key={bldg.id || bldg.name}
+                          onClick={() => {
+                            setBmsBuilding(bldg.name);
+                            handleTabClick("Buildings");
+                          }}
+                          className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:border-emerald-300 hover:shadow-sm transition cursor-pointer active:scale-[0.99] space-y-2.5 group"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-700 group-hover:bg-emerald-50 group-hover:text-emerald-700 transition">
+                                <Building2 className="h-4 w-4" />
+                              </div>
+                              <p className="text-xs sm:text-sm font-black text-slate-900 truncate">{bldg.name}</p>
+                            </div>
+                            <span
+                              className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${
+                                occRate >= 90
+                                  ? "bg-rose-50 text-rose-700 border-rose-200"
+                                  : occRate >= 70
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                  : "bg-slate-100 text-slate-600 border-slate-200"
+                              }`}
+                            >
+                              {occRate}% Filled
+                            </span>
+                          </div>
+
+                          {/* Progress Bar */}
+                          <div className="w-full bg-slate-200/80 rounded-full h-2 overflow-hidden">
+                            <div
+                              className={`h-2 rounded-full transition-all duration-500 ${
+                                occRate >= 90 ? "bg-rose-500" : "bg-emerald-600"
+                              }`}
+                              style={{ width: `${Math.min(100, occRate)}%` }}
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 pt-0.5">
+                            <span>🔴 {occBeds} Occupied</span>
+                            <span>🟢 {unoccBeds} Vacant</span>
+                            <span>🛏️ {totalBeds} Total</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Recent Customers & Admissions Ledger (Full Width) */}
               <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-12">
-                <div className="rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white p-3.5 sm:p-6 lg:p-7 shadow-sm lg:col-span-12 flex flex-col justify-between space-y-4">
+                <div className="rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-6 lg:p-7 shadow-xs lg:col-span-12 flex flex-col justify-between space-y-4">
                   <div>
                     {/* Top Title & Total Count */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
@@ -2821,10 +2974,11 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                         <button
                           key={filter.id}
                           onClick={() => setCustomerTimeFilter(filter.id as any)}
-                          className={`flex-1 min-w-[65px] sm:min-w-[70px] rounded-lg sm:rounded-xl px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-bold transition-all text-center whitespace-nowrap cursor-pointer ${customerTimeFilter === filter.id
+                          className={`flex-1 min-w-[65px] sm:min-w-[70px] rounded-lg sm:rounded-xl px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-bold transition-all text-center whitespace-nowrap cursor-pointer ${
+                            customerTimeFilter === filter.id
                               ? "bg-white text-brand-green shadow-xs border border-slate-200"
                               : "text-slate-500 hover:text-slate-900"
-                            }`}
+                          }`}
                         >
                           {filter.label}
                         </button>
@@ -2866,10 +3020,11 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                         <button
                           key={filter.id}
                           onClick={() => setDashboardSourceFilter(filter.id as any)}
-                          className={`min-w-[80px] sm:min-w-[90px] flex-1 sm:flex-initial rounded-lg sm:rounded-xl px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-bold transition-all text-center whitespace-nowrap cursor-pointer ${dashboardSourceFilter === filter.id
+                          className={`min-w-[80px] sm:min-w-[90px] flex-1 sm:flex-initial rounded-lg sm:rounded-xl px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-bold transition-all text-center whitespace-nowrap cursor-pointer ${
+                            dashboardSourceFilter === filter.id
                               ? "bg-white text-indigo-600 shadow-xs border border-slate-200"
                               : "text-slate-500 hover:text-slate-900"
-                            }`}
+                          }`}
                         >
                           {filter.label}
                         </button>
@@ -2878,27 +3033,27 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
                     {/* Single Column List */}
                     <div className="space-y-3">
-                      {getTimeFilteredBookings().filter(b => dashboardSourceFilter === 'all' || b.source === dashboardSourceFilter).length === 0 ? (
-                        <div className="p-8 text-center text-slate-400 font-semibold border border-dashed border-slate-200 rounded-2xl sm:rounded-3xl text-xs">
+                      {getTimeFilteredBookings().filter((b) => dashboardSourceFilter === "all" || b.source === dashboardSourceFilter).length === 0 ? (
+                        <div className="p-8 text-center text-slate-400 font-semibold border border-dashed border-slate-200 rounded-3xl text-xs bg-slate-50/50">
                           No registrations found for this timeframe.
                         </div>
                       ) : (
                         getTimeFilteredBookings()
-                          .filter(b => dashboardSourceFilter === 'all' || b.source === dashboardSourceFilter)
+                          .filter((b) => dashboardSourceFilter === "all" || b.source === dashboardSourceFilter)
                           .map((cust) => {
                             const hasAllocation = cust.status === "allocated";
                             const formattedPg = hasAllocation
                               ? `${cust.allocatedBuilding} • Room ${cust.allocatedRoom} (${cust.allocatedBed})`
                               : "Pending Room Allocation";
 
-                            const isOnline = cust.source === 'online';
-                            const badgeBg = isOnline ? 'bg-indigo-50 text-indigo-600 border-indigo-200/50' : 'bg-emerald-50 text-emerald-600 border-emerald-200/50';
+                            const isOnline = cust.source === "online";
+                            const badgeBg = isOnline ? "bg-indigo-50 text-indigo-600 border-indigo-200/50" : "bg-emerald-50 text-emerald-600 border-emerald-200/50";
 
                             return (
                               <div
                                 key={cust.id}
                                 onClick={() => setSelectedHistoryResident(cust)}
-                                className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-sm transition cursor-pointer active:scale-[0.99] gap-3"
+                                className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:border-emerald-300 hover:shadow-xs transition cursor-pointer active:scale-[0.99] gap-3"
                               >
                                 <div className="flex items-center gap-3 min-w-0">
                                   <div className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl font-black text-sm border ${badgeBg}`}>
@@ -2911,9 +3066,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                                   </div>
                                   <div className="min-w-0 flex-1">
                                     <p className="text-xs sm:text-sm font-black text-slate-900 truncate">{cust.name}</p>
-                                    <p className="text-[11px] font-semibold text-slate-500 truncate">
-                                      {formattedPg}
-                                    </p>
+                                    <p className="text-[11px] font-semibold text-slate-500 truncate">{formattedPg}</p>
                                     <div className="text-[10px] font-bold text-slate-500 mt-1 flex flex-wrap items-center gap-1.5">
                                       <span>📱 {cust.phone}</span>
                                       {cust.guardianPhone && cust.guardianPhone !== "N/A" && (
@@ -2940,11 +3093,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                                 <div className="flex items-center justify-between sm:justify-end gap-2.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200/60">
                                   <div className="flex flex-col sm:items-end gap-1">
                                     <span className="text-[10px] font-bold text-slate-400">{cust.timestamp}</span>
-                                    <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-extrabold ${
-                                      hasAllocation 
-                                        ? "bg-emerald-100 text-emerald-700 border border-emerald-200" 
-                                        : "bg-amber-100 text-amber-700 border border-amber-200 animate-pulse"
-                                    }`}>
+                                    <span
+                                      className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-extrabold ${
+                                        hasAllocation
+                                          ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                                          : "bg-amber-100 text-amber-700 border border-amber-200 animate-pulse"
+                                      }`}
+                                    >
                                       {cust.status === "allocated" ? "Allocated" : "Pending"}
                                     </span>
                                   </div>
