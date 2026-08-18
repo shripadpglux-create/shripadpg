@@ -2201,23 +2201,23 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
       {/* Sidebar Drawer */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-slate-200/80 bg-white/95 backdrop-blur-xl px-6 py-7 shadow-xl lg:shadow-md transition-transform duration-300 ease-in-out ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-slate-200/80 bg-white/95 backdrop-blur-xl px-5 sm:px-6 py-5 sm:py-6 shadow-xl lg:shadow-md transition-transform duration-300 ease-in-out overflow-y-auto scrollbar-none ${
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         } ${isSidebarCollapsed ? "lg:-translate-x-full" : "lg:translate-x-0"}`}
       >
         {/* Top Header Name Logo */}
-        <div className="mb-8 flex items-center justify-center relative w-full px-1">
+        <div className="mb-5 sm:mb-6 flex items-center justify-between relative w-full px-1 shrink-0">
           <ShripadNameLogo />
           <button
             onClick={() => setIsMobileMenuOpen(false)}
-            className="absolute right-1 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 lg:hidden shadow-2xs cursor-pointer"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 lg:hidden shadow-2xs cursor-pointer"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4.5 w-4.5" />
           </button>
         </div>
 
         {/* Curved Pill Navigation Items */}
-        <nav className="flex-1 space-y-2">
+        <nav className="flex-1 space-y-1.5 shrink-0">
           {[
             { name: "Dashboard", icon: LayoutDashboard },
             { name: "Revenue", icon: Wallet },
@@ -2229,13 +2229,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
               <button
                 key={item.name}
                 onClick={() => handleTabClick(item.name)}
-                className={`group relative flex w-full items-center gap-3.5 rounded-full px-5 py-3.5 text-sm font-bold transition-all duration-300 ${isActive
+                className={`group relative flex w-full items-center gap-3.5 rounded-full px-4.5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold transition-all duration-300 ${isActive
                     ? "bg-brand-green text-white shadow-lg shadow-brand-green/30 translate-x-1"
                     : "text-slate-600 hover:bg-slate-100/90 hover:text-slate-900 hover:translate-x-1"
                   }`}
               >
                 <item.icon
-                  className={`h-5 w-5 transition-transform group-hover:scale-110 ${isActive ? "text-white" : "text-slate-500"
+                  className={`h-4.5 w-4.5 sm:h-5 sm:w-5 transition-transform group-hover:scale-110 ${isActive ? "text-white" : "text-slate-500"
                     }`}
                 />
                 <span>{item.name}</span>
@@ -2259,9 +2259,9 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 setIsCreateModalOpen(true);
                 setIsMobileMenuOpen(false);
               }}
-              className="group relative flex w-full items-center gap-3.5 rounded-full px-5 py-3.5 text-sm font-bold text-slate-600 hover:bg-slate-100/90 hover:text-slate-900 hover:translate-x-1 transition-all duration-300 cursor-pointer"
+              className="group relative flex w-full items-center gap-3.5 rounded-full px-4.5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100/90 hover:text-slate-900 hover:translate-x-1 transition-all duration-300 cursor-pointer"
             >
-              <Plus className="h-5 w-5 text-slate-500 transition-transform group-hover:scale-110 group-hover:rotate-90 duration-300" />
+              <Plus className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-slate-500 transition-transform group-hover:scale-110 group-hover:rotate-90 duration-300" />
               <span>Create</span>
             </button>
           </div>
@@ -2276,13 +2276,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
               <button
                 key={item.name}
                 onClick={() => handleTabClick(item.name)}
-                className={`group relative flex w-full items-center gap-3.5 rounded-full px-5 py-3.5 text-sm font-bold transition-all duration-300 ${isActive
+                className={`group relative flex w-full items-center gap-3.5 rounded-full px-4.5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold transition-all duration-300 ${isActive
                     ? "bg-brand-green text-white shadow-lg shadow-brand-green/30 translate-x-1"
                     : "text-slate-600 hover:bg-slate-100/90 hover:text-slate-900 hover:translate-x-1"
                   }`}
               >
                 <item.icon
-                  className={`h-5 w-5 transition-transform group-hover:scale-110 ${isActive ? "text-white" : "text-slate-500"
+                  className={`h-4.5 w-4.5 sm:h-5 sm:w-5 transition-transform group-hover:scale-110 ${isActive ? "text-white" : "text-slate-500"
                     }`}
                 />
                 <span>{item.name}</span>
@@ -2293,18 +2293,18 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
             );
           })}
 
-          {/* Admin Management Actions in Sidebar */}
+          {/* Admin Management Actions in Sidebar (Uniform design matching other items) */}
           {!isStaffMode && (
-            <div className="pt-2 border-t border-slate-100 space-y-1.5">
+            <div className="pt-1.5 border-t border-slate-100 space-y-1.5">
               <button
                 onClick={() => {
                   setIsStaffModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="group relative flex w-full items-center gap-3.5 rounded-full px-5 py-3 text-sm font-bold text-slate-600 hover:bg-emerald-50 hover:text-emerald-900 hover:translate-x-1 transition-all duration-300 cursor-pointer"
+                className="group relative flex w-full items-center gap-3.5 rounded-full px-4.5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100/90 hover:text-slate-900 hover:translate-x-1 transition-all duration-300 cursor-pointer"
                 title="Manage Staff & Building Assignments"
               >
-                <UserCheck className="h-5 w-5 text-emerald-600 transition-transform group-hover:scale-110" />
+                <UserCheck className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-slate-500 transition-transform group-hover:scale-110" />
                 <span>Staff & Buildings</span>
               </button>
 
@@ -2313,31 +2313,31 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   setIsPaymentSettingsModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="group relative flex w-full items-center gap-3.5 rounded-full px-5 py-3 text-sm font-bold text-slate-600 hover:bg-slate-100/90 hover:text-slate-900 hover:translate-x-1 transition-all duration-300 cursor-pointer"
+                className="group relative flex w-full items-center gap-3.5 rounded-full px-4.5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100/90 hover:text-slate-900 hover:translate-x-1 transition-all duration-300 cursor-pointer"
                 title="Configure Real Payment Details & QR Code"
               >
-                <QrCode className="h-5 w-5 text-amber-500 transition-transform group-hover:scale-110" />
+                <QrCode className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-slate-500 transition-transform group-hover:scale-110" />
                 <span>Payment & QR</span>
               </button>
             </div>
           )}
         </nav>
 
-        {/* Enlarged Prominent Shripad PG Logo Showcase Footer */}
-        <div className="mt-auto rounded-3xl bg-gradient-to-br from-brand-green-light/40 via-emerald-50/50 to-white p-3.5 sm:p-4 border-2 border-brand-green/20 text-center space-y-2 shadow-sm hover:shadow-md transition-all">
+        {/* Shripad PG Logo Showcase Footer (Fully visible & responsive) */}
+        <div className="mt-4 mb-2 sm:mb-0 rounded-2xl bg-gradient-to-br from-brand-green-light/40 via-emerald-50/50 to-white p-3 border border-brand-green/20 text-center space-y-1.5 shadow-2xs shrink-0">
           <div className="mx-auto flex justify-center py-0.5">
             <img
               src={brandLogo}
               alt="Shripad PG Large Logo"
-              className="h-24 sm:h-28 w-auto max-w-full object-contain transition-transform hover:scale-105 filter drop-shadow-md"
+              className="h-14 sm:h-16 w-auto max-w-full object-contain transition-transform hover:scale-105 filter drop-shadow-xs"
             />
           </div>
           <div className="space-y-0.5">
-            <p className="text-xs font-black text-brand-navy tracking-wide uppercase">
+            <p className="text-[11px] font-black text-brand-navy tracking-wide uppercase">
               SHRIPAD PG PORTAL
             </p>
-            <p className="text-[10px] font-semibold text-slate-500 flex items-center justify-center gap-1">
-              <ShieldCheck className="h-3.5 w-3.5 text-brand-green" /> Premium Living & Care
+            <p className="text-[9px] font-semibold text-slate-500 flex items-center justify-center gap-1">
+              <ShieldCheck className="h-3 w-3 text-brand-green" /> Premium Living & Care
             </p>
           </div>
         </div>
