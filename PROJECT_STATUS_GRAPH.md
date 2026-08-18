@@ -2,6 +2,46 @@
 
 ---
 
+### 📍 Version 8.70 — Mobile Navigation Architecture & App Shell (Feature 0) 📱🚀✨
+
+```mermaid
+flowchart TD
+    subgraph MobileAppShell ["Mobile App Shell Architecture"]
+        TopHeader["Compact Top Header (Logo + WhatsApp + Notifications + Profile)"]
+        BottomNav["5-Item Bottom Dock:
+        1. 🏠 Home (Dashboard)
+        2. 👥 Customers (Residents)
+        3. 🏢 Buildings (Properties)
+        4. 💳 Payments (Revenue & Txns)
+        5. ☰ More (Drawer Trigger)"]
+        FAB["Floating Action Button (+)
+        • Add Customer
+        • Add Building
+        • Allocate Room
+        • Record Payment
+        • Create Invoice"]
+        MoreDrawer["Slide-Up More Sheet:
+        • 💰 Revenue
+        • 📊 Reports
+        • 📄 Invoice
+        • 🔑 Allocation
+        • ⚙️ Settings
+        • 👤 Staff & Buildings
+        • 📱 Payment & QR"]
+        
+        TopHeader --> BottomNav
+        BottomNav --> FAB
+        BottomNav --> MoreDrawer
+    end
+
+    subgraph DesktopShell ["Desktop Experience (Preserved)"]
+        Sidebar["Full Curved Pill Sidebar Navigation (Unchanged)"]
+        TopBar["Spacious Top Bar with Search & Scope Switcher"]
+    end
+```
+
+---
+
 ### 📍 Version 8.69 — Fixed A4 Proportions & Allocation Responsive Flow Alignment 📄🔑🎯
 
 ```mermaid
