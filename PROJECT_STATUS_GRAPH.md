@@ -2,6 +2,28 @@
 
 ---
 
+### 📍 Version 8.82 — Reference-Identical Symmetrical A4 Invoice Card Canvas 📄💎✨
+
+```mermaid
+flowchart TD
+    subgraph A4CardView ["Responsive A4 Document Card Preview (Reference Matched)"]
+        HeaderBrand["Centered Logo + SHRIPAD PG Heading + Contact & Web + Solid Navy INVOICE Badge"]
+        MetaGrid["2-Column Meta Table (Invoice No, Date, Booking ID, Due Date)"]
+        Symmetrical1["2 Symmetrical Top Cards: BILL TO (Name, Mobile, Email) vs ROOM & STAY (Building, Room/Bed, Floor)"]
+        DescTable["Line Items Table: Description, QTY, Rate, Amount & Total Subtotal"]
+        Symmetrical2["2 Symmetrical Bottom Cards: PAYMENT DETAILS (Mode, Paid, Balance, Status) vs AUTHORIZED SIGNATURE (Stamp & Line)"]
+        FooterScript["Thank You! Script + Powered by Shripad PG + Solid Navy Footer Bar"]
+
+        HeaderBrand --> MetaGrid
+        MetaGrid --> Symmetrical1
+        Symmetrical1 --> DescTable
+        DescTable --> Symmetrical2
+        Symmetrical2 --> FooterScript
+    end
+```
+
+---
+
 ### 📍 Version 8.81 — High-End Reference-Matched Mobile Invoice Experience & Clean Segmented Tabs 📱✨💎
 
 ```mermaid
