@@ -3055,7 +3055,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                                 onClick={() => setSelectedHistoryResident(cust)}
                                 className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:border-emerald-300 hover:shadow-xs transition cursor-pointer active:scale-[0.99] gap-3"
                               >
-                                <div className="flex items-center gap-3 min-w-0">
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
                                   <div className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl font-black text-sm border ${badgeBg}`}>
                                     {cust.name[0]}
                                     {isOnline && (
@@ -3158,35 +3158,44 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
           {/* TAB 2: PAYMENTS & FINANCIAL INSIGHTS TAB */}
           {(activeTab === "Revenue" || activeTab === "Analytics" || activeTab === "Payments") && (
             <div className="space-y-5 sm:space-y-6 animate-in fade-in duration-300">
-              {/* Header & Subtab Switcher */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              {/* Executive Header & Subtab Switcher */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs">
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-black text-emerald-800 border border-emerald-200/80">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Live Treasury Ledger
+                    </span>
+                    <span className="text-[11px] font-bold text-slate-400">
+                      {isStaffMode ? `Scope: ${staffScopeBuilding}` : "All Properties Active"}
+                    </span>
+                  </div>
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2">
                     Payments & Financial Hub 💳💰
                   </h1>
-                  <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
+                  <p className="text-xs sm:text-sm font-semibold text-slate-500 mt-0.5">
                     Track collected tenant rents, operational expenses, profit margins, and payment transaction audits.
                   </p>
                 </div>
 
                 {/* Subtab View Mode Switcher */}
-                <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100/90 border border-slate-200/80 self-start sm:self-auto shrink-0">
+                <div className="flex items-center gap-1 p-1 rounded-2xl bg-slate-100/90 border border-slate-200/80 self-start sm:self-auto shrink-0">
                   <button
                     onClick={() => setRevenueSubTab("analytics")}
                     className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
                       revenueSubTab === "analytics"
-                        ? "bg-white text-brand-green shadow-xs"
+                        ? "bg-white text-emerald-800 shadow-xs border border-slate-200/80"
                         : "text-slate-500 hover:text-slate-900"
                     }`}
                   >
                     <Wallet className="h-3.5 w-3.5" />
-                    <span>Analytics & Expenses</span>
+                    <span>Analytics & Spend</span>
                   </button>
                   <button
                     onClick={() => setRevenueSubTab("transactions")}
                     className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
                       revenueSubTab === "transactions"
-                        ? "bg-white text-indigo-600 shadow-xs"
+                        ? "bg-white text-indigo-700 shadow-xs border border-slate-200/80"
                         : "text-slate-500 hover:text-slate-900"
                     }`}
                   >
@@ -3197,15 +3206,15 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
               </div>
 
               {/* Financial KPI Cards Grid (4 Cards: Gross Revenue, Spend, Net Profit, Escrow Held) */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
                 {/* 1. Total Gross Revenue */}
-                <div className="rounded-2xl sm:rounded-3xl border border-emerald-200/80 bg-white p-3.5 sm:p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-emerald-500/10">
+                <div className="rounded-3xl border border-emerald-200/80 bg-white p-4 sm:p-5 shadow-xs transition-all duration-300 hover:shadow-md hover:border-emerald-300">
                   <div className="flex items-center justify-between">
-                    <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-xl sm:rounded-2xl bg-emerald-100/80 text-emerald-600 border border-emerald-200/60 shadow-2xs">
-                      <Wallet className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
+                    <div className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200/70">
+                      <Wallet className="h-5 w-5" />
                     </div>
-                    <span className="hidden sm:inline-flex items-center gap-0.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-extrabold text-emerald-700 border border-emerald-200/80">
-                      <ArrowUpRight className="h-3 w-3" /> Income
+                    <span className="hidden sm:inline-flex items-center gap-0.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-black text-emerald-700 border border-emerald-200/80">
+                      <ArrowUpRight className="h-3 w-3" /> Collections
                     </span>
                   </div>
                   <div className="mt-3 sm:mt-4">
@@ -3220,13 +3229,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 </div>
 
                 {/* 2. Total Monthly Spend / Expense */}
-                <div className="rounded-2xl sm:rounded-3xl border border-rose-200/80 bg-white p-3.5 sm:p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-rose-500/10">
+                <div className="rounded-3xl border border-rose-200/80 bg-white p-4 sm:p-5 shadow-xs transition-all duration-300 hover:shadow-md hover:border-rose-300">
                   <div className="flex items-center justify-between">
-                    <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-xl sm:rounded-2xl bg-rose-100/80 text-rose-600 border border-rose-200/60 shadow-2xs">
-                      <CreditCard className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
+                    <div className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-rose-50 text-rose-700 border border-rose-200/70">
+                      <CreditCard className="h-5 w-5" />
                     </div>
-                    <span className="hidden sm:inline-flex items-center gap-0.5 rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-extrabold text-rose-700 border border-rose-200/80">
-                      <ArrowDownRight className="h-3 w-3" /> Spend
+                    <span className="hidden sm:inline-flex items-center gap-0.5 rounded-full bg-rose-50 px-2.5 py-0.5 text-[10px] font-black text-rose-700 border border-rose-200/80">
+                      <ArrowDownRight className="h-3 w-3" /> Expenses
                     </span>
                   </div>
                   <div className="mt-3 sm:mt-4">
@@ -3235,18 +3244,18 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       ₹ {totalMonthlySpend.toLocaleString("en-IN")}
                     </p>
                     <p className="mt-0.5 text-[10px] sm:text-xs font-semibold text-slate-500 truncate">
-                      {scopedExpensesList.length} logged expense entries
+                      {scopedExpensesList.length} logged spend entries
                     </p>
                   </div>
                 </div>
 
                 {/* 3. Net Profit */}
-                <div className="rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white p-3.5 sm:p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-brand-green/10">
+                <div className="rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-xs transition-all duration-300 hover:shadow-md hover:border-emerald-300">
                   <div className="flex items-center justify-between">
-                    <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-xl sm:rounded-2xl bg-amber-100/80 text-amber-600 border border-amber-200/60 shadow-2xs">
-                      <TrendingUp className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
+                    <div className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-amber-50 text-amber-700 border border-amber-200/70">
+                      <TrendingUp className="h-5 w-5" />
                     </div>
-                    <span className={`hidden sm:inline-flex items-center gap-0.5 rounded-full px-2.5 py-0.5 text-[11px] font-extrabold border ${
+                    <span className={`hidden sm:inline-flex items-center gap-0.5 rounded-full px-2.5 py-0.5 text-[10px] font-black border ${
                       netProfit >= 0
                         ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                         : "bg-rose-50 text-rose-700 border-rose-200"
@@ -3260,19 +3269,19 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       ₹ {netProfit.toLocaleString("en-IN")}
                     </p>
                     <p className="mt-0.5 text-[10px] sm:text-xs font-semibold text-slate-500 truncate">
-                      Gross Revenue - Expenses
+                      Gross Revenue − Operational Spend
                     </p>
                   </div>
                 </div>
 
                 {/* 4. Total Security Deposits Held */}
-                <div className="rounded-2xl sm:rounded-3xl border border-cyan-200/80 bg-white p-3.5 sm:p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/10">
+                <div className="rounded-3xl border border-cyan-200/80 bg-white p-4 sm:p-5 shadow-xs transition-all duration-300 hover:shadow-md hover:border-cyan-300">
                   <div className="flex items-center justify-between">
-                    <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-xl sm:rounded-2xl bg-cyan-100/80 text-cyan-600 border border-cyan-200/60 shadow-2xs">
-                      <ShieldCheck className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
+                    <div className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-700 border border-cyan-200/70">
+                      <ShieldCheck className="h-5 w-5" />
                     </div>
-                    <span className="hidden sm:inline-flex items-center gap-0.5 rounded-full bg-cyan-50 px-2.5 py-0.5 text-[11px] font-extrabold text-cyan-700 border border-cyan-200/80">
-                      Escrow
+                    <span className="hidden sm:inline-flex items-center gap-0.5 rounded-full bg-cyan-50 px-2.5 py-0.5 text-[10px] font-black text-cyan-700 border border-cyan-200/80">
+                      🔒 Escrow
                     </span>
                   </div>
                   <div className="mt-3 sm:mt-4">
@@ -3281,7 +3290,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       ₹ {totalSecurityDepositHeld.toLocaleString("en-IN")}
                     </p>
                     <p className="mt-0.5 text-[10px] sm:text-xs font-semibold text-slate-500 truncate">
-                      Active tenant deposits
+                      Active refundable tenant deposits
                     </p>
                   </div>
                 </div>
@@ -3291,7 +3300,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
               {revenueSubTab === "analytics" && (
                 <div className="space-y-5 sm:space-y-6">
                   {/* Building Performance Matrix Card */}
-                  <div className="rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-6 shadow-sm space-y-4">
+                  <div className="rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-6 shadow-xs space-y-4">
                     <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                       <div>
                         <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
@@ -3307,7 +3316,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
                       {scopedBuildingsList.map((bld) => {
                         const stats = getBuildingOccupancyDetails(bld.name);
                         const occPct = stats.totalBeds > 0 ? Math.round((stats.occupiedBedsCount / stats.totalBeds) * 100) : 0;
@@ -3322,21 +3331,21 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                         });
 
                         return (
-                          <div key={bld.name} className="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-200/70 space-y-2.5">
+                          <div key={bld.name} className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:border-emerald-300 hover:shadow-xs transition space-y-2.5">
                             <div className="flex items-center justify-between font-bold text-xs">
                               <span className="font-black text-slate-900 text-sm flex items-center gap-1.5">
                                 <Building2 className="h-4 w-4 text-brand-green" />
                                 {bld.name}
                               </span>
-                              <span className="font-extrabold text-emerald-700">₹{bldRev.toLocaleString("en-IN")}</span>
+                              <span className="font-black text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200/60">₹{bldRev.toLocaleString("en-IN")}</span>
                             </div>
 
-                            <div className="space-y-1">
+                            <div className="space-y-1.5">
                               <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
                                 <span>Occupancy</span>
                                 <span className="text-slate-800">{occPct}% ({stats.occupiedBedsCount}/{stats.totalBeds} Beds)</span>
                               </div>
-                              <div className="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
+                              <div className="h-2 w-full rounded-full bg-slate-200/80 overflow-hidden">
                                 <div className="h-full bg-brand-green rounded-full transition-all duration-500" style={{ width: `${occPct}%` }} />
                               </div>
                             </div>
@@ -3347,12 +3356,12 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   </div>
 
                   {/* EXPENSE & SPEND RECORDS DATATABLE */}
-                  <div className="rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-6 shadow-sm space-y-4">
+                  <div className="rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-6 shadow-xs space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
                       <div>
                         <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
                           Monthly Spend & Expense Records 💸
-                          <span className="rounded-full bg-rose-100 px-2.5 py-0.5 text-[10px] font-extrabold text-rose-800 border border-rose-200">
+                          <span className="rounded-full bg-rose-50 px-2.5 py-0.5 text-[10px] font-black text-rose-700 border border-rose-200/80">
                             {scopedExpensesList.length} Entries
                           </span>
                         </h3>
@@ -3374,7 +3383,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                     </div>
 
                     {scopedExpensesList.length === 0 ? (
-                      <div className="text-center py-10 border-2 border-dashed border-slate-200 rounded-2xl space-y-2">
+                      <div className="text-center py-10 border border-dashed border-slate-200 rounded-3xl bg-slate-50/50 space-y-2">
                         <CreditCard className="h-10 w-10 text-slate-300 mx-auto" />
                         <p className="text-xs font-bold text-slate-600">No expense records logged yet.</p>
                         <p className="text-[11px] text-slate-400">Click "+ Log Expense" above to add your first monthly spend entry.</p>
@@ -3447,7 +3456,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
               {/* SUBTAB 2: TENANT PAYMENT COLLECTIONS & AUDIT TRAIL */}
               {revenueSubTab === "transactions" && (
-                <div className="rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-6 shadow-sm space-y-4">
+                <div className="rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-6 shadow-xs space-y-4">
                   {/* Search Bar for Transactions */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
                     <div className="relative flex-1 max-w-md">
@@ -4125,20 +4134,29 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
           {/* TAB 3: BUILDINGS TAB */}
           {activeTab === "Buildings" && (
             <div className="space-y-5 sm:space-y-6 animate-in fade-in duration-300">
-              {/* Header & Quick Action */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              {/* Executive Header & Quick Action */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs">
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-black text-emerald-800 border border-emerald-200/80">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      Live Property Portfolio
+                    </span>
+                    <span className="text-[11px] font-bold text-slate-400">
+                      {scopedBuildingsList.length} Active Properties
+                    </span>
+                  </div>
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2">
                     Buildings & Infrastructure 🏢
                   </h1>
-                  <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
+                  <p className="text-xs sm:text-sm font-semibold text-slate-500 mt-0.5">
                     Manage your PG properties, room capacities, floor layouts, and live occupancy rates.
                   </p>
                 </div>
 
                 <button
                   onClick={() => setIsAddBuildingModalOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-brand-green hover:bg-emerald-700 text-white font-extrabold text-xs px-4 py-2.5 shadow-md shadow-brand-green/20 transition cursor-pointer active:scale-95 self-start sm:self-auto"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-brand-green hover:bg-emerald-700 text-white font-extrabold text-xs px-5 py-3 shadow-md shadow-brand-green/20 transition cursor-pointer active:scale-95 self-start sm:self-auto shrink-0"
                 >
                   <Plus className="h-4 w-4" />
                   <span>+ Add New Building</span>
@@ -4160,22 +4178,22 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 const overallPct = totalBedsAll > 0 ? Math.round((totalOccBedsAll / totalBedsAll) * 100) : 0;
 
                 return (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
-                    <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 sm:p-4 shadow-xs">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                    <div className="rounded-3xl border border-slate-200/80 bg-white p-4 shadow-xs">
                       <p className="text-[10px] sm:text-xs font-extrabold uppercase text-slate-400">Total Properties</p>
                       <p className="text-lg sm:text-2xl font-black text-slate-900 mt-0.5">{scopedBuildingsList.length}</p>
                     </div>
-                    <div className="rounded-2xl border border-blue-200/80 bg-blue-50/40 p-3.5 sm:p-4 shadow-xs">
+                    <div className="rounded-3xl border border-blue-200/80 bg-white p-4 shadow-xs">
                       <p className="text-[10px] sm:text-xs font-extrabold uppercase text-blue-700">Total PG Rooms</p>
-                      <p className="text-lg sm:text-2xl font-black text-blue-950 mt-0.5">{totalRoomsAll}</p>
+                      <p className="text-lg sm:text-2xl font-black text-slate-900 mt-0.5">{totalRoomsAll}</p>
                     </div>
-                    <div className="rounded-2xl border border-emerald-200/80 bg-emerald-50/40 p-3.5 sm:p-4 shadow-xs">
+                    <div className="rounded-3xl border border-emerald-200/80 bg-white p-4 shadow-xs">
                       <p className="text-[10px] sm:text-xs font-extrabold uppercase text-emerald-700">Occupancy Rate</p>
                       <p className="text-lg sm:text-2xl font-black text-emerald-800 mt-0.5">
                         {overallPct}% <span className="text-[10px] sm:text-xs font-bold text-slate-400">({totalOccBedsAll}/{totalBedsAll})</span>
                       </p>
                     </div>
-                    <div className="rounded-2xl border border-amber-200/80 bg-amber-50/40 p-3.5 sm:p-4 shadow-xs">
+                    <div className="rounded-3xl border border-amber-200/80 bg-white p-4 shadow-xs">
                       <p className="text-[10px] sm:text-xs font-extrabold uppercase text-amber-700">Available Beds</p>
                       <p className="text-lg sm:text-2xl font-black text-amber-800 mt-0.5">{totalVacBedsAll}</p>
                     </div>
@@ -4205,24 +4223,24 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   });
 
                   return (
-                    <div key={b.name} className="rounded-2xl sm:rounded-3xl border border-slate-200/90 bg-white p-4 sm:p-6 shadow-sm space-y-4 hover:shadow-md transition">
+                    <div key={b.name} className="rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-xs space-y-4 hover:shadow-md hover:border-emerald-300 transition">
                       <div className="flex items-center justify-between">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-green text-white shadow-md">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200/70">
                           <Building2 className="h-5 w-5" />
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700">Active</span>
+                          <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-black text-emerald-800 border border-emerald-200/80">Active Property</span>
                           <button
                             title="Edit Building Details"
                             onClick={() => setEditingBuilding({ originalName: b.name, name: b.name, floors: b.floors, roomsPerFloor: b.roomsPerFloor })}
-                            className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-brand-green hover:text-white transition cursor-pointer"
+                            className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-brand-green hover:text-white transition cursor-pointer"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </button>
                           <button
                             title="Delete Building"
                             onClick={() => handleDeleteBuilding(b.name)}
-                            className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition cursor-pointer"
+                            className="flex h-8 w-8 items-center justify-center rounded-full bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition cursor-pointer"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
@@ -4231,7 +4249,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
                       <div>
                         <h3 className="text-base sm:text-lg font-black text-slate-900">{b.name}</h3>
-                        <p className="text-xs font-medium text-slate-500 mt-0.5">
+                        <p className="text-xs font-semibold text-slate-500 mt-0.5">
                           {(() => {
                             const gfExcluded = isGroundFloorExcluded(b);
                             const maxFl = gfExcluded ? b.floors : Math.max(0, b.floors - 1);
@@ -4243,12 +4261,12 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       </div>
 
                       {/* Real Occupancy Progress Bar */}
-                      <div className="space-y-1.5 p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                      <div className="space-y-1.5 p-3.5 rounded-2xl bg-slate-50/80 border border-slate-200/70">
                         <div className="flex items-center justify-between text-xs font-bold">
                           <span className="text-slate-600">Bed Occupancy:</span>
                           <span className="text-slate-900 font-extrabold">{occPct}% ({stats.occupiedBedsCount}/{stats.totalBeds})</span>
                         </div>
-                        <div className="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
+                        <div className="h-2 w-full rounded-full bg-slate-200/80 overflow-hidden">
                           <div
                             className={`h-full rounded-full transition-all duration-500 ${
                               occPct >= 90 ? "bg-rose-500" : occPct >= 60 ? "bg-emerald-600" : "bg-amber-500"
@@ -4263,7 +4281,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       </div>
 
                       {/* Accordion / Collapsible Floor & Room Layout */}
-                      <div className="rounded-2xl bg-slate-50 border border-slate-200/70 p-3 space-y-2 text-xs">
+                      <div className="rounded-2xl bg-slate-50/80 border border-slate-200/70 p-3.5 space-y-2 text-xs">
                         <button
                           type="button"
                           onClick={() => toggleBuildingAccordion(b.name)}
@@ -4286,7 +4304,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                               const roomStart = flIdx === 0 ? `G01` : `${flIdx}01`;
                               const roomEnd = flIdx === 0 ? `G${flCount.toString().padStart(2, "0")}` : `${flIdx}${flCount.toString().padStart(2, "0")}`;
                               return (
-                                <div key={flIdx} className="p-2 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-1">
+                                <div key={flIdx} className="p-2.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-1">
                                   <div className="flex items-center justify-between font-bold text-slate-900">
                                     <span>📍 {flName} ({flCount} {flCount === 1 ? "Room" : "Rooms"})</span>
                                     <span className="text-[11px] font-extrabold text-brand-green">
@@ -4328,9 +4346,9 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 {/* Add New Building Interactive Card */}
                 <button
                   onClick={() => setIsAddBuildingModalOpen(true)}
-                  className="rounded-2xl sm:rounded-3xl border-2 border-dashed border-slate-200 hover:border-brand-green bg-slate-50/50 hover:bg-emerald-50/30 p-6 flex flex-col items-center justify-center space-y-3 transition-all cursor-pointer min-h-[220px] group"
+                  className="rounded-3xl border-2 border-dashed border-slate-200 hover:border-brand-green bg-white hover:bg-emerald-50/20 p-6 flex flex-col items-center justify-center space-y-3 transition-all cursor-pointer min-h-[220px] group"
                 >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-green/10 text-brand-green group-hover:bg-brand-green group-hover:text-white transition-all">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-brand-green group-hover:bg-brand-green group-hover:text-white transition-all">
                     <Plus className="h-6 w-6" />
                   </div>
                   <div className="text-center">
@@ -4345,20 +4363,29 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
           {/* TAB 4: CUSTOMERS TAB */}
           {activeTab === "Customers" && (
             <div className="space-y-5 sm:space-y-6 animate-in fade-in duration-300">
-              {/* Header & Quick Action */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              {/* Executive Header & Quick Action */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs">
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-black text-emerald-800 border border-emerald-200/80">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      Live Resident Roster
+                    </span>
+                    <span className="text-[11px] font-bold text-slate-400">
+                      {scopedBookings.length} Total Registrations
+                    </span>
+                  </div>
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2">
                     Residents & Applicants Directory 👥
                   </h1>
-                  <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
+                  <p className="text-xs sm:text-sm font-semibold text-slate-500 mt-0.5">
                     Search, filter, and manage all PG tenants, room allocations, and pending applications.
                   </p>
                 </div>
 
                 <button
                   onClick={() => setIsCreateModalOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-brand-green hover:bg-emerald-700 text-white font-extrabold text-xs px-4 py-2.5 shadow-md shadow-brand-green/20 transition cursor-pointer active:scale-95 self-start sm:self-auto"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-brand-green hover:bg-emerald-700 text-white font-extrabold text-xs px-5 py-3 shadow-md shadow-brand-green/20 transition cursor-pointer active:scale-95 self-start sm:self-auto shrink-0"
                 >
                   <Plus className="h-4 w-4" />
                   <span>+ Admit Customer</span>
@@ -4366,24 +4393,24 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
               </div>
 
               {/* Quick Summary Metrics Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 sm:p-4 shadow-xs">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                <div className="rounded-3xl border border-slate-200/80 bg-white p-4 shadow-xs">
                   <p className="text-[10px] sm:text-xs font-extrabold uppercase text-slate-400">Total Records</p>
                   <p className="text-lg sm:text-2xl font-black text-slate-900 mt-0.5">{scopedBookings.length}</p>
                 </div>
-                <div className="rounded-2xl border border-emerald-200/80 bg-emerald-50/40 p-3.5 sm:p-4 shadow-xs">
+                <div className="rounded-3xl border border-emerald-200/80 bg-white p-4 shadow-xs">
                   <p className="text-[10px] sm:text-xs font-extrabold uppercase text-emerald-700">Allocated Tenants</p>
                   <p className="text-lg sm:text-2xl font-black text-emerald-800 mt-0.5">
                     {scopedBookings.filter((b) => b.status === "allocated").length}
                   </p>
                 </div>
-                <div className="rounded-2xl border border-amber-200/80 bg-amber-50/40 p-3.5 sm:p-4 shadow-xs">
+                <div className="rounded-3xl border border-amber-200/80 bg-white p-4 shadow-xs">
                   <p className="text-[10px] sm:text-xs font-extrabold uppercase text-amber-700">Pending Allocation</p>
                   <p className="text-lg sm:text-2xl font-black text-amber-800 mt-0.5">
                     {scopedBookings.filter((b) => b.status !== "allocated").length}
                   </p>
                 </div>
-                <div className="rounded-2xl border border-indigo-200/80 bg-indigo-50/40 p-3.5 sm:p-4 shadow-xs">
+                <div className="rounded-3xl border border-indigo-200/80 bg-white p-4 shadow-xs">
                   <p className="text-[10px] sm:text-xs font-extrabold uppercase text-indigo-700">Online Bookings</p>
                   <p className="text-lg sm:text-2xl font-black text-indigo-900 mt-0.5">
                     {scopedBookings.filter((b) => b.source === "online").length}
@@ -4392,9 +4419,9 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
               </div>
 
               {/* Main Directory Card with Integrated Search & Filter Controls */}
-              <div className="rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-6 shadow-sm space-y-4">
+              <div className="rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-6 shadow-xs space-y-4">
                 {/* Search Bar & Filter Controls */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-2 border-b border-slate-100">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
                   {/* Search Input */}
                   <div className="relative flex-1 max-w-md">
                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -4403,7 +4430,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       value={customerDirectorySearch}
                       onChange={(e) => setCustomerDirectorySearch(e.target.value)}
                       placeholder="Search by name, phone, room, or guardian..."
-                      className="w-full pl-10 pr-9 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-green focus:bg-white transition"
+                      className="w-full pl-10 pr-9 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-green focus:bg-white transition"
                     />
                     {customerDirectorySearch && (
                       <button
@@ -4423,7 +4450,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       <select
                         value={customerDirectoryBuilding}
                         onChange={(e) => setCustomerDirectoryBuilding(e.target.value)}
-                        className="rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-green cursor-pointer"
+                        className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-green cursor-pointer"
                       >
                         <option value="All">All Buildings</option>
                         {scopedBuildingsList.map((b) => (
@@ -4435,7 +4462,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                     </div>
 
                     {/* Status Filter Tabs */}
-                    <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl shrink-0">
+                    <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl shrink-0">
                       {[
                         { id: "all", label: "All" },
                         { id: "allocated", label: "Allocated" },
@@ -4444,9 +4471,9 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                         <button
                           key={tab.id}
                           onClick={() => setCustomerDirectoryStatus(tab.id as any)}
-                          className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer whitespace-nowrap ${
+                          className={`rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer whitespace-nowrap ${
                             customerDirectoryStatus === tab.id
-                              ? "bg-white text-slate-900 shadow-xs"
+                              ? "bg-white text-slate-900 shadow-xs border border-slate-200/80"
                               : "text-slate-500 hover:text-slate-800"
                           }`}
                         >
@@ -4484,7 +4511,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
                     if (filtered.length === 0) {
                       return (
-                        <div className="p-8 sm:p-10 text-center text-slate-400 font-semibold border-2 border-dashed border-slate-200 rounded-2xl sm:rounded-3xl space-y-2">
+                        <div className="p-8 sm:p-10 text-center text-slate-400 font-semibold border border-dashed border-slate-200 rounded-3xl bg-slate-50/50 space-y-2">
                           <Users className="h-8 w-8 text-slate-300 mx-auto" />
                           <p className="text-xs sm:text-sm font-bold text-slate-600">No resident records matched your filters.</p>
                           <p className="text-[11px] text-slate-400">Try adjusting your search terms or clearing status filters.</p>
@@ -4501,7 +4528,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                         <div
                           key={res.id}
                           onClick={() => setSelectedHistoryResident(res)}
-                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition cursor-pointer active:scale-[0.995] gap-3"
+                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:border-emerald-300 hover:shadow-xs transition cursor-pointer active:scale-[0.995] gap-3"
                         >
                           {/* Left: Avatar & Resident Info */}
                           <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -4517,7 +4544,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <p className="text-xs sm:text-sm font-black text-slate-900 truncate">{res.name}</p>
-                                <span className={`inline-block rounded-full px-2 py-0.5 text-[9px] font-extrabold border ${
+                                <span className={`inline-block rounded-full px-2.5 py-0.5 text-[9px] font-extrabold border ${
                                   hasAllocation
                                     ? "bg-emerald-100 text-emerald-800 border-emerald-200"
                                     : "bg-amber-100 text-amber-800 border-amber-200 animate-pulse"
@@ -4559,7 +4586,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                               <button
                                 title="Deallocate Room"
                                 onClick={(e) => handleDeallocateCustomer(res.id, res.name, e)}
-                                className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition cursor-pointer shrink-0"
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition cursor-pointer shrink-0"
                               >
                                 <RotateCcw className="h-3.5 w-3.5" />
                               </button>
@@ -4571,7 +4598,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                                 e.stopPropagation();
                                 setEditingCustomer({ ...res });
                               }}
-                              className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-brand-green hover:text-white transition cursor-pointer shrink-0"
+                              className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-brand-green hover:text-white transition cursor-pointer shrink-0"
                             >
                               <Pencil className="h-3.5 w-3.5" />
                             </button>
@@ -4579,7 +4606,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                             <button
                               title="Delete Resident Record"
                               onClick={(e) => handleDeleteCustomer(res.id, res.name, e)}
-                              className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition cursor-pointer shrink-0"
+                              className="flex h-8 w-8 items-center justify-center rounded-full bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition cursor-pointer shrink-0"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </button>
@@ -4595,31 +4622,38 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
           {/* TAB 5: SETTINGS TAB */}
           {activeTab === "Settings" && (
-            <div className="space-y-6 sm:space-y-7">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
+            <div className="space-y-5 sm:space-y-6 animate-in fade-in duration-300">
+              {/* Executive Header */}
+              <div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-black text-emerald-800 border border-emerald-200/80">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    System Controls & Cloud Sync
+                  </span>
+                </div>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2">
                   Settings & Preferences ⚙️
                 </h1>
-                <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
-                  Configure PG business settings, security options, and notification channels.
+                <p className="text-xs sm:text-sm font-semibold text-slate-500 mt-0.5">
+                  Configure Google Sheets real-time synchronization, PG property defaults, and security rules.
                 </p>
               </div>
 
               {/* GOOGLE SHEETS LIVE INTEGRATION CONFIGURATION CARD */}
-              <div className="rounded-[2rem] border border-emerald-200/80 bg-white p-6 sm:p-7 shadow-sm space-y-6 max-w-3xl relative overflow-hidden">
+              <div className="rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-7 shadow-xs space-y-6 max-w-3xl relative overflow-hidden">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-100/80 text-emerald-700 border border-emerald-200">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200/70">
                       <FileSpreadsheet className="h-6 w-6" />
                     </div>
                     <div>
                       <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
                         Google Sheets Live Synchronization 📊
-                        <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-800 border border-emerald-200">
+                        <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-black text-emerald-800 border border-emerald-200/80">
                           Active Auto-Sync
                         </span>
                       </h3>
-                      <p className="text-xs font-medium text-slate-500">
+                      <p className="text-xs font-semibold text-slate-500">
                         Configure manual & online booking Google Sheet URLs. Changes apply immediately to background sync.
                       </p>
                     </div>
@@ -4642,7 +4676,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <label className="text-xs sm:text-sm font-extrabold text-slate-800 flex items-center gap-2">
-                        <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-100 text-blue-700 text-xs font-black">1</span>
+                        <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-50 text-blue-700 text-xs font-black border border-blue-200/70">1</span>
                         Manual Booking Google Sheet URL (Admin & Staff Entries) 📝
                       </label>
                       {manualUrlTestStatus && (
@@ -4699,7 +4733,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <label className="text-xs sm:text-sm font-extrabold text-slate-800 flex items-center gap-2">
-                        <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 text-xs font-black">2</span>
+                        <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 text-xs font-black border border-emerald-200/70">2</span>
                         Online Booking Google Sheet URL (Public Website Submissions) 🌐
                       </label>
                       {onlineUrlTestStatus && (
@@ -4757,7 +4791,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                     <button
                       type="submit"
                       disabled={isSavingSettings}
-                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-green hover:bg-emerald-700 text-white font-extrabold text-xs px-6 py-3.5 shadow-lg shadow-brand-green/20 transition cursor-pointer disabled:opacity-50 active:scale-[0.98]"
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-green hover:bg-emerald-700 text-white font-extrabold text-xs px-6 py-3.5 shadow-md shadow-brand-green/20 transition cursor-pointer disabled:opacity-50 active:scale-[0.98]"
                     >
                       <Save className="h-4 w-4" />
                       <span>{isSavingSettings ? "Saving Sheet URLs..." : "Save Google Sheet Settings"}</span>
@@ -4778,11 +4812,11 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 </form>
 
                 {/* HELPER BOX: HOW TO GET CSV URL FROM GOOGLE SHEETS */}
-                <div className="rounded-2xl bg-slate-50 border border-slate-200/80 p-4 space-y-2 text-xs text-slate-600">
+                <div className="rounded-2xl bg-slate-50/80 border border-slate-200/80 p-4 space-y-2 text-xs text-slate-600">
                   <p className="font-extrabold text-slate-800 flex items-center gap-1.5">
                     <Sparkles className="h-4 w-4 text-emerald-600" /> How to get your Google Sheet CSV URL:
                   </p>
-                  <ol className="list-decimal list-inside space-y-1 font-medium pl-1 text-[11px] text-slate-600">
+                  <ol className="list-decimal list-inside space-y-1 font-semibold pl-1 text-[11px] text-slate-600">
                     <li>Open your Google Sheet in Google Drive.</li>
                     <li>Click <span className="font-bold text-slate-800">File &gt; Share &gt; Publish to web</span>.</li>
                     <li>Under Link, select <span className="font-bold text-slate-800">Comma-separated values (.csv)</span> and click <span className="font-bold text-slate-800">Publish</span>.</li>
@@ -4791,16 +4825,16 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 </div>
               </div>
 
-              <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm space-y-4 max-w-3xl">
+              <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-xs space-y-4 max-w-3xl">
                 <h3 className="text-base font-black text-slate-900">General Information</h3>
                 <div className="space-y-3 text-xs font-bold">
                   <div>
                     <label className="block text-slate-500 mb-1">PG Name</label>
-                    <input type="text" readOnly value="Shripad PG — Premium Living, Trusted Care" className="w-full rounded-xl bg-slate-50 border border-slate-200 p-3 text-slate-800" />
+                    <input type="text" readOnly value="Shripad PG — Premium Living, Trusted Care" className="w-full rounded-xl bg-slate-50 border border-slate-200 p-3 text-slate-800 font-semibold" />
                   </div>
                   <div>
                     <label className="block text-slate-500 mb-1">Contact Phone</label>
-                    <input type="text" readOnly value="+91 98765 43210" className="w-full rounded-xl bg-slate-50 border border-slate-200 p-3 text-slate-800" />
+                    <input type="text" readOnly value="+91 98765 43210" className="w-full rounded-xl bg-slate-50 border border-slate-200 p-3 text-slate-800 font-semibold" />
                   </div>
                 </div>
               </div>
@@ -4809,26 +4843,41 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
           {/* TAB 6: ALLOCATION TAB */}
           {activeTab === "Allocation" && (
-            <div className="space-y-6 sm:space-y-7">
-              {/* Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-5 sm:space-y-6 animate-in fade-in duration-300">
+              {/* Executive Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-[11px] font-bold text-amber-800 border border-amber-200">
-                      <KeyRound className="h-3 w-3" /> Bed & Room Management
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-black text-emerald-800 border border-emerald-200/80">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      Bed & Room Allocation Hub
+                    </span>
+                    <span className="text-[11px] font-bold text-slate-400">
+                      {bookings.filter((b) => b.status === "pending").length} Awaiting Bed Allotment
                     </span>
                   </div>
-                  <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2">
                     Customer Allocation 🔑
                   </h1>
-                  <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
+                  <p className="text-xs sm:text-sm font-semibold text-slate-500 mt-0.5">
                     Assign PG buildings, rooms, and bed numbers to manual and online bookings.
                   </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleManualSync}
+                    disabled={isSyncing}
+                    className="inline-flex items-center gap-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs px-4 py-2.5 transition cursor-pointer"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} />
+                    <span>{isSyncing ? "Syncing..." : "Sync Sheet"}</span>
+                  </button>
                 </div>
               </div>
 
               {/* 2 Main Status Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 {/* Pending Allocation Card */}
                 <div
                   onClick={() => {
@@ -4839,25 +4888,25 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       setAllocationSourceFilter("all");
                     }
                   }}
-                  className={`rounded-2xl sm:rounded-[2rem] border-2 p-3.5 sm:p-6 shadow-sm flex flex-col justify-between space-y-4 cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${
+                  className={`rounded-3xl border p-4 sm:p-5 shadow-xs flex flex-col justify-between space-y-4 cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${
                     allocationFilter === "pending"
-                      ? "border-amber-400 bg-amber-50/90 ring-2 ring-amber-400/40 shadow-md"
-                      : "border-amber-200/80 bg-gradient-to-br from-amber-50/70 via-white to-white hover:border-amber-300"
+                      ? "border-amber-400 bg-amber-50/70 ring-2 ring-amber-400/40"
+                      : "border-slate-200/80 bg-white hover:border-amber-300"
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5 sm:gap-3">
-                      <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl bg-amber-100 text-amber-700 font-bold border border-amber-200 shrink-0">
-                        <Clock className="h-5 w-5 sm:h-6 sm:w-6" />
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-50 text-amber-700 font-bold border border-amber-200/70 shrink-0">
+                        <Clock className="h-5 w-5" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
                           <h3 className="text-base sm:text-lg font-black text-slate-900">Pending Allocation</h3>
                           {allocationFilter === "pending" && allocationSourceFilter === "all" && (
-                            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500 text-white">Active</span>
+                            <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500 text-white">Active</span>
                           )}
                         </div>
-                        <p className="text-[11px] sm:text-xs font-semibold text-slate-500">Awaiting Room/Bed Assignment</p>
+                        <p className="text-[11px] font-semibold text-slate-500">Awaiting Room/Bed Assignment</p>
                       </div>
                     </div>
                     <span className="text-2xl sm:text-3xl font-black text-amber-600">
@@ -4865,7 +4914,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                     </span>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-2 border-t border-amber-100">
+                  <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100">
                     <button
                       type="button"
                       onClick={(e) => {
@@ -4878,10 +4927,10 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                           setAllocationSourceFilter("manual");
                         }
                       }}
-                      className={`rounded-full px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-extrabold shadow-2xs transition-all hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap ${
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-extrabold transition-all cursor-pointer whitespace-nowrap ${
                         allocationFilter === "pending" && allocationSourceFilter === "manual"
-                          ? "bg-emerald-600 text-white border border-emerald-700 shadow-sm"
-                          : "bg-emerald-100 text-emerald-800 border border-emerald-200 hover:bg-emerald-200"
+                          ? "bg-emerald-600 text-white shadow-xs"
+                          : "bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100"
                       }`}
                     >
                       Manual: {bookings.filter((b) => b.status === "pending" && b.source === "manual").length}
@@ -4898,10 +4947,10 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                           setAllocationSourceFilter("online");
                         }
                       }}
-                      className={`rounded-full px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-extrabold shadow-2xs transition-all hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap ${
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-extrabold transition-all cursor-pointer whitespace-nowrap ${
                         allocationFilter === "pending" && allocationSourceFilter === "online"
-                          ? "bg-indigo-600 text-white border border-indigo-700 shadow-sm"
-                          : "bg-indigo-100 text-indigo-800 border border-indigo-200 hover:bg-indigo-200"
+                          ? "bg-indigo-600 text-white shadow-xs"
+                          : "bg-indigo-50 text-indigo-800 border border-indigo-200 hover:bg-indigo-100"
                       }`}
                     >
                       Online: {bookings.filter((b) => b.status === "pending" && b.source === "online").length}
@@ -4919,25 +4968,25 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       setAllocationSourceFilter("all");
                     }
                   }}
-                  className={`rounded-2xl sm:rounded-[2rem] border-2 p-3.5 sm:p-6 shadow-sm flex flex-col justify-between space-y-4 cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${
+                  className={`rounded-3xl border p-4 sm:p-5 shadow-xs flex flex-col justify-between space-y-4 cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${
                     allocationFilter === "allocated"
-                      ? "border-emerald-400 bg-emerald-50/90 ring-2 ring-emerald-400/40 shadow-md"
-                      : "border-emerald-200/80 bg-gradient-to-br from-emerald-50/70 via-white to-white hover:border-emerald-300"
+                      ? "border-emerald-400 bg-emerald-50/70 ring-2 ring-emerald-400/40"
+                      : "border-slate-200/80 bg-white hover:border-emerald-300"
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5 sm:gap-3">
-                      <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl bg-emerald-100 text-emerald-700 font-bold border border-emerald-200 shrink-0">
-                        <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6" />
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 font-bold border border-emerald-200/70 shrink-0">
+                        <CheckCircle className="h-5 w-5" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
                           <h3 className="text-base sm:text-lg font-black text-slate-900">Allocated Customers</h3>
                           {allocationFilter === "allocated" && allocationSourceFilter === "all" && (
-                            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-600 text-white">Active</span>
+                            <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-600 text-white">Active</span>
                           )}
                         </div>
-                        <p className="text-[11px] sm:text-xs font-semibold text-slate-500">Rooms & Beds Allotted</p>
+                        <p className="text-[11px] font-semibold text-slate-500">Rooms & Beds Allotted</p>
                       </div>
                     </div>
                     <span className="text-2xl sm:text-3xl font-black text-emerald-600">
@@ -4945,7 +4994,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                     </span>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-2 border-t border-emerald-100">
+                  <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100">
                     <button
                       type="button"
                       onClick={(e) => {
@@ -4958,10 +5007,10 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                           setAllocationSourceFilter("manual");
                         }
                       }}
-                      className={`rounded-full px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-extrabold shadow-2xs transition-all hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap ${
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-extrabold transition-all cursor-pointer whitespace-nowrap ${
                         allocationFilter === "allocated" && allocationSourceFilter === "manual"
-                          ? "bg-emerald-600 text-white border border-emerald-700 shadow-sm"
-                          : "bg-emerald-100 text-emerald-800 border border-emerald-200 hover:bg-emerald-200"
+                          ? "bg-emerald-600 text-white shadow-xs"
+                          : "bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100"
                       }`}
                     >
                       Manual: {bookings.filter((b) => b.status === "allocated" && b.source === "manual").length}
@@ -4978,10 +5027,10 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                           setAllocationSourceFilter("online");
                         }
                       }}
-                      className={`rounded-full px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-extrabold shadow-2xs transition-all hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap ${
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-extrabold transition-all cursor-pointer whitespace-nowrap ${
                         allocationFilter === "allocated" && allocationSourceFilter === "online"
-                          ? "bg-indigo-600 text-white border border-indigo-700 shadow-sm"
-                          : "bg-indigo-100 text-indigo-800 border border-indigo-200 hover:bg-indigo-200"
+                          ? "bg-indigo-600 text-white shadow-xs"
+                          : "bg-indigo-50 text-indigo-800 border border-indigo-200 hover:bg-indigo-100"
                       }`}
                     >
                       Online: {bookings.filter((b) => b.status === "allocated" && b.source === "online").length}
@@ -4991,10 +5040,10 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
               </div>
 
               {/* Filter Toolbar & Directory */}
-              <div className="rounded-2xl sm:rounded-[2rem] border border-slate-200 bg-white p-3.5 sm:p-6 shadow-sm space-y-4 sm:space-y-5">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+              <div className="rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-6 shadow-xs space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
                   {/* Status Tabs */}
-                  <div className="flex items-center gap-1.5 sm:gap-2 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl bg-slate-100/90 border border-slate-200/80 overflow-x-auto scrollbar-none flex-nowrap w-full sm:w-auto">
+                  <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl overflow-x-auto scrollbar-none flex-nowrap w-full sm:w-auto">
                     {[
                       { id: "all", label: `All Bookings (${bookings.length})` },
                       { id: "pending", label: `Pending (${bookings.filter((b) => b.status === "pending").length})` },
@@ -5003,45 +5052,36 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       <button
                         key={tab.id}
                         onClick={() => setAllocationFilter(tab.id as any)}
-                        className={`flex-1 sm:flex-initial rounded-lg sm:rounded-xl px-2.5 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold transition-all text-center whitespace-nowrap cursor-pointer ${allocationFilter === tab.id
-                            ? "bg-white text-brand-green shadow-xs border border-slate-200"
+                        className={`flex-1 sm:flex-initial rounded-xl px-3 py-1.5 text-xs font-bold transition-all text-center whitespace-nowrap cursor-pointer ${
+                          allocationFilter === tab.id
+                            ? "bg-white text-slate-900 shadow-xs border border-slate-200/80"
                             : "text-slate-500 hover:text-slate-900"
-                          }`}
+                        }`}
                       >
                         {tab.label}
                       </button>
                     ))}
                   </div>
 
-                  {/* Source Dropdown Filter & Sync */}
-                  <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
-                    <div className="flex items-center gap-1.5 flex-1 sm:flex-initial">
-                      <span className="text-xs font-bold text-slate-500 shrink-0">Source:</span>
-                      <select
-                        value={allocationSourceFilter}
-                        onChange={(e) => setAllocationSourceFilter(e.target.value as any)}
-                        className="rounded-xl sm:rounded-full border border-slate-200 bg-slate-50 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold text-slate-700 outline-none focus:border-brand-green flex-1 sm:flex-initial"
-                      >
-                        <option value="all">All Sources (Manual + Online)</option>
-                        <option value="manual">Manual Admissions Only</option>
-                        <option value="online">Online Form Bookings Only</option>
-                      </select>
-                    </div>
-
-                    <button
-                      onClick={handleManualSync}
-                      disabled={isSyncing}
-                      className="inline-flex items-center justify-center gap-1.5 rounded-xl sm:rounded-full bg-brand-green hover:bg-brand-gold disabled:bg-slate-300 text-white px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs font-black shadow-sm transition-all cursor-pointer whitespace-nowrap shrink-0"
+                  {/* Source Dropdown Filter */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-500 shrink-0">Source:</span>
+                    <select
+                      value={allocationSourceFilter}
+                      onChange={(e) => setAllocationSourceFilter(e.target.value as any)}
+                      className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 outline-none focus:border-brand-green cursor-pointer"
                     >
-                      {isSyncing ? "Syncing..." : "Sync Sheet 🔄"}
-                    </button>
+                      <option value="all">All Sources (Manual + Online)</option>
+                      <option value="manual">Manual Admissions Only</option>
+                      <option value="online">Online Form Bookings Only</option>
+                    </select>
                   </div>
                 </div>
 
                 {/* Allocation Customer List */}
                 <div className="space-y-3">
                   {bookings.length === 0 ? (
-                    <div className="p-8 text-center text-slate-400 font-semibold border border-dashed border-slate-200 rounded-2xl sm:rounded-3xl text-xs">
+                    <div className="p-8 text-center text-slate-400 font-semibold border border-dashed border-slate-200 rounded-3xl bg-slate-50/50 text-xs">
                       No customer bookings found.
                     </div>
                   ) : (
@@ -5062,10 +5102,10 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                           <div
                             key={cust.id}
                             onClick={() => setSelectedHistoryResident(cust)}
-                            className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50/80 border border-slate-200/70 gap-2.5 sm:gap-3 hover:border-slate-300 hover:bg-slate-100/70 transition cursor-pointer active:scale-[0.995]"
+                            className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 gap-3 hover:border-emerald-300 hover:bg-white hover:shadow-xs transition cursor-pointer active:scale-[0.995]"
                           >
                             <div className="flex items-center gap-3 min-w-0">
-                              <div className="relative flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-brand-green/10 text-brand-green font-black text-sm border border-brand-green/20">
+                              <div className="relative flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 font-black text-sm border border-emerald-200/70">
                                 {cust.name[0]}
                                 <span
                                   className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 sm:h-4 sm:w-4 rounded-full border-2 border-white flex items-center justify-center ${
@@ -5084,18 +5124,18 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                                 <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                                   <h4 className="text-xs sm:text-sm font-black text-slate-900 truncate">{cust.name}</h4>
                                   <span
-                                    className={`rounded-full px-2 py-0.5 text-[9px] sm:text-[10px] font-extrabold ${
+                                    className={`rounded-full px-2.5 py-0.5 text-[9px] font-extrabold ${
                                       cust.source === "online"
                                         ? "bg-indigo-50 text-indigo-700 border border-indigo-200"
                                         : "bg-emerald-50 text-emerald-700 border border-emerald-200"
                                     }`}
                                   >
-                                    {cust.source === "online" ? "Online" : "Manual"} (Google Form)
+                                    {cust.source === "online" ? "Online Form" : "Manual Admission"}
                                   </span>
 
                                   {cust.depositAmount !== undefined && (
                                     <span
-                                      className={`rounded-full px-2 py-0.5 text-[9px] sm:text-[10px] font-extrabold ${
+                                      className={`rounded-full px-2.5 py-0.5 text-[9px] font-extrabold ${
                                         cust.depositStatus === "refunded"
                                           ? "bg-slate-100 text-slate-700 border border-slate-300"
                                           : cust.depositStatus === "paid"
@@ -5107,7 +5147,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-[11px] sm:text-xs font-semibold text-slate-500 mt-0.5 truncate">
+                                <p className="text-[11px] font-semibold text-slate-500 mt-0.5 truncate">
                                   {cust.phone} • Registered: {cust.timestamp}
                                 </p>
                               </div>
@@ -5117,8 +5157,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                             <div className="flex flex-wrap items-center gap-1.5 mt-1 sm:mt-0 w-full sm:w-auto justify-start sm:justify-end">
                               {isAllocated ? (
                                 <div className="flex flex-wrap items-center gap-1.5">
-                                  <span className="rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 px-2.5 py-1 text-[11px] sm:text-xs font-extrabold flex items-center gap-1">
-                                    <CheckCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-600 shrink-0" />
+                                  <span className="rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 px-3 py-1 text-[11px] font-extrabold flex items-center gap-1">
+                                    <CheckCircle className="h-3 w-3 text-emerald-600 shrink-0" />
                                     <span>{cust.allocatedBuilding} • Room {cust.allocatedRoom} ({cust.allocatedBed})</span>
                                   </span>
                                   <button
@@ -5130,7 +5170,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                                       setBmsDepositStatus(cust.depositStatus === "pending" ? "pending" : "paid");
                                       setBmsRentStartDate(cust.rentStartDate || new Date().toISOString().substring(0, 10));
                                     }}
-                                    className="rounded-full bg-white border border-slate-200 px-2.5 py-1 text-[11px] sm:text-xs font-bold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+                                    className="rounded-full bg-white border border-slate-200 px-3 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
                                   >
                                     Change
                                   </button>
@@ -5143,16 +5183,16 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                                       setCheckoutRefundMethod("cash");
                                       setCheckoutTxnId("");
                                     }}
-                                    className="rounded-full bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-1 text-[11px] sm:text-xs font-black hover:bg-rose-600 hover:text-white transition cursor-pointer flex items-center gap-1 shadow-2xs"
+                                    className="rounded-full bg-rose-50 text-rose-700 border border-rose-200 px-3 py-1 text-[11px] font-black hover:bg-rose-600 hover:text-white transition cursor-pointer flex items-center gap-1 shadow-2xs"
                                   >
                                     Check Out & Refund 🚪💸
                                   </button>
                                   <button
                                     title="Deallocate Room"
                                     onClick={(e) => handleDeallocateCustomer(cust.id, cust.name, e)}
-                                    className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition cursor-pointer shrink-0"
+                                    className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition cursor-pointer shrink-0"
                                   >
-                                    <RotateCcw className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                                    <RotateCcw className="h-3.5 w-3.5" />
                                   </button>
                                 </div>
                               ) : (
@@ -5170,7 +5210,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                                       setBmsDepositStatus(cust.depositStatus === "pending" ? "pending" : "paid");
                                       setBmsRentStartDate(cust.rentStartDate || new Date().toISOString().substring(0, 10));
                                     }}
-                                    className="rounded-full bg-brand-green hover:bg-brand-gold text-white px-4 py-1.5 text-xs font-black shadow-md transition-all active:scale-95 cursor-pointer"
+                                    className="rounded-2xl bg-brand-green hover:bg-emerald-700 text-white px-4 py-2 text-xs font-black shadow-md shadow-brand-green/20 transition-all active:scale-95 cursor-pointer"
                                   >
                                     Allocate Room & Bed
                                   </button>
