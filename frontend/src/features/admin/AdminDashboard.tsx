@@ -2259,111 +2259,130 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
       {/* Desktop Sidebar (lg screens only) */}
       <aside
-        className={`hidden lg:flex fixed inset-y-0 left-0 z-50 w-72 flex-col justify-between border-r border-slate-200/80 bg-white/95 backdrop-blur-xl px-5 sm:px-6 py-5 sm:py-6 shadow-md transition-transform duration-300 ease-in-out overflow-y-auto scrollbar-none ${
+        className={`hidden lg:flex fixed inset-y-0 left-0 z-50 w-72 flex-col justify-between border-r border-slate-200/80 bg-white/95 backdrop-blur-xl px-4 py-5 shadow-sm transition-transform duration-300 ease-in-out overflow-y-auto scrollbar-none ${
           isSidebarCollapsed ? "lg:-translate-x-full" : "lg:translate-x-0"
         }`}
       >
-        {/* Top Header Name Logo */}
-        <div className="mb-5 sm:mb-6 flex items-center justify-between relative w-full px-1 shrink-0">
-          <ShripadNameLogo />
-          <button
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 lg:hidden shadow-2xs cursor-pointer"
-          >
-            <X className="h-4.5 w-4.5" />
-          </button>
+        {/* Top Header & Role Badge */}
+        <div className="mb-4 space-y-2 px-1 shrink-0">
+          <div className="flex items-center justify-between">
+            <ShripadNameLogo />
+          </div>
+          <div className="flex items-center justify-between px-1">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-black text-emerald-800 border border-emerald-200/80">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              {isStaffMode ? "🏢 Staff Portal" : "👑 Super Admin"}
+            </span>
+            <span className="text-[10px] font-bold text-slate-400 font-mono">v9.10</span>
+          </div>
         </div>
 
-        {/* Curved Pill Navigation Items */}
-        <nav className="flex-1 space-y-1.5 shrink-0">
-          {[
-            { name: "Dashboard", icon: LayoutDashboard },
-            { name: "Revenue", icon: Wallet },
-            { name: "Reports", icon: FileSpreadsheet },
-            { name: "Invoice", icon: Receipt, badgeCount: pendingPaymentsCount },
-          ].map((item) => {
-            const isActive = activeTab === item.name;
-            return (
-              <button
-                key={item.name}
-                onClick={() => handleTabClick(item.name)}
-                className={`group relative flex w-full items-center gap-3.5 rounded-full px-4.5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold transition-all duration-300 ${isActive
-                    ? "bg-brand-green text-white shadow-lg shadow-brand-green/30 translate-x-1"
-                    : "text-slate-600 hover:bg-slate-100/90 hover:text-slate-900 hover:translate-x-1"
+        {/* Categorized Pill Navigation Items */}
+        <nav className="flex-1 space-y-4 shrink-0 px-1">
+          {/* Group 1: Operations */}
+          <div className="space-y-1">
+            <p className="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400">Operations</p>
+            {[
+              { name: "Dashboard", label: "Dashboard", icon: LayoutDashboard },
+              { name: "Revenue", label: "Revenue & Finance", icon: Wallet },
+              { name: "Reports", label: "Reports & Export", icon: FileSpreadsheet },
+              { name: "Invoice", label: "Invoices & Receipts", icon: Receipt, badgeCount: pendingPaymentsCount },
+            ].map((item) => {
+              const isActive = activeTab === item.name;
+              return (
+                <button
+                  key={item.name}
+                  onClick={() => handleTabClick(item.name)}
+                  className={`group relative flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-xs font-bold transition-all duration-200 cursor-pointer ${
+                    isActive
+                      ? "bg-gradient-to-r from-emerald-700 via-brand-green to-emerald-600 text-white shadow-md shadow-emerald-700/20"
+                      : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 active:scale-[0.98]"
                   }`}
-              >
-                <item.icon
-                  className={`h-4.5 w-4.5 sm:h-5 sm:w-5 transition-transform group-hover:scale-110 ${isActive ? "text-white" : "text-slate-500"
+                >
+                  <div
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl transition-colors ${
+                      isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-700"
                     }`}
-                />
-                <span>{item.name}</span>
-                {item.badgeCount && item.badgeCount > 0 ? (
-                  <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-[10px] font-black text-white shadow-xs animate-bounce">
-                    {item.badgeCount}
-                  </span>
-                ) : (
-                  isActive && (
-                    <span className="ml-auto h-2 w-2 rounded-full bg-white animate-pulse shadow-xs" />
-                  )
-                )}
-              </button>
-            );
-          })}
+                  >
+                    <item.icon className="h-4 w-4" />
+                  </div>
+                  <span className="truncate">{item.label}</span>
+                  {item.badgeCount && item.badgeCount > 0 ? (
+                    <span className="ml-auto flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-amber-400 text-slate-950 px-1.5 text-[9px] font-black shadow-xs animate-bounce">
+                      {item.badgeCount}
+                    </span>
+                  ) : (
+                    isActive && <span className="ml-auto h-2 w-2 rounded-full bg-white animate-pulse" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
 
-          {/* Central Plus Create Button */}
-          <div className="py-0.5">
+          {/* Group 2: Property & Residents */}
+          <div className="space-y-1">
+            <p className="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400">Accommodations</p>
+            {[
+              { name: "Buildings", label: "Buildings & Floors", icon: Building2 },
+              { name: "Customers", label: "Residents Directory", icon: Users },
+              { name: "Allocation", label: "Bed Allocation", icon: KeyRound },
+            ].map((item) => {
+              const isActive = activeTab === item.name;
+              return (
+                <button
+                  key={item.name}
+                  onClick={() => handleTabClick(item.name)}
+                  className={`group relative flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-xs font-bold transition-all duration-200 cursor-pointer ${
+                    isActive
+                      ? "bg-gradient-to-r from-emerald-700 via-brand-green to-emerald-600 text-white shadow-md shadow-emerald-700/20"
+                      : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 active:scale-[0.98]"
+                  }`}
+                >
+                  <div
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl transition-colors ${
+                      isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-700"
+                    }`}
+                  >
+                    <item.icon className="h-4 w-4" />
+                  </div>
+                  <span className="truncate">{item.label}</span>
+                  {isActive && <span className="ml-auto h-2 w-2 rounded-full bg-white animate-pulse" />}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Quick Action: New Admission */}
+          <div className="pt-0.5">
             <button
               onClick={() => {
                 setIsCreateModalOpen(true);
                 setIsMobileMenuOpen(false);
               }}
-              className="group relative flex w-full items-center gap-3.5 rounded-full px-4.5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100/90 hover:text-slate-900 hover:translate-x-1 transition-all duration-300 cursor-pointer"
+              className="group flex w-full items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100/80 px-3 py-2.5 text-xs font-black text-emerald-900 shadow-2xs transition-all active:scale-[0.98] cursor-pointer"
             >
-              <Plus className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-slate-500 transition-transform group-hover:scale-110 group-hover:rotate-90 duration-300" />
-              <span>Create</span>
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-xs group-hover:scale-110 transition-transform">
+                <Plus className="h-4 w-4 stroke-[3]" />
+              </div>
+              <span>+ New Admission</span>
             </button>
           </div>
 
-          {[
-            { name: "Buildings", icon: Building2 },
-            { name: "Customers", icon: Users },
-            { name: "Allocation", icon: KeyRound },
-          ].map((item) => {
-            const isActive = activeTab === item.name;
-            return (
-              <button
-                key={item.name}
-                onClick={() => handleTabClick(item.name)}
-                className={`group relative flex w-full items-center gap-3.5 rounded-full px-4.5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold transition-all duration-300 ${isActive
-                    ? "bg-brand-green text-white shadow-lg shadow-brand-green/30 translate-x-1"
-                    : "text-slate-600 hover:bg-slate-100/90 hover:text-slate-900 hover:translate-x-1"
-                  }`}
-              >
-                <item.icon
-                  className={`h-4.5 w-4.5 sm:h-5 sm:w-5 transition-transform group-hover:scale-110 ${isActive ? "text-white" : "text-slate-500"
-                    }`}
-                />
-                <span>{item.name}</span>
-                {isActive && (
-                  <span className="ml-auto h-2 w-2 rounded-full bg-white animate-pulse shadow-xs" />
-                )}
-              </button>
-            );
-          })}
-
-          {/* Admin Management Actions in Sidebar (Uniform design matching other items) */}
+          {/* Group 3: Administration */}
           {!isStaffMode && (
-            <div className="pt-1.5 border-t border-slate-100 space-y-1.5">
+            <div className="space-y-1 pt-1 border-t border-slate-100">
+              <p className="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400">Administration</p>
               <button
                 onClick={() => {
                   setIsStaffModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="group relative flex w-full items-center gap-3.5 rounded-full px-4.5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100/90 hover:text-slate-900 hover:translate-x-1 transition-all duration-300 cursor-pointer"
-                title="Manage Staff & Building Assignments"
+                className="group flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 transition-all cursor-pointer active:scale-[0.98]"
               >
-                <UserCheck className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-slate-500 transition-transform group-hover:scale-110" />
-                <span>Staff & Buildings</span>
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-700 transition-colors">
+                  <UserCheck className="h-4 w-4" />
+                </div>
+                <span>Staff & Access</span>
               </button>
 
               <button
@@ -2371,30 +2390,49 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   setIsPaymentSettingsModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="group relative flex w-full items-center gap-3.5 rounded-full px-4.5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100/90 hover:text-slate-900 hover:translate-x-1 transition-all duration-300 cursor-pointer"
-                title="Configure Real Payment Details & QR Code"
+                className="group flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 transition-all cursor-pointer active:scale-[0.98]"
               >
-                <QrCode className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-slate-500 transition-transform group-hover:scale-110" />
-                <span>Payment & QR</span>
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-700 transition-colors">
+                  <QrCode className="h-4 w-4" />
+                </div>
+                <span>Payment QR Code</span>
+              </button>
+
+              <button
+                onClick={() => handleTabClick("Settings")}
+                className={`group flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-xs font-bold transition-all cursor-pointer active:scale-[0.98] ${
+                  activeTab === "Settings"
+                    ? "bg-gradient-to-r from-emerald-700 via-brand-green to-emerald-600 text-white shadow-md shadow-emerald-700/20"
+                    : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
+                }`}
+              >
+                <div
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl transition-colors ${
+                    activeTab === "Settings" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-700"
+                  }`}
+                >
+                  <Settings className="h-4 w-4" />
+                </div>
+                <span>Settings & Sync</span>
               </button>
             </div>
           )}
         </nav>
 
-        {/* Shripad PG Logo Showcase Footer (Fully visible & responsive) */}
-        <div className="mt-4 mb-2 sm:mb-0 rounded-2xl bg-gradient-to-br from-brand-green-light/40 via-emerald-50/50 to-white p-3 border border-brand-green/20 text-center space-y-1.5 shadow-2xs shrink-0">
+        {/* Shripad PG Logo Showcase Footer */}
+        <div className="mt-3 rounded-2xl bg-gradient-to-br from-emerald-50/80 via-white to-slate-50 p-3 border border-emerald-200/60 text-center space-y-1 shadow-xs shrink-0">
           <div className="mx-auto flex justify-center py-0.5">
             <img
               src={brandLogo}
               alt="Shripad PG Large Logo"
-              className="h-14 sm:h-16 w-auto max-w-full object-contain transition-transform hover:scale-105 filter drop-shadow-xs"
+              className="h-12 w-auto max-w-full object-contain transition-transform hover:scale-105 filter drop-shadow-xs"
             />
           </div>
           <div className="space-y-0.5">
-            <p className="text-[11px] font-black text-brand-navy tracking-wide uppercase">
+            <p className="text-[10px] font-black text-slate-900 tracking-wider uppercase leading-none">
               SHRIPAD PG PORTAL
             </p>
-            <p className="text-[9px] font-semibold text-slate-500 flex items-center justify-center gap-1">
+            <p className="text-[9px] font-semibold text-slate-500 flex items-center justify-center gap-1 leading-none">
               <ShieldCheck className="h-3 w-3 text-brand-green" /> Premium Living & Care
             </p>
           </div>
@@ -3167,7 +3205,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       Live Treasury Ledger
                     </span>
                     <span className="text-[11px] font-bold text-slate-400">
-                      {isStaffMode ? `Scope: ${staffScopeBuilding}` : "All Properties Active"}
+                      {isStaffMode ? `Scope: ${activeStaffMember?.assignedBuildings?.join(", ") || "PG A"}` : "All Properties Active"}
                     </span>
                   </div>
                   <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2">
@@ -8437,136 +8475,155 @@ function doPost(e) {
 
               {/* Sidebar Drawer Container */}
               <aside
-                className="fixed inset-y-0 left-0 z-[76] w-72 sm:w-80 max-w-[82vw] h-[100dvh] flex flex-col justify-between border-r border-slate-200/80 bg-white/98 backdrop-blur-2xl px-4 py-4 sm:px-5 sm:py-5 shadow-2xl transition-transform duration-300 ease-in-out overflow-y-auto overscroll-contain scrollbar-none animate-in slide-in-from-left duration-250 lg:hidden"
+                className="fixed inset-y-0 left-0 z-[76] w-72 sm:w-80 max-w-[85vw] h-[100dvh] flex flex-col justify-between border-r border-slate-200/80 bg-white/98 backdrop-blur-2xl px-4 py-4 shadow-2xl transition-transform duration-300 ease-in-out overflow-y-auto overscroll-contain scrollbar-none animate-in slide-in-from-left duration-250 lg:hidden"
                 style={{
                   paddingTop: 'max(1rem, env(safe-area-inset-top))',
                   paddingBottom: 'max(1rem, env(safe-area-inset-bottom))'
                 }}
               >
-                {/* Top Header Name Logo & Close Button (Aligned with zero overlap) */}
-                <div className="relative mb-3 flex items-center justify-between pb-3 border-b border-slate-100/90 shrink-0">
-                  <div className="flex-1 flex items-center justify-center pl-7">
-                    <ShripadNameLogo className="h-auto scale-90 sm:scale-100 origin-center" />
+                {/* Top Header Name Logo & Close Button */}
+                <div className="relative mb-3 space-y-2 pb-3 border-b border-slate-100/90 shrink-0">
+                  <div className="flex items-center justify-between">
+                    <ShripadNameLogo className="h-auto scale-90 sm:scale-95 origin-left" />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      aria-label="Close Navigation Menu"
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 active:scale-90 transition cursor-pointer shadow-2xs"
+                    >
+                      <X className="h-4 w-4 stroke-[2.5]" />
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setIsMobileMenuOpen(false);
-                    }}
-                    onTouchEnd={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setIsMobileMenuOpen(false);
-                    }}
-                    aria-label="Close Navigation Menu"
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 active:scale-90 active:bg-slate-300 transition cursor-pointer shadow-2xs"
-                  >
-                    <X className="h-4.5 w-4.5 stroke-[2.5]" />
-                  </button>
+                  <div className="flex items-center justify-between px-0.5">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-black text-emerald-800 border border-emerald-200/80">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      {isStaffMode ? "🏢 Staff Portal" : "👑 Super Admin"}
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-400 font-mono">v9.10</span>
+                  </div>
                 </div>
 
-                {/* Curved Pill Navigation Items */}
-                <nav className="flex-1 space-y-1 shrink-0 overflow-y-auto py-1 scrollbar-none">
-                  {[
-                    { name: "Dashboard", icon: LayoutDashboard },
-                    { name: "Revenue", icon: Wallet },
-                    { name: "Reports", icon: FileSpreadsheet },
-                    { name: "Invoice", icon: Receipt, badgeCount: pendingPaymentsCount },
-                  ].map((item) => {
-                    const isActive = activeTab === item.name;
-                    return (
-                      <button
-                        key={item.name}
-                        onClick={() => {
-                          handleTabClick(item.name);
-                          setIsMobileMenuOpen(false);
-                        }}
-                        className={`group relative flex w-full items-center gap-3 rounded-full px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer ${
-                          isActive
-                            ? "bg-brand-green text-white shadow-md shadow-brand-green/25 translate-x-1"
-                            : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 active:bg-slate-100"
-                        }`}
-                      >
-                        <item.icon
-                          className={`h-4.5 w-4.5 shrink-0 transition-transform group-hover:scale-110 ${
-                            isActive ? "text-white" : "text-slate-500"
+                {/* Categorized Pill Navigation Items */}
+                <nav className="flex-1 space-y-3.5 shrink-0 overflow-y-auto py-1 scrollbar-none">
+                  {/* Group 1: Operations */}
+                  <div className="space-y-1">
+                    <p className="px-2.5 text-[9.5px] font-black uppercase tracking-wider text-slate-400">Operations</p>
+                    {[
+                      { name: "Dashboard", label: "Dashboard", icon: LayoutDashboard },
+                      { name: "Revenue", label: "Revenue & Finance", icon: Wallet },
+                      { name: "Reports", label: "Reports & Export", icon: FileSpreadsheet },
+                      { name: "Invoice", label: "Invoices & Receipts", icon: Receipt, badgeCount: pendingPaymentsCount },
+                    ].map((item) => {
+                      const isActive = activeTab === item.name;
+                      return (
+                        <button
+                          key={item.name}
+                          onClick={() => {
+                            handleTabClick(item.name);
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className={`group relative flex w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-bold transition-all duration-200 cursor-pointer ${
+                            isActive
+                              ? "bg-gradient-to-r from-emerald-700 via-brand-green to-emerald-600 text-white shadow-md shadow-emerald-700/20"
+                              : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 active:bg-slate-100"
                           }`}
-                        />
-                        <span>{item.name}</span>
-                        {item.badgeCount && item.badgeCount > 0 ? (
-                          <span className="ml-auto flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-[9px] font-black text-white shadow-xs">
-                            {item.badgeCount}
-                          </span>
-                        ) : (
-                          isActive && (
-                            <span className="ml-auto h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
-                          )
-                        )}
-                      </button>
-                    );
-                  })}
+                        >
+                          <div
+                            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl transition-colors ${
+                              isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-700"
+                            }`}
+                          >
+                            <item.icon className="h-4 w-4" />
+                          </div>
+                          <span className="truncate">{item.label}</span>
+                          {item.badgeCount && item.badgeCount > 0 ? (
+                            <span className="ml-auto flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-amber-400 text-slate-950 px-1.5 text-[9px] font-black shadow-xs">
+                              {item.badgeCount}
+                            </span>
+                          ) : (
+                            isActive && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
 
-                  {/* Central Plus Create Button */}
-                  <div className="py-0.5">
+                  {/* Group 2: Property & Residents */}
+                  <div className="space-y-1">
+                    <p className="px-2.5 text-[9.5px] font-black uppercase tracking-wider text-slate-400">Accommodations</p>
+                    {[
+                      { name: "Buildings", label: "Buildings & Floors", icon: Building2 },
+                      { name: "Customers", label: "Residents Directory", icon: Users },
+                      { name: "Allocation", label: "Bed Allocation", icon: KeyRound },
+                    ].map((item) => {
+                      const isActive = activeTab === item.name;
+                      return (
+                        <button
+                          key={item.name}
+                          onClick={() => {
+                            handleTabClick(item.name);
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className={`group relative flex w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-bold transition-all duration-200 cursor-pointer ${
+                            isActive
+                              ? "bg-gradient-to-r from-emerald-700 via-brand-green to-emerald-600 text-white shadow-md shadow-emerald-700/20"
+                              : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 active:bg-slate-100"
+                          }`}
+                        >
+                          <div
+                            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl transition-colors ${
+                              isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-700"
+                            }`}
+                          >
+                            <item.icon className="h-4 w-4" />
+                          </div>
+                          <span className="truncate">{item.label}</span>
+                          {isActive && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-white animate-pulse" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Central Quick Action: New Admission */}
+                  <div className="pt-0.5">
                     <button
                       onClick={() => {
                         setIsCreateModalOpen(true);
                         setIsMobileMenuOpen(false);
                       }}
-                      className="group relative flex w-full items-center gap-3 rounded-full px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 active:bg-slate-100 transition-all duration-200 cursor-pointer"
+                      className="group flex w-full items-center gap-2.5 rounded-2xl border border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100/80 px-3 py-2.5 text-xs font-black text-emerald-900 shadow-2xs transition-all active:scale-[0.98] cursor-pointer"
                     >
-                      <Plus className="h-4.5 w-4.5 text-slate-500 shrink-0 transition-transform group-hover:scale-110 group-hover:rotate-90 duration-300" />
-                      <span>Create</span>
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-xs group-hover:scale-110 transition-transform">
+                        <Plus className="h-4 w-4 stroke-[3]" />
+                      </div>
+                      <span>+ New Admission</span>
                     </button>
                   </div>
 
-                  {[
-                    { name: "Buildings", icon: Building2 },
-                    { name: "Customers", icon: Users },
-                    { name: "Allocation", icon: KeyRound },
-                  ].map((item) => {
-                    const isActive = activeTab === item.name;
-                    return (
-                      <button
-                        key={item.name}
-                        onClick={() => {
-                          handleTabClick(item.name);
-                          setIsMobileMenuOpen(false);
-                        }}
-                        className={`group relative flex w-full items-center gap-3 rounded-full px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer ${
-                          isActive
-                            ? "bg-brand-green text-white shadow-md shadow-brand-green/25 translate-x-1"
-                            : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 active:bg-slate-100"
-                        }`}
-                      >
-                        <item.icon
-                          className={`h-4.5 w-4.5 shrink-0 transition-transform group-hover:scale-110 ${
-                            isActive ? "text-white" : "text-slate-500"
-                          }`}
-                        />
-                        <span>{item.name}</span>
-                        {isActive && (
-                          <span className="ml-auto h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
-                        )}
-                      </button>
-                    );
-                  })}
-
-                  {/* Admin Management Actions in Sidebar */}
+                  {/* Group 3: Administration */}
                   {!isStaffMode && (
-                    <div className="pt-1.5 mt-1 border-t border-slate-100 space-y-1">
+                    <div className="space-y-1 pt-1 border-t border-slate-100">
+                      <p className="px-2.5 text-[9.5px] font-black uppercase tracking-wider text-slate-400">Administration</p>
                       <button
                         onClick={() => {
                           setIsStaffModalOpen(true);
                           setIsMobileMenuOpen(false);
                         }}
-                        className="group relative flex w-full items-center gap-3 rounded-full px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 active:bg-slate-100 transition-all duration-200 cursor-pointer"
-                        title="Manage Staff & Building Assignments"
+                        className="group flex w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all cursor-pointer active:bg-slate-100"
                       >
-                        <UserCheck className="h-4.5 w-4.5 text-slate-500 shrink-0" />
-                        <span>Staff & Buildings</span>
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-700 transition-colors">
+                          <UserCheck className="h-4 w-4" />
+                        </div>
+                        <span>Staff & Access</span>
                       </button>
 
                       <button
@@ -8574,27 +8631,49 @@ function doPost(e) {
                           setIsPaymentSettingsModalOpen(true);
                           setIsMobileMenuOpen(false);
                         }}
-                        className="group relative flex w-full items-center gap-3 rounded-full px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 active:bg-slate-100 transition-all duration-200 cursor-pointer"
-                        title="Configure Real Payment Details & QR Code"
+                        className="group flex w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all cursor-pointer active:bg-slate-100"
                       >
-                        <QrCode className="h-4.5 w-4.5 text-slate-500 shrink-0" />
-                        <span>Payment & QR</span>
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-700 transition-colors">
+                          <QrCode className="h-4 w-4" />
+                        </div>
+                        <span>Payment QR Code</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          handleTabClick("Settings");
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`group flex w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-bold transition-all cursor-pointer active:bg-slate-100 ${
+                          activeTab === "Settings"
+                            ? "bg-gradient-to-r from-emerald-700 via-brand-green to-emerald-600 text-white shadow-md shadow-emerald-700/20"
+                            : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                        }`}
+                      >
+                        <div
+                          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl transition-colors ${
+                            activeTab === "Settings" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-700"
+                          }`}
+                        >
+                          <Settings className="h-4 w-4" />
+                        </div>
+                        <span>Settings & Sync</span>
                       </button>
                     </div>
                   )}
                 </nav>
 
                 {/* Shripad PG Logo Showcase Footer */}
-                <div className="mt-3 rounded-2xl bg-gradient-to-br from-brand-green-light/40 via-emerald-50/50 to-white p-2.5 border border-brand-green/20 text-center space-y-1 shadow-2xs shrink-0">
+                <div className="mt-2 rounded-2xl bg-gradient-to-br from-emerald-50/80 via-white to-slate-50 p-2.5 border border-emerald-200/60 text-center space-y-1 shadow-xs shrink-0">
                   <div className="mx-auto flex justify-center py-0.5">
                     <img
                       src={brandLogo}
                       alt="Shripad PG Large Logo"
-                      className="h-10 sm:h-12 w-auto max-w-full object-contain filter drop-shadow-xs"
+                      className="h-10 sm:h-11 w-auto max-w-full object-contain filter drop-shadow-xs"
                     />
                   </div>
                   <div className="space-y-0.5">
-                    <p className="text-[10px] font-black text-brand-navy tracking-wider uppercase leading-none">
+                    <p className="text-[10px] font-black text-slate-900 tracking-wider uppercase leading-none">
                       SHRIPAD PG PORTAL
                     </p>
                     <p className="text-[8.5px] font-semibold text-slate-500 flex items-center justify-center gap-1 leading-none">
