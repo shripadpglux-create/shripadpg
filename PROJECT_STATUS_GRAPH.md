@@ -2,6 +2,36 @@
 
 ---
 
+### 📍 Version 8.71 — Dashboard Production-Level UI/UX Overhaul (Feature 1) 📊🚀✨
+
+```mermaid
+flowchart TD
+    subgraph DashboardKPIGrid ["4-Card Responsive Operational KPI Grid (2x2 Mobile, 4x1 Desktop)"]
+        KPI1["🟢 Available Beds (Unoccupied Modal Matrix Trigger)"]
+        KPI2["🔴 Booked Beds (Occupied Modal Matrix Trigger)"]
+        KPI3["👥 Active Residents (Direct Customers Tab Navigation)"]
+        KPI4["🏢 Total Properties (Direct Buildings Tab Navigation)"]
+        
+        KPI1 ~~~ KPI2
+        KPI3 ~~~ KPI4
+    end
+
+    subgraph RecentCustomersFeed ["Recent Customers & Admissions Feed"]
+        TimeFilters["Scrollbar-None Time Filters (24h, 7d, 1m, Custom Range)"]
+        SourceTabs["Source Tabs (All Bookings, Online, Manual)"]
+        CustomerRows["Responsive Customer Row Cards:
+        • Distinct avatar & online self-booking badge
+        • Guardian phone & admitter role tags
+        • Status badge + Tailwind circular action buttons
+        • Deallocate, Edit & Delete without mobile wrap collision"]
+        
+        TimeFilters --> SourceTabs
+        SourceTabs --> CustomerRows
+    end
+```
+
+---
+
 ### 📍 Version 8.70 — Mobile Navigation Architecture & App Shell (Feature 0) 📱🚀✨
 
 ```mermaid
