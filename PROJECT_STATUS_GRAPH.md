@@ -2,6 +2,26 @@
 
 ---
 
+### 📍 Version 8.94 — Elimination of Mobile Sidebar Vertical Gap & Clean Drawer Routing 📱✨🧹
+
+```mermaid
+flowchart TD
+    subgraph MobileLayoutEngine ["Mobile Layout & Navigation Refinement"]
+        DesktopScope["Desktop Sidebar Scoping:
+        • <aside> scoped strictly to 'hidden lg:flex' (desktop/tablet only)
+        • Eliminates the 80%-width giant white mobile slide-out box
+        • Removed vertical empty gap above footer showcase"]
+        
+        NavbarRouting["Top Navbar Hamburger Routing:
+        • window.innerWidth < 1024 opens sleek mobile bottom drawer (setIsMoreDrawerOpen)
+        • Unified, compact, native mobile user experience"]
+        
+        DesktopScope & NavbarRouting --> CleanMobileUI["Zero Unwanted Screen Gaps & Pixel-Perfect Mobile Navigation"]
+    end
+```
+
+---
+
 ### 📍 Version 8.93 — Official Logo Integration & Safe-Zone PWA Homescreen Icon Generation 🖼️📱✨
 
 ```mermaid

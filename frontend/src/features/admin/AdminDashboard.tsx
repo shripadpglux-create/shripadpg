@@ -2217,19 +2217,11 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       <div className="fixed top-0 left-64 w-96 h-96 bg-brand-green-light/30 rounded-full blur-3xl pointer-events-none -z-10" />
       <div className="fixed bottom-0 right-0 w-96 h-96 bg-emerald-100/40 rounded-full blur-3xl pointer-events-none -z-10" />
 
-      {/* Mobile Drawer Overlay Backdrop */}
-      {isMobileMenuOpen && (
-        <div
-          onClick={() => setIsMobileMenuOpen(false)}
-          className="fixed inset-0 z-40 bg-slate-900/5 backdrop-blur-[1px] transition-opacity lg:hidden"
-        />
-      )}
-
-      {/* Sidebar Drawer */}
+      {/* Desktop Sidebar (lg screens only) */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-slate-200/80 bg-white/95 backdrop-blur-xl px-5 sm:px-6 py-5 sm:py-6 shadow-xl lg:shadow-md transition-transform duration-300 ease-in-out overflow-y-auto scrollbar-none ${
-          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-        } ${isSidebarCollapsed ? "lg:-translate-x-full" : "lg:translate-x-0"}`}
+        className={`hidden lg:flex fixed inset-y-0 left-0 z-50 w-72 flex-col justify-between border-r border-slate-200/80 bg-white/95 backdrop-blur-xl px-5 sm:px-6 py-5 sm:py-6 shadow-md transition-transform duration-300 ease-in-out overflow-y-auto scrollbar-none ${
+          isSidebarCollapsed ? "lg:-translate-x-full" : "lg:translate-x-0"
+        }`}
       >
         {/* Top Header Name Logo */}
         <div className="mb-5 sm:mb-6 flex items-center justify-between relative w-full px-1 shrink-0">
@@ -2378,14 +2370,14 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
             <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 flex-nowrap">
               <button
                 onClick={() => {
-                  if (window.innerWidth < 1024) {
-                    setIsMobileMenuOpen(true);
+                  if (typeof window !== "undefined" && window.innerWidth < 1024) {
+                    setIsMoreDrawerOpen(true);
                   } else {
                     setIsSidebarCollapsed(!isSidebarCollapsed);
                   }
                 }}
                 className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full border border-slate-200/80 bg-slate-50 text-slate-600 hover:bg-slate-100 shadow-2xs cursor-pointer active:scale-95"
-                title="Toggle Sidebar Navigation"
+                title="Navigation Menu"
               >
                 <Menu className="h-4 w-4" />
               </button>
