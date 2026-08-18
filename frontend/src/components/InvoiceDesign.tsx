@@ -719,33 +719,35 @@ export function InvoiceDesign({
                   </button>
                 )}
 
-                {/* WHATSAPP SHARE BUTTON */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    const text = encodeURIComponent(
-                      `*Official Rent Receipt - SHRIPAD PG*\n` +
-                      `Invoice No: ${invoiceNo}\n` +
-                      `Resident: ${tenantName}\n` +
-                      `Building: ${building}\n` +
-                      `Room / Bed: ${room} (${bed})\n` +
-                      `Rent Amount: ₹${rentAmount.toLocaleString("en-IN")}\n` +
-                      `Paid Amount: ₹${paidAmount.toLocaleString("en-IN")}\n` +
-                      `Balance Due: ₹${balanceDue.toLocaleString("en-IN")}\n` +
-                      `Date: ${date}\n\n` +
-                      `Thank you for choosing Shripad PG!`
-                    );
-                    const phoneClean = (contact || "").replace(/[^0-9]/g, "");
-                    const waUrl = phoneClean.length >= 10
-                      ? `https://wa.me/${phoneClean.startsWith("91") ? phoneClean : `91${phoneClean}`}?text=${text}`
-                      : `https://wa.me/?text=${text}`;
-                    window.open(waUrl, "_blank");
-                  }}
-                  className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3.5 py-2 text-xs sm:text-sm font-bold text-white shadow-xs transition active:scale-95 cursor-pointer"
-                  title="Send Receipt directly on WhatsApp"
-                >
-                  <span>WhatsApp 📱</span>
-                </button>
+                {/* WHATSAPP SHARE BUTTON (Admin & Staff Only) */}
+                {isAdminOrStaff && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const text = encodeURIComponent(
+                        `*Official Rent Receipt - SHRIPAD PG*\n` +
+                        `Invoice No: ${invoiceNo}\n` +
+                        `Resident: ${tenantName}\n` +
+                        `Building: ${building}\n` +
+                        `Room / Bed: ${room} (${bed})\n` +
+                        `Rent Amount: ₹${rentAmount.toLocaleString("en-IN")}\n` +
+                        `Paid Amount: ₹${paidAmount.toLocaleString("en-IN")}\n` +
+                        `Balance Due: ₹${balanceDue.toLocaleString("en-IN")}\n` +
+                        `Date: ${date}\n\n` +
+                        `Thank you for choosing Shripad PG!`
+                      );
+                      const phoneClean = (contact || "").replace(/[^0-9]/g, "");
+                      const waUrl = phoneClean.length >= 10
+                        ? `https://wa.me/${phoneClean.startsWith("91") ? phoneClean : `91${phoneClean}`}?text=${text}`
+                        : `https://wa.me/?text=${text}`;
+                      window.open(waUrl, "_blank");
+                    }}
+                    className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3.5 py-2 text-xs sm:text-sm font-bold text-white shadow-xs transition active:scale-95 cursor-pointer"
+                    title="Send Receipt directly on WhatsApp to Resident"
+                  >
+                    <span>WhatsApp 📱</span>
+                  </button>
+                )}
 
                 {/* PRINT RECEIPT BUTTON */}
                 <button
