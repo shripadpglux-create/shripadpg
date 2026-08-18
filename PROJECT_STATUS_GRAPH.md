@@ -2,6 +2,25 @@
 
 ---
 
+### 📍 Version 8.96 — Fix Body Containing Block & Mobile Fixed Navigation Docking 📱📌✨
+
+```mermaid
+flowchart TD
+    subgraph MobileViewportFix ["Mobile Viewport & Fixed Positioning Engine"]
+        BodyTransformFix["Body Stacking Context Fix:
+        • Removed 'transform: translate3d(0, 0, 0)' and 'perspective: 1000px' from <body> selector in styles.css
+        • Solves CSS specification limitation where body transform broke all 'position: fixed' viewports"]
+
+        ViewportDocking["Viewport Sticking Restored:
+        • Bottom Navigation Dock stays firmly pinned to mobile screen while scrolling
+        • Top Hamburger & 'More Features' drawer open directly on user screen instead of scrolling down"]
+
+        BodyTransformFix --> ViewportDocking --> CleanMobileExperience["Pixel-Perfect Native Mobile Dock & Drawer Experience"]
+    end
+```
+
+---
+
 ### 📍 Version 8.95 — Full-Stack Flow Synchronization & Mismatch Fixes 🔄🛠️✨
 
 ```mermaid
