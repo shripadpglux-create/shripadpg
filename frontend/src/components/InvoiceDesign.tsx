@@ -769,7 +769,8 @@ export function InvoiceDesign({
           )}
 
           {/* A4 Printable Invoice Sheet */}
-          <div className="invoice-sheet mx-auto flex max-w-full flex-col bg-white shadow-2xl rounded-sm border border-slate-200/80 overflow-hidden text-slate-900">
+          <div className="w-full max-w-full overflow-x-auto pb-6 scrollbar-none flex justify-start sm:justify-center">
+            <div className="invoice-sheet mx-auto flex max-w-full flex-col bg-white shadow-2xl rounded-sm border border-slate-200/80 overflow-hidden text-slate-900 shrink-0">
             {/* Decorative Top Banner */}
             <header className="relative h-[120px] shrink-0 overflow-hidden bg-white border-b border-slate-100">
               {/* Angular Polygons */}
@@ -1094,6 +1095,7 @@ export function InvoiceDesign({
               </div>
             </footer>
           </div>
+        </div>
         </>
       )}
 

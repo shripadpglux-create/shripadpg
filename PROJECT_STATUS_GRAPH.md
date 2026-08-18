@@ -2,6 +2,33 @@
 
 ---
 
+### 📍 Version 8.68 — Comprehensive Mobile Viewport Responsive Overhaul & 5-Item Native Dock 📱✨🚀
+
+```mermaid
+flowchart TD
+    subgraph MobileNavigation ["Mobile Navigation Overhaul"]
+        HeaderCompact["Compact Top Header (px-2.5, compact buttons & S avatar)"]
+        FiveItemDock["5-Item Native App Bottom Dock:
+        1. Home (Dashboard)
+        2. Customers (Residents)
+        3. + Create (Elevated action button)
+        4. Allocation (Room & Bed matrix)
+        5. Dynamic 'More' Drawer Trigger"]
+        
+        HeaderCompact --> FiveItemDock
+    end
+
+    subgraph MobileCardLayouts ["Card Padding & Overflow Optimization"]
+        ScrollbarNone["Global scrollbar-none utility for clean horizontal swiping"]
+        ResponsivePaddings["p-3.5 sm:p-6 card paddings & rounded-2xl to maximize screen real estate"]
+        InvoiceResponsive["Responsive scroll wrapper for A4 invoice print preview"]
+        
+        FiveItemDock --> MobileCardLayouts
+    end
+```
+
+---
+
 ### 📍 Version 8.67 — Multi-Month Payment History Revenue Aggregation & System-Wide Flow Hardening 💰📊✨
 
 ```mermaid

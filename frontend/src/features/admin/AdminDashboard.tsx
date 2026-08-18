@@ -2339,10 +2339,10 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       {/* Main Content Area */}
       <div className={`flex flex-1 flex-col transition-all duration-300 min-w-0 ${isSidebarCollapsed ? "lg:pl-0" : "lg:pl-72"}`}>
         {/* Centered top navigation bar wrapper aligning perfectly with main layout margins */}
-        <div className="sticky top-4 z-30 w-full px-4 sm:px-6 lg:px-8 mt-4 mb-2">
-          <header className="mx-auto max-w-7xl rounded-full border border-slate-200/80 bg-white/90 shadow-lg shadow-slate-200/50 backdrop-blur-xl px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3 transition-all">
+        <div className="sticky top-2 sm:top-4 z-30 w-full px-2 sm:px-6 lg:px-8 mt-2 sm:mt-4 mb-2">
+          <header className="mx-auto max-w-7xl rounded-full border border-slate-200/80 bg-white/95 shadow-lg shadow-slate-200/50 backdrop-blur-xl px-2.5 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between gap-2 sm:gap-3 transition-all">
             {/* Left: Menu, Role Scope, WhatsApp & Complaints */}
-            <div className="flex items-center gap-2 sm:gap-3 shrink-0 flex-wrap lg:flex-nowrap">
+            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 flex-nowrap">
               <button
                 onClick={() => {
                   if (window.innerWidth < 1024) {
@@ -2351,7 +2351,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                     setIsSidebarCollapsed(!isSidebarCollapsed);
                   }
                 }}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200/80 bg-slate-50 text-slate-600 hover:bg-slate-100 shadow-2xs cursor-pointer"
+                className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full border border-slate-200/80 bg-slate-50 text-slate-600 hover:bg-slate-100 shadow-2xs cursor-pointer active:scale-95"
                 title="Toggle Sidebar Navigation"
               >
                 <Menu className="h-4 w-4" />
@@ -2399,7 +2399,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   fetchWhatsAppStatus();
                   fetchWhatsAppTemplates();
                 }}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black transition cursor-pointer shadow-sm active:scale-95 border ${
+                className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-xs font-black transition cursor-pointer shadow-sm active:scale-95 border ${
                   whatsappStatus?.connected
                     ? "bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700"
                     : "bg-emerald-50 text-emerald-900 border-emerald-200 hover:bg-emerald-100"
@@ -2407,14 +2407,14 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 title="WhatsApp Baileys Automation Center (Auto-Credentials, Invoices & Chatbot)"
               >
                 <span className="text-xs">💬</span>
-                <span>WhatsApp</span>
+                <span className="text-[11px] sm:text-xs">WhatsApp</span>
                 <span className={`h-2 w-2 rounded-full ${whatsappStatus?.connected ? "bg-white animate-pulse" : "bg-amber-500"}`} />
               </button>
 
               {/* Complaints Center Quick Access Notification Button */}
               <button
                 onClick={() => setIsComplaintsHubModalOpen(true)}
-                className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black transition cursor-pointer shadow-sm active:scale-95 border ${
+                className={`relative flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-black transition cursor-pointer shadow-sm active:scale-95 border ${
                   activeComplaintsCount > 0
                     ? "bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100 animate-pulse"
                     : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200"
@@ -2422,7 +2422,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 title="Manage Resident Complaints & Service Requests"
               >
                 <MessageSquare className={`h-3.5 w-3.5 ${activeComplaintsCount > 0 ? "text-rose-600" : "text-slate-500"}`} />
-                <span className="hidden sm:inline">Complaints</span>
+                <span className="hidden md:inline">Complaints</span>
                 {activeComplaintsCount > 0 && (
                   <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-600 text-[9px] font-black text-white px-1 shadow-xs">
                     {activeComplaintsCount}
@@ -2622,7 +2622,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
               {/* 4 KPI Summary Cards */}
               {/* Interactive Operational Summary Cards (Clickable to launch BookMyShow Occupancy Explorer) */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-5">
                 {/* 1. Vacant / Unoccupied Rooms (Green 🟢 - BookMyShow Standard: Available for Booking) */}
                 <div
                   onClick={() =>
@@ -2632,17 +2632,17 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       selectedBuilding: scopedBuildingsList[0]?.name || "PG A",
                     })
                   }
-                  className="group rounded-[1.5rem] sm:rounded-[2rem] border border-emerald-200/90 bg-gradient-to-br from-emerald-50/40 via-white to-white p-4 sm:p-5 lg:p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10 cursor-pointer relative overflow-hidden"
+                  className="group rounded-2xl sm:rounded-[2rem] border border-emerald-200/90 bg-gradient-to-br from-emerald-50/40 via-white to-white p-3.5 sm:p-5 lg:p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10 cursor-pointer relative overflow-hidden active:scale-[0.99]"
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-2xs group-hover:scale-110 transition-transform">
-                      <Bed className="h-5 w-5 sm:h-6 sm:w-6" />
+                    <div className="flex h-9 w-9 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-2xs group-hover:scale-110 transition-transform">
+                      <Bed className="h-4.5 w-4.5 sm:h-6 sm:w-6" />
                     </div>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100/80 px-3 py-1 text-xs font-extrabold text-emerald-800 border border-emerald-300 shadow-2xs">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100/80 px-2.5 py-0.5 sm:px-3 sm:py-1 text-[11px] sm:text-xs font-extrabold text-emerald-800 border border-emerald-300 shadow-2xs">
                       🟢 Available / Vacant
                     </span>
                   </div>
-                  <div className="mt-4 sm:mt-5">
+                  <div className="mt-3 sm:mt-5">
                     <p className="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-500">Unoccupied Rooms & Beds</p>
                     <p className="mt-0.5 sm:mt-1 text-xl sm:text-2xl lg:text-3xl font-black text-emerald-800">
                       {overallOccupancyStats.totalUnocc} <span className="text-xs font-bold text-slate-400">Available</span>
@@ -2662,17 +2662,17 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       selectedBuilding: scopedBuildingsList[0]?.name || "PG A",
                     })
                   }
-                  className="group rounded-[1.5rem] sm:rounded-[2rem] border border-rose-200/90 bg-gradient-to-br from-rose-50/40 via-white to-white p-4 sm:p-5 lg:p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-rose-500/10 cursor-pointer relative overflow-hidden"
+                  className="group rounded-2xl sm:rounded-[2rem] border border-rose-200/90 bg-gradient-to-br from-rose-50/40 via-white to-white p-3.5 sm:p-5 lg:p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-rose-500/10 cursor-pointer relative overflow-hidden active:scale-[0.99]"
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl bg-rose-100 text-rose-600 border border-rose-200 shadow-2xs group-hover:scale-110 transition-transform">
-                      <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" />
+                    <div className="flex h-9 w-9 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl bg-rose-100 text-rose-600 border border-rose-200 shadow-2xs group-hover:scale-110 transition-transform">
+                      <CheckCircle2 className="h-4.5 w-4.5 sm:h-6 sm:w-6" />
                     </div>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-rose-100/80 px-3 py-1 text-xs font-extrabold text-rose-800 border border-rose-300 shadow-2xs">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-rose-100/80 px-2.5 py-0.5 sm:px-3 sm:py-1 text-[11px] sm:text-xs font-extrabold text-rose-800 border border-rose-300 shadow-2xs">
                       🔴 Occupied / Booked
                     </span>
                   </div>
-                  <div className="mt-4 sm:mt-5">
+                  <div className="mt-3 sm:mt-5">
                     <p className="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-500">Occupied Rooms</p>
                     <p className="mt-0.5 sm:mt-1 text-xl sm:text-2xl lg:text-3xl font-black text-rose-700">
                       {overallOccupancyStats.totalOcc} <span className="text-xs font-bold text-slate-400">Occupied</span>
@@ -2686,17 +2686,17 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 {/* 3. Total Buildings */}
                 <div
                   onClick={() => setActiveTab("Buildings")}
-                  className="group rounded-[1.5rem] sm:rounded-[2rem] border border-slate-200/80 bg-white p-4 sm:p-5 lg:p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg cursor-pointer"
+                  className="group rounded-2xl sm:rounded-[2rem] border border-slate-200/80 bg-white p-3.5 sm:p-5 lg:p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg cursor-pointer active:scale-[0.99]"
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl bg-amber-100/80 text-amber-600 border border-amber-200/60 shadow-2xs group-hover:scale-110 transition-transform">
-                      <Building2 className="h-5 w-5 sm:h-6 sm:w-6" />
+                    <div className="flex h-9 w-9 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl bg-amber-100/80 text-amber-600 border border-amber-200/60 shadow-2xs group-hover:scale-110 transition-transform">
+                      <Building2 className="h-4.5 w-4.5 sm:h-6 sm:w-6" />
                     </div>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-extrabold text-amber-700 border border-amber-200/80">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 sm:py-1 text-xs font-extrabold text-amber-700 border border-amber-200/80">
                       Properties
                     </span>
                   </div>
-                  <div className="mt-4 sm:mt-5">
+                  <div className="mt-3 sm:mt-5">
                     <p className="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400">Total Buildings</p>
                     <p className="mt-0.5 sm:mt-1 text-xl sm:text-2xl lg:text-3xl font-black text-slate-900">{scopedBuildingsList.length}</p>
                     <p className="mt-0.5 text-xs font-semibold text-slate-500 group-hover:underline">Manage Buildings →</p>
@@ -2705,9 +2705,9 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
               </div>
 
               {/* Recent Customers Activity Feed (Full Width) */}
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+              <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-12">
                 {/* Recent Customers (Manual & Online + Time Filter) (Full 12 cols) */}
-                <div className="rounded-[2rem] border border-slate-200/80 bg-white p-6 sm:p-7 shadow-sm lg:col-span-12 flex flex-col justify-between space-y-4">
+                <div className="rounded-2xl sm:rounded-[2rem] border border-slate-200/80 bg-white p-3.5 sm:p-6 lg:p-7 shadow-sm lg:col-span-12 flex flex-col justify-between space-y-4">
                   <div>
                     {/* Top Title & Total Count */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
@@ -2724,7 +2724,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                     </div>
 
                     {/* Filter Pills Toolbar */}
-                    <div className="flex items-center justify-between gap-2 p-1.5 rounded-2xl bg-slate-100/80 border border-slate-200/70 mb-4 overflow-x-auto">
+                    <div className="flex items-center justify-between gap-1.5 sm:gap-2 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl bg-slate-100/80 border border-slate-200/70 mb-4 overflow-x-auto scrollbar-none flex-nowrap">
                       {[
                         { id: "24h", label: "24 Hours" },
                         { id: "7d", label: "7 Days" },
@@ -2734,7 +2734,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                         <button
                           key={filter.id}
                           onClick={() => setCustomerTimeFilter(filter.id as any)}
-                          className={`flex-1 min-w-[70px] rounded-xl px-3 py-1.5 text-xs font-bold transition-all text-center ${customerTimeFilter === filter.id
+                          className={`flex-1 min-w-[65px] sm:min-w-[70px] rounded-lg sm:rounded-xl px-2.5 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs font-bold transition-all text-center whitespace-nowrap cursor-pointer ${customerTimeFilter === filter.id
                               ? "bg-white text-brand-green shadow-xs border border-slate-200"
                               : "text-slate-500 hover:text-slate-900"
                             }`}
@@ -2746,28 +2746,31 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
                     {/* Custom Date Inputs Range (Shown when 'custom' is active) */}
                     {customerTimeFilter === "custom" && (
-                      <div className="flex items-center gap-2 p-3 mb-4 rounded-2xl bg-emerald-50/60 border border-emerald-200/60 text-xs font-bold">
-                        <CalendarRange className="h-4 w-4 text-brand-green shrink-0" />
-                        <div className="flex items-center gap-2 flex-1">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 p-2.5 sm:p-3 mb-4 rounded-xl sm:rounded-2xl bg-emerald-50/60 border border-emerald-200/60 text-xs font-bold">
+                        <div className="flex items-center gap-1.5 text-brand-green">
+                          <CalendarRange className="h-4 w-4 shrink-0" />
+                          <span className="sm:hidden text-[11px]">Date Range:</span>
+                        </div>
+                        <div className="flex items-center gap-2 flex-1 flex-wrap sm:flex-nowrap">
                           <input
                             type="date"
                             value={customStartDate}
                             onChange={(e) => setCustomStartDate(e.target.value)}
-                            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-slate-700 outline-none text-xs font-semibold"
+                            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-slate-700 outline-none text-xs font-semibold flex-1 sm:flex-initial"
                           />
-                          <span className="text-slate-400">to</span>
+                          <span className="text-slate-400 text-xs">to</span>
                           <input
                             type="date"
                             value={customEndDate}
                             onChange={(e) => setCustomEndDate(e.target.value)}
-                            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-slate-700 outline-none text-xs font-semibold"
+                            className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-slate-700 outline-none text-xs font-semibold flex-1 sm:flex-initial"
                           />
                         </div>
                       </div>
                     )}
 
                     {/* Source Filter Tabs */}
-                    <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-100/80 border border-slate-200/70 mb-4 overflow-x-auto w-max">
+                    <div className="flex items-center gap-1.5 sm:gap-2 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl bg-slate-100/80 border border-slate-200/70 mb-4 overflow-x-auto scrollbar-none w-full max-w-full flex-nowrap">
                       {[
                         { id: "all", label: "All Bookings" },
                         { id: "online", label: "Online Bookings" },
@@ -2776,7 +2779,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                         <button
                           key={filter.id}
                           onClick={() => setDashboardSourceFilter(filter.id as any)}
-                          className={`min-w-[90px] rounded-xl px-3 py-1.5 text-xs font-bold transition-all text-center ${dashboardSourceFilter === filter.id
+                          className={`min-w-[80px] sm:min-w-[90px] flex-1 sm:flex-initial rounded-lg sm:rounded-xl px-2.5 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs font-bold transition-all text-center whitespace-nowrap cursor-pointer ${dashboardSourceFilter === filter.id
                               ? "bg-white text-indigo-600 shadow-xs border border-slate-200"
                               : "text-slate-500 hover:text-slate-900"
                             }`}
@@ -7781,83 +7784,87 @@ function doPost(e) {
         </div>
       )}
 
-      {/* INSTAGRAM-STYLE BOTTOM TAB BAR FOR MOBILE SCREENS */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-2 py-2 flex lg:hidden shadow-2xl items-center justify-between pb-safe">
-        {/* Tab 1: Dashboard */}
+      {/* NATIVE APP STYLE 5-ITEM BOTTOM DOCK BAR FOR MOBILE VIEWPORTS */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-slate-200/90 px-3 py-1.5 flex lg:hidden shadow-2xl items-center justify-around pb-safe">
+        {/* Tab 1: Dashboard / Home */}
         <button
           onClick={() => handleTabClick("Dashboard")}
-          className={`flex flex-col items-center justify-center flex-1 py-1 transition-all active:scale-95 ${
-            activeTab === "Dashboard" ? "text-brand-green scale-105" : "text-slate-500 hover:text-slate-800"
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-2xl transition-all active:scale-90 cursor-pointer ${
+            activeTab === "Dashboard" ? "text-brand-green font-black scale-105" : "text-slate-500 hover:text-slate-800"
           }`}
         >
-          <LayoutDashboard className="h-5 w-5" />
-          <span className="text-[9px] font-black mt-0.5">Home</span>
+          <LayoutDashboard className={`h-5 w-5 ${activeTab === "Dashboard" ? "stroke-[2.5]" : "stroke-[1.75]"}`} />
+          <span className="text-[10px] font-bold mt-0.5 tracking-tight">Home</span>
         </button>
 
-        {/* Tab 2: Customers */}
+        {/* Tab 2: Customers / Residents */}
         <button
           onClick={() => handleTabClick("Customers")}
-          className={`flex flex-col items-center justify-center flex-1 py-1 transition-all active:scale-95 ${
-            activeTab === "Customers" ? "text-brand-green scale-105" : "text-slate-500 hover:text-slate-800"
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-2xl transition-all active:scale-90 cursor-pointer ${
+            activeTab === "Customers" ? "text-brand-green font-black scale-105" : "text-slate-500 hover:text-slate-800"
           }`}
         >
-          <Users className="h-5 w-5" />
-          <span className="text-[9px] font-black mt-0.5">Customers</span>
+          <Users className={`h-5 w-5 ${activeTab === "Customers" ? "stroke-[2.5]" : "stroke-[1.75]"}`} />
+          <span className="text-[10px] font-bold mt-0.5 tracking-tight">Customers</span>
         </button>
 
-        {/* Tab 3: Reports */}
-        <button
-          onClick={() => handleTabClick("Reports")}
-          className={`flex flex-col items-center justify-center flex-1 py-1 transition-all active:scale-95 ${
-            activeTab === "Reports" ? "text-brand-green scale-105" : "text-slate-500 hover:text-slate-800"
-          }`}
-        >
-          <FileSpreadsheet className="h-5 w-5" />
-          <span className="text-[9px] font-black mt-0.5">Reports</span>
-        </button>
-
-        {/* Tab 4: Plus Create Button (Static without blinking) */}
-        <div className="flex-1 flex justify-center -mt-6">
+        {/* Tab 3: Central Elevated Create Button */}
+        <div className="flex justify-center -mt-5">
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-brand-green via-emerald-600 to-brand-green text-white shadow-lg shadow-brand-green/30 border-4 border-white active:scale-90 transition-transform cursor-pointer"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-tr from-brand-green via-emerald-600 to-emerald-500 text-white shadow-xl shadow-brand-green/40 border-[3px] border-white active:scale-90 transition-transform cursor-pointer"
+            title="Quick Admission & Room Allocation"
           >
             <Plus className="h-6 w-6 stroke-[3]" />
           </button>
         </div>
 
-        {/* Tab 5: Revenue */}
-        <button
-          onClick={() => handleTabClick("Revenue")}
-          className={`flex flex-col items-center justify-center flex-1 py-1 transition-all active:scale-95 ${
-            activeTab === "Revenue" ? "text-brand-green scale-105" : "text-slate-500 hover:text-slate-800"
-          }`}
-        >
-          <Wallet className="h-5 w-5" />
-          <span className="text-[9px] font-black mt-0.5">Revenue</span>
-        </button>
-
-        {/* Tab 6: Allocation */}
+        {/* Tab 4: Room Matrix & Allocation */}
         <button
           onClick={() => handleTabClick("Allocation")}
-          className={`flex flex-col items-center justify-center flex-1 py-1 transition-all active:scale-95 ${
-            activeTab === "Allocation" ? "text-brand-green scale-105" : "text-slate-500 hover:text-slate-800"
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-2xl transition-all active:scale-90 cursor-pointer ${
+            activeTab === "Allocation" ? "text-brand-green font-black scale-105" : "text-slate-500 hover:text-slate-800"
           }`}
         >
-          <KeyRound className="h-5 w-5" />
-          <span className="text-[9px] font-black mt-0.5">Allocation</span>
+          <KeyRound className={`h-5 w-5 ${activeTab === "Allocation" ? "stroke-[2.5]" : "stroke-[1.75]"}`} />
+          <span className="text-[10px] font-bold mt-0.5 tracking-tight">Allocation</span>
         </button>
 
-        {/* Tab 7: Buildings */}
-        <button
-          onClick={() => handleTabClick("Buildings")}
-          className={`flex flex-col items-center justify-center flex-1 py-1 transition-all active:scale-95 ${
-            activeTab === "Buildings" ? "text-brand-green scale-105" : "text-slate-500 hover:text-slate-800"
-          }`}
-        >
-          <Building2 className="h-5 w-5" />
-          <span className="text-[9px] font-black mt-0.5">Buildings</span>
-        </button>
+        {/* Tab 5: More / Drawer with active subtab indicator */}
+        {(() => {
+          const isOtherActive = ["Revenue", "Reports", "Invoice", "Buildings", "Settings"].includes(activeTab);
+          const OtherIcon =
+            activeTab === "Revenue"
+              ? Wallet
+              : activeTab === "Reports"
+              ? FileSpreadsheet
+              : activeTab === "Invoice"
+              ? Receipt
+              : activeTab === "Buildings"
+              ? Building2
+              : Menu;
+
+          const label = isOtherActive ? activeTab : "More";
+
+          return (
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(true);
+              }}
+              className={`relative flex flex-col items-center justify-center py-1 px-2 rounded-2xl transition-all active:scale-90 cursor-pointer ${
+                isOtherActive ? "text-brand-green font-black scale-105" : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              <div className="relative">
+                <OtherIcon className={`h-5 w-5 ${isOtherActive ? "stroke-[2.5]" : "stroke-[1.75]"}`} />
+                {(pendingPaymentsCount > 0 || activeComplaintsCount > 0) && (
+                  <span className="absolute -top-1 -right-1.5 h-2 w-2 rounded-full bg-rose-600 ring-2 ring-white animate-pulse" />
+                )}
+              </div>
+              <span className="text-[10px] font-bold mt-0.5 tracking-tight max-w-[55px] truncate">{label}</span>
+            </button>
+          );
+        })()}
       </div>
 
       {/* REAL PAYMENT DETAILS & QR CODE CONTROL MODAL */}
