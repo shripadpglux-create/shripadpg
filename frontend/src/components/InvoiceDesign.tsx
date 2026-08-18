@@ -572,30 +572,30 @@ export function InvoiceDesign({
     <div className="space-y-6">
       {/* Sub-Navigation Header Segmented Control (Admin / Staff Only) */}
       {!isEffectiveHideTabs && (
-        <div className="no-print mx-auto w-full max-w-[210mm]">
-          <div className="grid grid-cols-3 gap-1 p-1 rounded-2xl bg-slate-100/90 border border-slate-200/80 shadow-2xs">
+        <div className="no-print mx-auto w-full max-w-4xl">
+          <div className="grid grid-cols-3 gap-1.5 p-1.5 rounded-2xl bg-slate-100/90 border border-slate-200/80 shadow-2xs">
             <button
               onClick={() => setActiveSubTab("editor")}
-              className={`flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-xs font-black transition cursor-pointer ${
+              className={`flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 text-xs sm:text-sm font-black transition cursor-pointer ${
                 activeSubTab === "editor"
                   ? "bg-brand-green text-white shadow-xs"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              <Sparkles className={`h-3.5 w-3.5 ${activeSubTab === "editor" ? "text-amber-300" : "text-brand-green"}`} />
+              <Sparkles className={`h-4 w-4 ${activeSubTab === "editor" ? "text-amber-300" : "text-brand-green"}`} />
               <span className="truncate">Studio</span>
             </button>
             <button
               onClick={() => setActiveSubTab("history")}
-              className={`flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-xs font-black transition cursor-pointer ${
+              className={`flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 text-xs sm:text-sm font-black transition cursor-pointer ${
                 activeSubTab === "history"
                   ? "bg-brand-green text-white shadow-xs"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              <Clock className="h-3.5 w-3.5" />
+              <Clock className="h-4 w-4" />
               <span className="truncate">Invoices</span>
-              <span className={`ml-0.5 rounded-full px-1.5 py-0.2 text-[10px] font-black ${
+              <span className={`ml-1 rounded-full px-2 py-0.5 text-xs font-black ${
                 activeSubTab === "history" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"
               }`}>
                 {scopedInvoicesList.length}
@@ -603,16 +603,16 @@ export function InvoiceDesign({
             </button>
             <button
               onClick={() => setActiveSubTab("pending")}
-              className={`flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-xs font-black transition cursor-pointer ${
+              className={`flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 text-xs sm:text-sm font-black transition cursor-pointer ${
                 activeSubTab === "pending"
                   ? "bg-brand-green text-white shadow-xs"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              <AlertCircle className={`h-3.5 w-3.5 ${pendingRequests.length > 0 ? "text-amber-400 animate-pulse" : ""}`} />
+              <AlertCircle className={`h-4 w-4 ${pendingRequests.length > 0 ? "text-amber-400 animate-pulse" : ""}`} />
               <span className="truncate">Pending</span>
               {pendingRequests.length > 0 && (
-                <span className="ml-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[9px] font-black text-white">
+                <span className="ml-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-xs font-black text-white">
                   {pendingRequests.length}
                 </span>
               )}
@@ -620,8 +620,8 @@ export function InvoiceDesign({
           </div>
 
           {saveNotification && (
-            <div className="mt-3 flex items-center gap-2 rounded-2xl bg-emerald-50 border border-emerald-300 px-3.5 py-2 text-xs font-extrabold text-emerald-800 animate-fade-in shadow-2xs">
-              <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+            <div className="mt-3 flex items-center gap-2 rounded-2xl bg-emerald-50 border border-emerald-300 px-4 py-2.5 text-xs sm:text-sm font-extrabold text-emerald-800 animate-fade-in shadow-2xs">
+              <CheckCircle className="h-4.5 w-4.5 text-emerald-600 shrink-0" />
               <span>{saveNotification}</span>
             </div>
           )}
@@ -631,45 +631,45 @@ export function InvoiceDesign({
       {/* SUB-TAB 1: INVOICE EDITOR */}
       {activeSubTab === "editor" && (
         <>
-          {/* Top Controls Toolbar (No PDF button) */}
+          {/* Top Controls Toolbar */}
           {!hideTopBar && (
-            <div className="no-print mx-auto flex w-full max-w-[210mm] flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-2xl sm:rounded-3xl border border-slate-200/90 bg-white p-3.5 sm:p-4 shadow-xs">
+            <div className="no-print mx-auto flex w-full max-w-4xl flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 rounded-2xl sm:rounded-3xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs">
               {isEffectiveReadOnly ? (
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-300">
-                    <ShieldCheck className="h-4.5 w-4.5" />
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    <ShieldCheck className="h-5 w-5" />
                   </div>
                   <div>
-                    <div className="flex items-center gap-1.5">
-                      <h2 className="text-xs sm:text-sm font-black text-slate-900">{invoiceNo}</h2>
-                      <span className="rounded-full bg-emerald-100 border border-emerald-300/80 px-2 py-0.5 text-[9px] font-black text-emerald-800 uppercase tracking-wide">
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-sm sm:text-base font-black text-slate-900">{invoiceNo}</h2>
+                      <span className="rounded-full bg-emerald-100 border border-emerald-300/80 px-2.5 py-0.5 text-[10px] font-black text-emerald-800 uppercase tracking-wide">
                         Verified
                       </span>
                     </div>
-                    <p className="text-[10px] sm:text-xs font-medium text-slate-500">
+                    <p className="text-xs font-medium text-slate-500">
                       Official Rent Receipt • Shripad PG
                     </p>
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-green/10 text-brand-green border border-brand-green/20">
-                    <Sparkles className="h-4.5 w-4.5" />
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-green/10 text-brand-green border border-brand-green/20">
+                    <Sparkles className="h-5 w-5" />
                   </div>
                   <div>
-                    <h2 className="text-xs sm:text-sm font-black text-slate-900">Invoice Editor</h2>
-                    <p className="text-[10px] sm:text-xs font-medium text-slate-500">Fill terms & issue receipt</p>
+                    <h2 className="text-sm sm:text-base font-black text-slate-900">Invoice Studio</h2>
+                    <p className="text-xs font-medium text-slate-500">Fill terms & issue receipt</p>
                   </div>
                 </div>
               )}
 
-              <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 flex-wrap">
+              <div className="flex items-center gap-2.5 self-end sm:self-auto shrink-0 flex-wrap">
                 {/* ADMIN IN EDIT MODE: RESIDENT SELECTOR */}
                 {!readOnly && isAdminOrStaff && isEditing && residentsList.length > 0 && (
                   <select
                     value={selectedResidentId}
                     onChange={(e) => handleSelectResident(e.target.value)}
-                    className="w-36 sm:w-44 rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:border-brand-green focus:bg-white focus:outline-none shadow-2xs"
+                    className="w-40 sm:w-48 rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-xs sm:text-sm font-bold text-slate-800 focus:border-brand-green focus:bg-white focus:outline-none shadow-2xs"
                   >
                     <option value="">-- Manual Input --</option>
                     {residentsList.filter((r) => r.room && r.room !== "Unallocated").length > 0 && (
@@ -702,9 +702,9 @@ export function InvoiceDesign({
                   <button
                     onClick={handleSaveInvoice}
                     disabled={isSaving}
-                    className="flex items-center justify-center gap-1.5 rounded-xl bg-brand-green hover:bg-emerald-700 px-3.5 py-1.5 text-xs font-black text-white shadow-xs transition active:scale-95 cursor-pointer disabled:opacity-50"
+                    className="flex items-center justify-center gap-1.5 rounded-xl bg-brand-green hover:bg-emerald-700 px-4 py-2 text-xs sm:text-sm font-black text-white shadow-xs transition active:scale-95 cursor-pointer disabled:opacity-50"
                   >
-                    <Save className="h-3.5 w-3.5" />
+                    <Save className="h-4 w-4" />
                     <span>{isSaving ? "Saving..." : "Save & Issue"}</span>
                   </button>
                 )}
@@ -731,7 +731,7 @@ export function InvoiceDesign({
                       : `https://wa.me/?text=${text}`;
                     window.open(waUrl, "_blank");
                   }}
-                  className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white shadow-xs transition active:scale-95 cursor-pointer"
+                  className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3.5 py-2 text-xs sm:text-sm font-bold text-white shadow-xs transition active:scale-95 cursor-pointer"
                   title="Send Receipt directly on WhatsApp"
                 >
                   <span>WhatsApp 📱</span>
@@ -743,9 +743,9 @@ export function InvoiceDesign({
                   onClick={() => {
                     if (typeof window !== "undefined") window.print();
                   }}
-                  className="flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 px-3 py-1.5 text-xs font-bold text-white shadow-xs transition active:scale-95 cursor-pointer"
+                  className="flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 px-4 py-2 text-xs sm:text-sm font-bold text-white shadow-xs transition active:scale-95 cursor-pointer"
                 >
-                  <Printer className="h-3.5 w-3.5 text-emerald-400" />
+                  <Printer className="h-4 w-4 text-emerald-400" />
                   <span>Print</span>
                 </button>
 
@@ -754,9 +754,9 @@ export function InvoiceDesign({
                   <button
                     type="button"
                     onClick={() => setIsEditing(true)}
-                    className="flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs transition active:scale-95 cursor-pointer"
+                    className="flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 px-4 py-2 text-xs sm:text-sm font-bold text-white shadow-xs transition active:scale-95 cursor-pointer"
                   >
-                    <Edit className="h-3.5 w-3.5" />
+                    <Edit className="h-4 w-4" />
                     <span>Edit</span>
                   </button>
                 )}
@@ -766,9 +766,9 @@ export function InvoiceDesign({
                   <button
                     type="button"
                     onClick={handleStartNewInvoice}
-                    className="flex items-center justify-center gap-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 shadow-xs transition active:scale-95 cursor-pointer"
+                    className="flex items-center justify-center gap-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 shadow-xs transition active:scale-95 cursor-pointer"
                   >
-                    <Plus className="h-3.5 w-3.5 text-emerald-600" />
+                    <Plus className="h-4 w-4 text-emerald-600" />
                     <span>New</span>
                   </button>
                 )}
@@ -776,29 +776,29 @@ export function InvoiceDesign({
             </div>
           )}
 
-          {/* A4 Printable Invoice Sheet */}
-          <div className="w-full max-w-full overflow-x-auto pb-6 scrollbar-none flex justify-start lg:justify-center">
-            <div className="invoice-sheet mx-auto flex w-[210mm] min-w-[210mm] max-w-[210mm] min-h-[297mm] flex-col bg-white shadow-2xl rounded-sm border border-slate-200/80 overflow-hidden text-slate-900 shrink-0">
+          {/* Full-Sized Responsive A4 Document Sheet */}
+          <div className="w-full max-w-4xl mx-auto flex justify-center pb-8">
+            <div className="invoice-sheet w-full bg-white shadow-2xl rounded-2xl sm:rounded-3xl border border-slate-200/90 overflow-hidden text-slate-900 flex flex-col min-h-[750px]">
             {/* Decorative Top Banner */}
-            <header className="relative h-[120px] shrink-0 overflow-hidden bg-white border-b border-slate-100">
+            <header className="relative h-[135px] sm:h-[150px] shrink-0 overflow-hidden bg-white border-b border-slate-100">
               {/* Angular Polygons */}
               <div className="absolute inset-y-0 left-0 w-[60%] bg-[#0f1b3d] [clip-path:polygon(0_0,100%_0,86%_100%,0_100%)]" />
               <div className="absolute inset-y-0 left-[48%] w-[16%] bg-[#D49A3B] [clip-path:polygon(28%_0,100%_0,72%_100%,0_100%)]" />
 
-              <div className="relative flex h-full items-center justify-between px-8 z-10">
+              <div className="relative flex h-full items-center justify-between px-6 sm:px-10 z-10">
                 <div className="flex items-center gap-4">
                   <img
                     src={brandLogo}
                     alt="Shripad PG Logo"
-                    className="h-18 sm:h-20 w-auto object-contain filter brightness-0 invert drop-shadow-md"
+                    className="h-20 sm:h-24 w-auto object-contain filter brightness-0 invert drop-shadow-md"
                   />
                 </div>
 
                 <div className="text-right">
-                  <h1 className="text-3xl sm:text-[2.4rem] font-black tracking-tight text-[#0f1b3d] leading-none">
+                  <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-[#0f1b3d] leading-none">
                     INVOICE
                   </h1>
-                  <p className="text-[10px] sm:text-xs font-black tracking-[0.25em] text-[#D49A3B] uppercase mt-1">
+                  <p className="text-xs sm:text-sm font-black tracking-[0.25em] text-[#D49A3B] uppercase mt-1.5">
                     RENT RECEIPT
                   </p>
                 </div>
@@ -806,10 +806,10 @@ export function InvoiceDesign({
             </header>
 
             {/* Invoice Meta Section */}
-            <section className="px-8 pt-4">
-              <div className="ml-auto w-full sm:w-[58%] space-y-2">
-                <div className="flex overflow-hidden rounded-lg border border-slate-300">
-                  <div className="flex w-[120px] shrink-0 items-center justify-center bg-[#0f1b3d] px-3 py-1.5 text-xs font-extrabold text-white">
+            <section className="px-6 sm:px-10 pt-6">
+              <div className="ml-auto w-full sm:w-[58%] space-y-2.5">
+                <div className="flex overflow-hidden rounded-xl border border-slate-300">
+                  <div className="flex w-[140px] shrink-0 items-center justify-center bg-[#0f1b3d] px-4 py-2 text-xs sm:text-sm font-extrabold text-white">
                     INV. NO.
                   </div>
                   <input
@@ -817,11 +817,11 @@ export function InvoiceDesign({
                     value={invoiceNo}
                     disabled={isEffectiveReadOnly}
                     onChange={(e) => setInvoiceNo(e.target.value)}
-                    className="inv-input rounded-none font-bold text-slate-900 border-none py-1 disabled:bg-slate-50 disabled:cursor-not-allowed"
+                    className="inv-input rounded-none font-bold text-sm sm:text-base text-slate-900 border-none py-1.5 px-3 disabled:bg-slate-50 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="w-[120px] shrink-0 text-right text-xs font-black text-emerald-800 uppercase tracking-wide">
+                  <span className="w-[140px] shrink-0 text-right text-xs sm:text-sm font-black text-emerald-800 uppercase tracking-wide">
                     DATE:
                   </span>
                   <input
@@ -829,11 +829,11 @@ export function InvoiceDesign({
                     value={date}
                     disabled={isEffectiveReadOnly}
                     onChange={(e) => setDate(e.target.value)}
-                    className="inv-input font-medium text-slate-800 py-1 disabled:bg-slate-50 disabled:cursor-not-allowed"
+                    className="inv-input font-bold text-xs sm:text-sm text-slate-800 py-1.5 px-3 disabled:bg-slate-50 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="w-[120px] shrink-0 text-right text-xs font-black text-emerald-800 uppercase tracking-wide">
+                  <span className="w-[140px] shrink-0 text-right text-xs sm:text-sm font-black text-emerald-800 uppercase tracking-wide">
                     DUE DATE:
                   </span>
                   <input
@@ -841,91 +841,91 @@ export function InvoiceDesign({
                     value={dueDate}
                     disabled={isEffectiveReadOnly}
                     onChange={(e) => setDueDate(e.target.value)}
-                    className="inv-input font-medium text-slate-800 py-1 disabled:bg-slate-50 disabled:cursor-not-allowed"
+                    className="inv-input font-bold text-xs sm:text-sm text-slate-800 py-1.5 px-3 disabled:bg-slate-50 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
             </section>
 
             {/* Bill To Section */}
-            <section className="px-8 pt-4">
+            <section className="px-6 sm:px-10 pt-6">
               <div className="flex items-center">
-                <div className="flex h-8 w-10 items-center justify-center rounded-t-lg bg-emerald-800 text-white">
-                  <User className="h-3.5 w-3.5" />
+                <div className="flex h-9 w-11 items-center justify-center rounded-t-xl bg-emerald-800 text-white">
+                  <User className="h-4 w-4" />
                 </div>
-                <div className="flex h-8 items-center rounded-t-lg bg-emerald-800 px-4 text-xs font-extrabold tracking-wider text-white uppercase">
+                <div className="flex h-9 items-center rounded-t-xl bg-emerald-800 px-5 text-xs sm:text-sm font-extrabold tracking-wider text-white uppercase">
                   BILL TO (TENANT DETAILS)
                 </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2.5 rounded-xl rounded-tl-none border-2 border-[#0f1b3d] p-4 bg-white">
-                <div className="space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3.5 rounded-2xl rounded-tl-none border-2 border-[#0f1b3d] p-5 sm:p-6 bg-white">
+                <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <span className="w-[80px] shrink-0 text-xs font-bold text-[#0f1b3d]">Name:</span>
+                    <span className="w-[90px] shrink-0 text-xs sm:text-sm font-bold text-[#0f1b3d]">Name:</span>
                     <input
                       type="text"
                       value={tenantName}
                       disabled={isEffectiveReadOnly}
                       onChange={(e) => setTenantName(e.target.value)}
                       placeholder="Resident Full Name"
-                      className="inv-input font-semibold py-1 disabled:bg-slate-50 disabled:cursor-not-allowed"
+                      className="inv-input font-bold text-xs sm:text-sm py-1.5 disabled:bg-slate-50 disabled:cursor-not-allowed"
                     />
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="w-[80px] shrink-0 text-xs font-bold text-[#0f1b3d]">Contact:</span>
+                    <span className="w-[90px] shrink-0 text-xs sm:text-sm font-bold text-[#0f1b3d]">Contact:</span>
                     <input
                       type="text"
                       value={contact}
                       disabled={isEffectiveReadOnly}
                       onChange={(e) => setContact(e.target.value)}
                       placeholder="+91 Phone Number"
-                      className="inv-input py-1 disabled:bg-slate-50 disabled:cursor-not-allowed"
+                      className="inv-input font-semibold text-xs sm:text-sm py-1.5 disabled:bg-slate-50 disabled:cursor-not-allowed"
                     />
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="w-[80px] shrink-0 text-xs font-bold text-[#0f1b3d]">Email:</span>
+                    <span className="w-[90px] shrink-0 text-xs sm:text-sm font-bold text-[#0f1b3d]">Email:</span>
                     <input
                       type="email"
                       value={email}
                       disabled={isEffectiveReadOnly}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="resident@gmail.com"
-                      className="inv-input py-1 disabled:bg-slate-50 disabled:cursor-not-allowed"
+                      className="inv-input text-xs sm:text-sm py-1.5 disabled:bg-slate-50 disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <span className="w-[80px] shrink-0 text-xs font-bold text-[#0f1b3d]">Building:</span>
+                    <span className="w-[90px] shrink-0 text-xs sm:text-sm font-bold text-[#0f1b3d]">Building:</span>
                     <input
                       type="text"
                       value={building}
                       disabled={isEffectiveReadOnly}
                       onChange={(e) => setBuilding(e.target.value)}
                       placeholder="Building Name"
-                      className="inv-input py-1 disabled:bg-slate-50 disabled:cursor-not-allowed"
+                      className="inv-input font-bold text-xs sm:text-sm py-1.5 disabled:bg-slate-50 disabled:cursor-not-allowed"
                     />
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="w-[80px] shrink-0 text-xs font-bold text-[#0f1b3d]">Floor:</span>
+                    <span className="w-[90px] shrink-0 text-xs sm:text-sm font-bold text-[#0f1b3d]">Floor:</span>
                     <input
                       type="text"
                       value={floor}
                       disabled={isEffectiveReadOnly}
                       onChange={(e) => setFloor(e.target.value)}
                       placeholder="Floor"
-                      className="inv-input py-1 disabled:bg-slate-50 disabled:cursor-not-allowed"
+                      className="inv-input text-xs sm:text-sm py-1.5 disabled:bg-slate-50 disabled:cursor-not-allowed"
                     />
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="w-[80px] shrink-0 text-xs font-bold text-[#0f1b3d]">Room / Bed:</span>
-                    <div className="grid grid-cols-2 gap-2 w-full">
+                    <span className="w-[90px] shrink-0 text-xs sm:text-sm font-bold text-[#0f1b3d]">Room / Bed:</span>
+                    <div className="grid grid-cols-2 gap-2.5 w-full">
                       <input
                         type="text"
                         value={room}
                         disabled={isEffectiveReadOnly}
                         onChange={(e) => setRoom(e.target.value)}
                         placeholder="Room No"
-                        className="inv-input py-1 disabled:bg-slate-50 disabled:cursor-not-allowed"
+                        className="inv-input font-bold text-xs sm:text-sm py-1.5 disabled:bg-slate-50 disabled:cursor-not-allowed"
                       />
                       <input
                         type="text"
@@ -933,7 +933,7 @@ export function InvoiceDesign({
                         disabled={isEffectiveReadOnly}
                         onChange={(e) => setBed(e.target.value)}
                         placeholder="Bed Tag"
-                        className="inv-input py-1 disabled:bg-slate-50 disabled:cursor-not-allowed"
+                        className="inv-input font-bold text-xs sm:text-sm py-1.5 disabled:bg-slate-50 disabled:cursor-not-allowed"
                       />
                     </div>
                   </div>
@@ -942,22 +942,22 @@ export function InvoiceDesign({
             </section>
 
             {/* Payment Details Section */}
-            <section className="px-8 pt-4">
+            <section className="px-6 sm:px-10 pt-6">
               <div className="flex items-center">
-                <div className="flex h-8 w-10 items-center justify-center rounded-t-lg bg-emerald-800 text-white">
-                  <CreditCard className="h-3.5 w-3.5" />
+                <div className="flex h-9 w-11 items-center justify-center rounded-t-xl bg-emerald-800 text-white">
+                  <CreditCard className="h-4 w-4" />
                 </div>
-                <div className="flex h-8 items-center rounded-t-lg bg-emerald-800 px-4 text-xs font-extrabold tracking-wider text-white uppercase">
+                <div className="flex h-9 items-center rounded-t-xl bg-emerald-800 px-5 text-xs sm:text-sm font-extrabold tracking-wider text-white uppercase">
                   PAYMENT DETAILS
                 </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-[1fr_2fr] gap-3 rounded-xl rounded-tl-none border-2 border-[#0f1b3d] p-3.5 bg-white">
-                <div className="overflow-hidden rounded-lg border border-slate-200">
-                  <div className="bg-[#0f1b3d] py-1.5 text-center text-xs font-bold text-white uppercase">
+              <div className="grid grid-cols-1 sm:grid-cols-[1fr_2fr] gap-4 rounded-2xl rounded-tl-none border-2 border-[#0f1b3d] p-4 sm:p-5 bg-white">
+                <div className="overflow-hidden rounded-xl border border-slate-200">
+                  <div className="bg-[#0f1b3d] py-2 text-center text-xs sm:text-sm font-bold text-white uppercase">
                     MONTHLY RENT AMOUNT
                   </div>
-                  <div className="flex items-center gap-2 bg-emerald-50/60 p-3">
-                    <span className="text-xl font-black text-emerald-800">₹</span>
+                  <div className="flex items-center gap-2 bg-emerald-50/60 p-4">
+                    <span className="text-2xl font-black text-emerald-800">₹</span>
                     <input
                       type="number"
                       value={rentAmount === 0 ? "" : rentAmount}
@@ -967,26 +967,26 @@ export function InvoiceDesign({
                         setRentAmount(val === "" ? 0 : parseInt(val.replace(/^0+/, "") || "0", 10));
                       }}
                       placeholder="0"
-                      className="inv-input text-base font-bold text-slate-900 py-1 disabled:bg-transparent disabled:cursor-not-allowed"
+                      className="inv-input text-lg sm:text-xl font-bold text-slate-900 py-1.5 disabled:bg-transparent disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
-                <div className="overflow-hidden rounded-lg border border-slate-200">
-                  <div className="bg-[#0f1b3d] py-1.5 text-center text-xs font-bold text-white uppercase">
+                <div className="overflow-hidden rounded-xl border border-slate-200">
+                  <div className="bg-[#0f1b3d] py-2 text-center text-xs sm:text-sm font-bold text-white uppercase">
                     PAYMENT MODE
                   </div>
-                  <div className="flex flex-wrap items-center justify-around gap-3 bg-emerald-50/60 px-4 py-3 h-full">
+                  <div className="flex flex-wrap items-center justify-around gap-3 bg-emerald-50/60 px-5 py-4 h-full">
                     {modes.map((m) => (
                       <label
                         key={m}
-                        className={`flex items-center gap-1.5 text-xs font-extrabold text-[#0f1b3d] ${readOnly ? "cursor-not-allowed opacity-90" : "cursor-pointer"}`}
+                        className={`flex items-center gap-2 text-xs sm:text-sm font-extrabold text-[#0f1b3d] ${readOnly ? "cursor-not-allowed opacity-90" : "cursor-pointer"}`}
                       >
                         <input
                           type="checkbox"
                           checked={selectedModes.includes(m)}
                           disabled={isEffectiveReadOnly}
                           onChange={() => togglePaymentMode(m)}
-                          className="h-3.5 w-3.5 accent-emerald-700 rounded cursor-pointer disabled:cursor-not-allowed"
+                          className="h-4 w-4 accent-emerald-700 rounded cursor-pointer disabled:cursor-not-allowed"
                         />
                         {m}
                       </label>
@@ -997,40 +997,40 @@ export function InvoiceDesign({
             </section>
 
             {/* Description / Notes Section */}
-            <section className="px-8 pt-4">
+            <section className="px-6 sm:px-10 pt-6">
               <div className="flex items-center">
-                <div className="flex h-8 w-10 items-center justify-center rounded-t-lg bg-emerald-800 text-white">
-                  <FileText className="h-3.5 w-3.5" />
+                <div className="flex h-9 w-11 items-center justify-center rounded-t-xl bg-emerald-800 text-white">
+                  <FileText className="h-4 w-4" />
                 </div>
-                <div className="flex h-8 items-center rounded-t-lg bg-emerald-800 px-4 text-xs font-extrabold tracking-wider text-white uppercase">
+                <div className="flex h-9 items-center rounded-t-xl bg-emerald-800 px-5 text-xs sm:text-sm font-extrabold tracking-wider text-white uppercase">
                   DESCRIPTION / NOTES
                 </div>
               </div>
-              <div className="relative rounded-xl rounded-tl-none border-2 border-[#0f1b3d] p-2.5 bg-white">
+              <div className="relative rounded-2xl rounded-tl-none border-2 border-[#0f1b3d] p-3.5 bg-white">
                 <textarea
                   value={notes}
                   disabled={isEffectiveReadOnly}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="inv-input relative h-[65px] resize-none bg-emerald-50/40 text-xs font-medium leading-relaxed py-1 disabled:cursor-not-allowed"
+                  className="inv-input relative h-[75px] resize-none bg-emerald-50/40 text-xs sm:text-sm font-medium leading-relaxed py-1.5 disabled:cursor-not-allowed"
                 />
               </div>
             </section>
 
             {/* Totals Section */}
-            <section className="grid grid-cols-1 sm:grid-cols-2 items-end gap-6 px-8 pt-4">
+            <section className="grid grid-cols-1 sm:grid-cols-2 items-end gap-6 px-6 sm:px-10 pt-6">
               <div>
-                <p className="font-script text-3xl font-bold text-emerald-800">Thank You!</p>
-                <p className="mt-1 text-xs font-bold leading-tight text-[#0f1b3d]">
+                <p className="font-script text-4xl font-bold text-emerald-800">Thank You!</p>
+                <p className="mt-1.5 text-xs sm:text-sm font-bold leading-tight text-[#0f1b3d]">
                   For choosing Shripad PG.
                   <br />
                   We truly value your trust and stay with us.
                 </p>
               </div>
 
-              <div className="overflow-hidden rounded-xl border-2 border-[#0f1b3d] bg-white">
+              <div className="overflow-hidden rounded-2xl border-2 border-[#0f1b3d] bg-white">
                 <div className="grid grid-cols-2 items-center bg-[#0f1b3d]">
-                  <span className="px-3.5 py-1.5 text-xs font-extrabold text-white">TOTAL RENT</span>
-                  <div className="flex items-center gap-1 bg-emerald-50 px-3 py-1 border-l border-[#0f1b3d]">
+                  <span className="px-4 py-2 text-xs sm:text-sm font-extrabold text-white">TOTAL RENT</span>
+                  <div className="flex items-center gap-1 bg-emerald-50 px-3.5 py-1.5 border-l border-[#0f1b3d]">
                     <span className="font-bold text-emerald-800">₹</span>
                     <input
                       type="number"
@@ -1041,14 +1041,14 @@ export function InvoiceDesign({
                         setRentAmount(val === "" ? 0 : parseInt(val.replace(/^0+/, "") || "0", 10));
                       }}
                       placeholder="0"
-                      className="inv-input font-bold text-slate-900 py-0.5 disabled:bg-transparent disabled:cursor-not-allowed"
+                      className="inv-input font-bold text-sm sm:text-base text-slate-900 py-1 disabled:bg-transparent disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 items-center border-t border-slate-200">
-                  <span className="px-3.5 py-1.5 text-xs font-bold text-[#0f1b3d]">PAID AMOUNT</span>
-                  <div className="flex items-center gap-1 px-3 py-1 border-l border-slate-200">
+                  <span className="px-4 py-2 text-xs sm:text-sm font-bold text-[#0f1b3d]">PAID AMOUNT</span>
+                  <div className="flex items-center gap-1 px-3.5 py-1.5 border-l border-slate-200">
                     <span className="text-[#0f1b3d]">₹</span>
                     <input
                       type="number"
@@ -1059,44 +1059,44 @@ export function InvoiceDesign({
                         setPaidAmount(val === "" ? 0 : parseInt(val.replace(/^0+/, "") || "0", 10));
                       }}
                       placeholder="0"
-                      className="inv-input font-bold text-slate-900 py-0.5 disabled:bg-transparent disabled:cursor-not-allowed"
+                      className="inv-input font-bold text-sm sm:text-base text-slate-900 py-1 disabled:bg-transparent disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 items-center border-t-2 border-[#0f1b3d] bg-emerald-50/50">
-                  <span className="px-3.5 py-1.5 text-xs font-black text-emerald-800">BALANCE DUE</span>
-                  <div className="flex items-center gap-1 px-3 py-1.5 border-l border-[#0f1b3d]">
+                  <span className="px-4 py-2 text-xs sm:text-sm font-black text-emerald-800">BALANCE DUE</span>
+                  <div className="flex items-center gap-1 px-3.5 py-2 border-l border-[#0f1b3d]">
                     <span className="font-black text-emerald-800">₹</span>
-                    <span className="text-sm font-black text-emerald-800">{balanceDue.toLocaleString("en-IN")}</span>
+                    <span className="text-base sm:text-lg font-black text-emerald-800">{balanceDue.toLocaleString("en-IN")}</span>
                   </div>
                 </div>
               </div>
             </section>
 
             {/* Footer */}
-            <footer className="relative mt-auto h-[95px] shrink-0 pt-4 overflow-hidden">
-              <div className="absolute inset-x-0 bottom-0 h-[72px] bg-[#D49A3B] [clip-path:polygon(0_45%,6%_12%,100%_12%,100%_100%,0_100%)]" />
-              <div className="absolute inset-x-0 bottom-0 h-[66px] bg-emerald-800 [clip-path:polygon(0_28%,6%_0,100%_0,100%_100%,0_100%)]" />
-              <div className="absolute inset-x-0 bottom-0 h-[60px] bg-[#0f1b3d] [clip-path:polygon(0_30%,6%_0,100%_0,100%_100%,0_100%)]" />
-              <div className="relative flex h-full items-end justify-center gap-6 pb-3 text-[0.7rem] font-bold text-white z-10">
+            <footer className="relative mt-auto h-[105px] shrink-0 pt-4 overflow-hidden">
+              <div className="absolute inset-x-0 bottom-0 h-[80px] bg-[#D49A3B] [clip-path:polygon(0_45%,6%_12%,100%_12%,100%_100%,0_100%)]" />
+              <div className="absolute inset-x-0 bottom-0 h-[74px] bg-emerald-800 [clip-path:polygon(0_28%,6%_0,100%_0,100%_100%,0_100%)]" />
+              <div className="absolute inset-x-0 bottom-0 h-[68px] bg-[#0f1b3d] [clip-path:polygon(0_30%,6%_0,100%_0,100%_100%,0_100%)]" />
+              <div className="relative flex h-full items-end justify-center gap-6 pb-3.5 text-xs sm:text-sm font-bold text-white z-10">
                 <span className="flex items-center gap-2">
                   <span className="flex h-5 w-5 items-center justify-center rounded-full border border-emerald-400 text-emerald-400">
-                    <Phone className="h-2.5 w-2.5" />
+                    <Phone className="h-3 w-3" />
                   </span>
                   +91 87675 31345
                 </span>
                 <span className="h-5 w-px bg-[#D49A3B]" />
                 <span className="flex items-center gap-2">
                   <span className="flex h-5 w-5 items-center justify-center rounded-full border border-emerald-400 text-emerald-400">
-                    <Mail className="h-2.5 w-2.5" />
+                    <Mail className="h-3 w-3" />
                   </span>
                   shripadpglux@gmail.com
                 </span>
                 <span className="h-5 w-px bg-[#D49A3B]" />
                 <span className="flex items-center gap-2">
                   <span className="flex h-5 w-5 items-center justify-center rounded-full border border-emerald-400 text-emerald-400">
-                    <MapPin className="h-2.5 w-2.5" />
+                    <MapPin className="h-3 w-3" />
                   </span>
                   <span className="leading-tight">Shripad PG, Pune, MH, India</span>
                 </span>
