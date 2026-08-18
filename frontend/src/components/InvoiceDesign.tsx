@@ -572,43 +572,45 @@ export function InvoiceDesign({
     <div className="space-y-6">
       {/* Sub-Navigation Header Tabs (Admin / Staff Only) */}
       {!isEffectiveHideTabs && (
-        <div className="no-print mx-auto flex w-full max-w-[210mm] items-center justify-between gap-2 border-b border-slate-200 pb-3 overflow-hidden">
+        <div className="no-print mx-auto flex w-full max-w-[210mm] items-center justify-between gap-3 border-b border-slate-200/80 pb-4 overflow-hidden">
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-none w-full max-w-full pb-1 flex-nowrap">
             <button
               onClick={() => setActiveSubTab("editor")}
-              className={`flex items-center gap-2 rounded-2xl px-3.5 sm:px-5 py-2 sm:py-2.5 text-xs font-black transition cursor-pointer whitespace-nowrap shrink-0 ${
+              className={`flex items-center gap-2 rounded-2xl px-4 sm:px-5 py-2.5 text-xs font-black transition cursor-pointer whitespace-nowrap shrink-0 ${
                 activeSubTab === "editor"
-                  ? "bg-[#0f1b3d] text-white shadow-md"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  ? "bg-brand-green text-white shadow-md shadow-brand-green/20"
+                  : "bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
               }`}
             >
-              <Sparkles className="h-4 w-4 text-emerald-400" />
-              <span>Invoice Editor & Generator</span>
+              <Sparkles className={`h-4 w-4 ${activeSubTab === "editor" ? "text-amber-300" : "text-brand-green"}`} />
+              <span>Invoice Editor & Studio</span>
             </button>
             <button
               onClick={() => setActiveSubTab("history")}
-              className={`flex items-center gap-2 rounded-2xl px-3.5 sm:px-5 py-2 sm:py-2.5 text-xs font-black transition cursor-pointer whitespace-nowrap shrink-0 ${
+              className={`flex items-center gap-2 rounded-2xl px-4 sm:px-5 py-2.5 text-xs font-black transition cursor-pointer whitespace-nowrap shrink-0 ${
                 activeSubTab === "history"
-                  ? "bg-[#0f1b3d] text-white shadow-md"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  ? "bg-brand-green text-white shadow-md shadow-brand-green/20"
+                  : "bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
               }`}
             >
-              <Clock className="h-4 w-4 text-emerald-400" />
+              <Clock className={`h-4 w-4 ${activeSubTab === "history" ? "text-white" : "text-slate-500"}`} />
               <span>All Invoices & History</span>
-              <span className="ml-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-extrabold text-emerald-700">
+              <span className={`ml-1 rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
+                activeSubTab === "history" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-700"
+              }`}>
                 {scopedInvoicesList.length}
               </span>
             </button>
             <button
               onClick={() => setActiveSubTab("pending")}
-              className={`flex items-center gap-2 rounded-2xl px-3.5 sm:px-5 py-2 sm:py-2.5 text-xs font-black transition cursor-pointer whitespace-nowrap shrink-0 ${
+              className={`flex items-center gap-2 rounded-2xl px-4 sm:px-5 py-2.5 text-xs font-black transition cursor-pointer whitespace-nowrap shrink-0 ${
                 activeSubTab === "pending"
-                  ? "bg-[#0f1b3d] text-white shadow-md"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  ? "bg-brand-green text-white shadow-md shadow-brand-green/20"
+                  : "bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
               }`}
             >
               <AlertCircle className={`h-4 w-4 ${pendingRequests.length > 0 ? "text-amber-400 animate-pulse" : "text-slate-400"}`} />
-              <span>Pending Requests</span>
+              <span>Pending Verifications</span>
               {pendingRequests.length > 0 && (
                 <span className="ml-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-[10px] font-black text-white shadow-xs animate-bounce">
                   {pendingRequests.length}
@@ -618,7 +620,8 @@ export function InvoiceDesign({
           </div>
 
           {saveNotification && (
-            <div className="hidden sm:flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-300 px-3 py-1.5 text-xs font-extrabold text-emerald-800 animate-fade-in">
+            <div className="hidden sm:flex items-center gap-2 rounded-2xl bg-emerald-50 border border-emerald-300 px-3.5 py-2 text-xs font-extrabold text-emerald-800 animate-fade-in shadow-2xs">
+              <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
               <span>{saveNotification}</span>
             </div>
           )}
@@ -626,20 +629,21 @@ export function InvoiceDesign({
       )}
 
       {saveNotification && (
-        <div className="no-print sm:hidden mx-auto w-full max-w-[210mm] rounded-xl bg-emerald-50 border border-emerald-300 p-3 text-xs font-extrabold text-emerald-800">
-          {saveNotification}
+        <div className="no-print sm:hidden mx-auto w-full max-w-[210mm] rounded-2xl bg-emerald-50 border border-emerald-300 p-3 text-xs font-extrabold text-emerald-800 flex items-center gap-2">
+          <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+          <span>{saveNotification}</span>
         </div>
       )}
 
       {/* SUB-TAB 1: INVOICE EDITOR */}
       {activeSubTab === "editor" && (
         <>
-          {/* Top Controls Toolbar (Hidden when printing or when hideTopBar is true) */}
+          {/* Top Controls Toolbar */}
           {!hideTopBar && (
-            <div className="no-print mx-auto flex w-full max-w-[210mm] flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 rounded-2xl sm:rounded-3xl border border-slate-200/90 bg-white/95 p-3.5 sm:p-4 shadow-sm backdrop-blur-xl">
+            <div className="no-print mx-auto flex w-full max-w-[210mm] flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 rounded-3xl border border-slate-200/90 bg-white p-3.5 sm:p-5 shadow-xs backdrop-blur-xl">
               {isEffectiveReadOnly ? (
                 <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs">
                     <ShieldCheck className="h-5 w-5" />
                   </div>
                   <div>
@@ -656,17 +660,17 @@ export function InvoiceDesign({
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-green/10 text-brand-green border border-brand-green/20">
-                    <Sparkles className="h-4 w-4" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-green/10 text-brand-green border border-brand-green/20 shadow-2xs">
+                    <Sparkles className="h-5 w-5" />
                   </div>
                   <div>
-                    <h2 className="text-xs sm:text-sm font-black text-slate-900">Invoice Editor & Generator</h2>
-                    <p className="text-[10px] sm:text-xs font-medium text-slate-500">Edit fields and click Save & Issue</p>
+                    <h2 className="text-xs sm:text-sm font-black text-slate-900">Invoice Editor & Studio</h2>
+                    <p className="text-[10px] sm:text-xs font-medium text-slate-500">Fill terms, calculate rent & issue receipt</p>
                   </div>
                 </div>
               )}
 
-              <div className="flex items-center gap-2.5 self-end sm:self-auto shrink-0 flex-wrap sm:flex-nowrap">
+              <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 flex-wrap sm:flex-nowrap">
                 {/* ADMIN IN EDIT MODE: RESIDENT SELECTOR */}
                 {!readOnly && isAdminOrStaff && isEditing && residentsList.length > 0 && (
                   <div className="flex items-center gap-1.5">
@@ -674,7 +678,7 @@ export function InvoiceDesign({
                     <select
                       value={selectedResidentId}
                       onChange={(e) => handleSelectResident(e.target.value)}
-                      className="w-36 sm:w-44 rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-800 focus:border-brand-green focus:bg-white focus:outline-none shadow-2xs"
+                      className="w-36 sm:w-44 rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 text-xs font-bold text-slate-800 focus:border-brand-green focus:bg-white focus:outline-none shadow-2xs"
                     >
                       <option value="">-- Manual Input --</option>
 
@@ -710,34 +714,74 @@ export function InvoiceDesign({
                   <button
                     onClick={handleSaveInvoice}
                     disabled={isSaving}
-                    className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition active:scale-95 cursor-pointer whitespace-nowrap disabled:opacity-50"
+                    className="flex items-center justify-center gap-1.5 rounded-xl bg-brand-green hover:bg-emerald-700 px-3.5 py-2 text-xs font-black text-white shadow-sm shadow-brand-green/20 transition active:scale-95 cursor-pointer whitespace-nowrap disabled:opacity-50"
                   >
                     <Save className="h-3.5 w-3.5" />
                     <span>{isSaving ? "Saving..." : "Save & Issue"}</span>
                   </button>
                 )}
 
-                {/* ADMIN IN EDIT MODE: CANCEL EDIT BUTTON */}
-                {!readOnly && isAdminOrStaff && isEditing && (
-                  <button
-                    type="button"
-                    onClick={() => setIsEditing(false)}
-                    className="flex items-center justify-center gap-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm transition active:scale-95 cursor-pointer whitespace-nowrap"
-                  >
-                    <RotateCcw className="h-3.5 w-3.5" />
-                    <span>Cancel</span>
-                  </button>
-                )}
+                {/* PDF DOWNLOAD BUTTON */}
+                <button
+                  type="button"
+                  onClick={handleDownloadPdf}
+                  disabled={isDownloadingPdf}
+                  className="flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 px-3 py-2 text-xs font-bold text-white shadow-xs transition active:scale-95 cursor-pointer whitespace-nowrap disabled:opacity-50"
+                  title="Download High-Resolution PDF"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  <span>{isDownloadingPdf ? "Exporting..." : "PDF"}</span>
+                </button>
+
+                {/* WHATSAPP SHARE BUTTON */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const text = encodeURIComponent(
+                      `*Official Rent Receipt - SHRIPAD PG*\n` +
+                      `Invoice No: ${invoiceNo}\n` +
+                      `Resident: ${tenantName}\n` +
+                      `Building: ${building}\n` +
+                      `Room / Bed: ${room} (${bed})\n` +
+                      `Rent Amount: ₹${rentAmount.toLocaleString("en-IN")}\n` +
+                      `Paid Amount: ₹${paidAmount.toLocaleString("en-IN")}\n` +
+                      `Balance Due: ₹${balanceDue.toLocaleString("en-IN")}\n` +
+                      `Date: ${date}\n\n` +
+                      `Thank you for choosing Shripad PG!`
+                    );
+                    const phoneClean = (contact || "").replace(/[^0-9]/g, "");
+                    const waUrl = phoneClean.length >= 10
+                      ? `https://wa.me/${phoneClean.startsWith("91") ? phoneClean : `91${phoneClean}`}?text=${text}`
+                      : `https://wa.me/?text=${text}`;
+                    window.open(waUrl, "_blank");
+                  }}
+                  className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3 py-2 text-xs font-bold text-white shadow-xs transition active:scale-95 cursor-pointer whitespace-nowrap"
+                  title="Send Receipt directly on WhatsApp"
+                >
+                  <span>WhatsApp 📱</span>
+                </button>
+
+                {/* PRINT RECEIPT BUTTON */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (typeof window !== "undefined") window.print();
+                  }}
+                  className="flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 px-3 py-2 text-xs font-bold text-white shadow-xs transition active:scale-95 cursor-pointer whitespace-nowrap"
+                >
+                  <Printer className="h-3.5 w-3.5 text-emerald-400" />
+                  <span>Print</span>
+                </button>
 
                 {/* ADMIN IN VIEW-ONLY MODE: EDIT BUTTON */}
                 {!readOnly && isAdminOrStaff && !isEditing && (
                   <button
                     type="button"
                     onClick={() => setIsEditing(true)}
-                    className="flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition active:scale-95 cursor-pointer whitespace-nowrap"
+                    className="flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 px-3 py-2 text-xs font-bold text-white shadow-xs transition active:scale-95 cursor-pointer whitespace-nowrap"
                   >
                     <Edit className="h-3.5 w-3.5" />
-                    <span>Edit Invoice</span>
+                    <span>Edit</span>
                   </button>
                 )}
 
@@ -746,24 +790,12 @@ export function InvoiceDesign({
                   <button
                     type="button"
                     onClick={handleStartNewInvoice}
-                    className="flex items-center justify-center gap-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm transition active:scale-95 cursor-pointer whitespace-nowrap"
+                    className="flex items-center justify-center gap-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 px-3 py-2 text-xs font-bold text-slate-700 shadow-xs transition active:scale-95 cursor-pointer whitespace-nowrap"
                   >
                     <Plus className="h-3.5 w-3.5 text-emerald-600" />
                     <span>New</span>
                   </button>
                 )}
-
-                {/* PRINT RECEIPT BUTTON */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (typeof window !== "undefined") window.print();
-                  }}
-                  className="flex items-center justify-center gap-1.5 rounded-xl bg-[#0f1b3d] hover:bg-slate-800 px-4 py-1.5 text-xs font-bold text-white shadow-sm transition active:scale-95 cursor-pointer whitespace-nowrap"
-                >
-                  <Printer className="h-3.5 w-3.5 text-emerald-400" />
-                  <span>Print Receipt</span>
-                </button>
               </div>
             </div>
           )}
