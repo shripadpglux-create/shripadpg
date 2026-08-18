@@ -2,6 +2,34 @@
 
 ---
 
+### 📍 Version 9.14 — Occupied & Available Bed Occupancy Pipeline Synchronization 🛏️📊⚡
+
+```mermaid
+flowchart TD
+    subgraph OccupancyPipelineSync ["100% Synchronized Bed & Occupancy Architecture"]
+        AllocationMatcher["Robust Allocation Matcher (getAllocationsForRoom):
+        • Normalized room matching: '101' / 'Room 101' / 'G01' / 'G1'
+        • Case & space-insensitive building matching
+        • Includes active, allocated, confirmed & room-assigned tenants
+        • Excludes cancelled, checked_out & vacated residents"]
+
+        BedMatrixDistributor["Bed State Calculator (getRoomBedState):
+        • Accurate letter/number bed matching ('Bed A', 'Bed 1', etc.)
+        • Automatic fallback distributor for unlettered room allocations
+        • Guarantees every allocated tenant consumes a bed"]
+
+        KPIReconciliation["Overview Bento Card Reconciliation:
+        • Available Beds: Dynamic totalVacBeds (totalBedsCount - finalOccBeds)
+        • Occupied Beds: finalOccBeds matched with active residents
+        • Active Residents: Count of all valid active residents
+        • Fixed bug where room counts were mistakenly shown on bed cards"]
+
+        AllocationMatcher --> BedMatrixDistributor --> KPIReconciliation
+    end
+```
+
+---
+
 ### 📍 Version 9.13 — Absolute Dark Navy Blue (#00022E) Primary Palette Implementation 🌌💎✨
 
 ```mermaid

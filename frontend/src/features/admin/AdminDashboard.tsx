@@ -1608,22 +1608,45 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
   // Robust Helper to match allocated residents for a building + room
   const getAllocationsForRoom = (buildingName: string, roomNo: string) => {
-    return bookings.filter((bk) => {
-      // Must be allocated status
-      const isAllocated = bk.status === "allocated" || bk.status?.toLowerCase() === "allocated";
+    const cleanTargetRoom = (roomNo || "").toString().replace(/^Room\s+/i, "").trim().toLowerCase();
+    const targetNorm = cleanTargetRoom.replace(/^0+/, "");
+
+    return (bookings || []).filter((bk) => {
+      // Must be an active/allocated resident
+      const isAllocated =
+        bk.status === "allocated" ||
+        bk.status?.toLowerCase() === "allocated" ||
+        bk.status === "active" ||
+        bk.status === "confirmed" ||
+        Boolean(bk.allocatedRoom || bk.room);
+
+      if (bk.status === "cancelled" || bk.status === "checked_out" || bk.status === "vacated" || bk.status === "refunded") {
+        return false;
+      }
       if (!isAllocated) return false;
 
       // Match building (check allocatedBuilding first, fallback to building)
-      const bkBuilding = (bk.allocatedBuilding || bk.building || "").trim();
-      const bldMatch = bkBuilding.toLowerCase() === buildingName.toLowerCase();
+      const bkBuilding = (bk.allocatedBuilding || bk.building || "").trim().toLowerCase();
+      const targetBld = (buildingName || "").trim().toLowerCase();
+      const bldMatch =
+        !bkBuilding ||
+        bkBuilding === "unallocated" ||
+        bkBuilding === targetBld ||
+        bkBuilding.replace(/[\s\-_]/g, "") === targetBld.replace(/[\s\-_]/g, "") ||
+        buildingsList.length <= 1;
+
       if (!bldMatch) return false;
 
-      // Match room (strip "Room " prefix if present, e.g. "Room 102" -> "102")
-      const rawRoom = (bk.allocatedRoom || bk.room || "").toString().trim();
-      const cleanBkRoom = rawRoom.replace(/^Room\s+/i, "").trim();
-      const cleanTargetRoom = roomNo.replace(/^Room\s+/i, "").trim();
+      // Match room (strip "Room " prefix, e.g. "Room 102" -> "102", "G01" -> "g1")
+      const rawRoom = (bk.allocatedRoom || bk.room || "").toString().trim().replace(/^Room\s+/i, "").toLowerCase();
+      const bkNorm = rawRoom.replace(/^0+/, "");
 
-      return cleanBkRoom.toLowerCase() === cleanTargetRoom.toLowerCase();
+      return (
+        rawRoom === cleanTargetRoom ||
+        bkNorm === targetNorm ||
+        rawRoom === targetNorm ||
+        bkNorm === cleanTargetRoom
+      );
     });
   };
 
@@ -1665,7 +1688,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       const numStr = (bedIdx + 1).toString(); // '1', '2', '3', ...
 
       // Match allocation for this bed
-      const matchedAlloc = allocations.find((bk) => {
+      let matchedAlloc = allocations.find((bk) => {
         if (assignedIds.has(bk.id)) return false;
         const bkBed = (bk.allocatedBed || bk.bed || "").toLowerCase().trim();
 
@@ -1683,6 +1706,11 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
         }
         return false;
       });
+
+      // Fallback: If no explicit bed string match, allocate to next available bed
+      if (!matchedAlloc) {
+        matchedAlloc = allocations.find((bk) => !assignedIds.has(bk.id));
+      }
 
       if (matchedAlloc) {
         assignedIds.add(matchedAlloc.id);
@@ -1786,24 +1814,43 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     let totalVacBeds = 0;
     let totalAvailRooms = 0;
     let totalOccRooms = 0;
+    let totalBedsCount = 0;
 
     scopedBuildingsList.forEach((bld) => {
       const stats = getBuildingOccupancyDetails(bld.name);
+      totalBedsCount += stats.totalBeds;
       totalOccBeds += stats.occupiedBedsCount;
       totalVacBeds += stats.vacantBedsCount;
       totalAvailRooms += stats.availableRoomsCount;
       totalOccRooms += stats.occupiedRoomsCount;
     });
 
+    // Determine active residents count
+    const activeResidentsList = (scopedBookings || []).filter(
+      (b) =>
+        (b.status === "allocated" || b.status === "active" || b.status === "confirmed" || Boolean(b.allocatedRoom || b.room)) &&
+        b.status !== "cancelled" &&
+        b.status !== "checked_out" &&
+        b.status !== "vacated" &&
+        b.status !== "refunded"
+    );
+    const totalActiveResidents = activeResidentsList.length;
+
+    // Reconciliation safety net: Occupied beds matches active allocated residents
+    const finalOccBeds = Math.max(totalOccBeds, totalActiveResidents);
+    const finalVacBeds = Math.max(0, totalBedsCount - finalOccBeds);
+
     return {
-      totalOccBeds,
-      totalVacBeds,
+      totalBedsCount,
+      totalOccBeds: finalOccBeds,
+      totalVacBeds: finalVacBeds,
       totalAvailRooms,
       totalOccRooms,
-      totalOcc: totalOccRooms,
-      totalUnocc: totalAvailRooms,
+      totalActiveResidents,
+      totalOcc: finalOccBeds,
+      totalUnocc: finalVacBeds,
     };
-  }, [scopedBuildingsList, bookings]);
+  }, [scopedBuildingsList, scopedBookings, bookings, customRoomSharing]);
 
   // Centralized Aggregated Complaints across all residents in scoped buildings
   const allComplaintsList = useMemo(() => {
@@ -2817,7 +2864,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   <div className="mt-3 sm:mt-4">
                     <p className="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400">Available Beds</p>
                     <p className="mt-0.5 sm:mt-1 text-xl sm:text-2xl lg:text-3xl font-black text-slate-900">
-                      {overallOccupancyStats.totalUnocc} <span className="text-[11px] sm:text-xs font-bold text-slate-400">Beds</span>
+                      {overallOccupancyStats.totalVacBeds} <span className="text-[11px] sm:text-xs font-bold text-slate-400">Beds</span>
                     </p>
                     <p className="mt-1 text-[10px] sm:text-xs font-bold text-[#00022E] group-hover:underline flex items-center gap-1">
                       Vacant Matrix →
@@ -2847,7 +2894,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   <div className="mt-3 sm:mt-4">
                     <p className="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400">Occupied Beds</p>
                     <p className="mt-0.5 sm:mt-1 text-xl sm:text-2xl lg:text-3xl font-black text-slate-900">
-                      {overallOccupancyStats.totalOcc} <span className="text-[11px] sm:text-xs font-bold text-slate-400">Beds</span>
+                      {overallOccupancyStats.totalOccBeds} <span className="text-[11px] sm:text-xs font-bold text-slate-400">Beds</span>
                     </p>
                     <p className="mt-1 text-[10px] sm:text-xs font-bold text-rose-600 group-hover:underline flex items-center gap-1">
                       Occupied Matrix →
@@ -2871,7 +2918,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   <div className="mt-3 sm:mt-4">
                     <p className="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-400">Active Residents</p>
                     <p className="mt-0.5 sm:mt-1 text-xl sm:text-2xl lg:text-3xl font-black text-slate-900">
-                      {scopedBookings.filter((b) => b.status === "allocated").length} <span className="text-[11px] sm:text-xs font-bold text-slate-400">Tenants</span>
+                      {overallOccupancyStats.totalActiveResidents} <span className="text-[11px] sm:text-xs font-bold text-slate-400">Tenants</span>
                     </p>
                     <p className="mt-1 text-[10px] sm:text-xs font-bold text-indigo-700 group-hover:underline flex items-center gap-1">
                       View Residents →
