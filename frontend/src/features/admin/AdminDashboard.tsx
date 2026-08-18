@@ -3883,117 +3883,218 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
           {/* TAB 3: BUILDINGS TAB */}
           {activeTab === "Buildings" && (
-            <div className="space-y-6 sm:space-y-7">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-5 sm:space-y-6 animate-in fade-in duration-300">
+              {/* Header & Quick Action */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
-                    Buildings & Facilities 🏢
+                  <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2">
+                    Buildings & Infrastructure 🏢
                   </h1>
                   <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
-                    Manage your PG properties, room capacities, and floor layouts.
+                    Manage your PG properties, room capacities, floor layouts, and live occupancy rates.
                   </p>
                 </div>
+
+                <button
+                  onClick={() => setIsAddBuildingModalOpen(true)}
+                  className="inline-flex items-center gap-2 rounded-2xl bg-brand-green hover:bg-emerald-700 text-white font-extrabold text-xs px-4 py-2.5 shadow-md shadow-brand-green/20 transition cursor-pointer active:scale-95 self-start sm:self-auto"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>+ Add New Building</span>
+                </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {scopedBuildingsList.map((b, i) => (
-                  <div key={b.name} className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm space-y-4 hover:shadow-md transition">
-                    <div className="flex items-center justify-between">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-green text-white shadow-md">
-                        <Building2 className="h-6 w-6" />
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">Active</span>
-                        <button
-                          title="Edit Building"
-                          onClick={() => setEditingBuilding({ originalName: b.name, name: b.name, floors: b.floors, roomsPerFloor: b.roomsPerFloor })}
-                          className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-brand-green hover:text-white transition cursor-pointer"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          title="Delete Building"
-                          onClick={() => handleDeleteBuilding(b.name)}
-                          className="flex h-8 w-8 items-center justify-center rounded-full bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition cursor-pointer"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
+              {/* Quick Summary Metrics Grid */}
+              {(() => {
+                let totalRoomsAll = 0;
+                let totalBedsAll = 0;
+                let totalOccBedsAll = 0;
+                scopedBuildingsList.forEach((bld) => {
+                  const stats = getBuildingOccupancyDetails(bld.name);
+                  totalRoomsAll += stats.totalRooms;
+                  totalBedsAll += stats.totalBeds;
+                  totalOccBedsAll += stats.occupiedBedsCount;
+                });
+                const totalVacBedsAll = Math.max(0, totalBedsAll - totalOccBedsAll);
+                const overallPct = totalBedsAll > 0 ? Math.round((totalOccBedsAll / totalBedsAll) * 100) : 0;
+
+                return (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
+                    <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 sm:p-4 shadow-xs">
+                      <p className="text-[10px] sm:text-xs font-extrabold uppercase text-slate-400">Total Properties</p>
+                      <p className="text-lg sm:text-2xl font-black text-slate-900 mt-0.5">{scopedBuildingsList.length}</p>
                     </div>
-                    <div>
-                      <h3 className="text-lg font-black text-slate-900">{b.name}</h3>
-                      <p className="text-xs font-medium text-slate-500 mt-0.5">
-                        {(() => {
-                          const gfExcluded = isGroundFloorExcluded(b);
-                          const maxFl = gfExcluded ? b.floors : Math.max(0, b.floors - 1);
-                          return gfExcluded
-                            ? `${b.floors} Active PG Floors (1st to ${maxFl}${getOrdinalSuffix(maxFl)} Floor)`
-                            : `${b.floors} PG Floors (Ground to ${maxFl}${getOrdinalSuffix(maxFl)} Floor)`;
-                        })()} • {getTotalRoomsForBuilding(b)} Total PG Rooms
+                    <div className="rounded-2xl border border-blue-200/80 bg-blue-50/40 p-3.5 sm:p-4 shadow-xs">
+                      <p className="text-[10px] sm:text-xs font-extrabold uppercase text-blue-700">Total PG Rooms</p>
+                      <p className="text-lg sm:text-2xl font-black text-blue-950 mt-0.5">{totalRoomsAll}</p>
+                    </div>
+                    <div className="rounded-2xl border border-emerald-200/80 bg-emerald-50/40 p-3.5 sm:p-4 shadow-xs">
+                      <p className="text-[10px] sm:text-xs font-extrabold uppercase text-emerald-700">Occupancy Rate</p>
+                      <p className="text-lg sm:text-2xl font-black text-emerald-800 mt-0.5">
+                        {overallPct}% <span className="text-[10px] sm:text-xs font-bold text-slate-400">({totalOccBedsAll}/{totalBedsAll})</span>
                       </p>
                     </div>
-
-                    {/* Accordion / Collapsible Floor & Room List */}
-                    <div className="rounded-2xl bg-slate-50 border border-slate-200/70 p-3 space-y-2 text-xs">
-                      <button
-                        type="button"
-                        onClick={() => toggleBuildingAccordion(b.name)}
-                        className="w-full flex items-center justify-between font-extrabold text-slate-700 hover:text-brand-green transition cursor-pointer"
-                      >
-                        <span className="flex items-center gap-1.5">
-                          <Layers className="h-4 w-4 text-brand-green" />
-                          View Floor & Room Layout
-                        </span>
-                        <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${expandedBuildingFloors[b.name] ? "rotate-180 text-brand-green" : "text-slate-400"}`} />
-                      </button>
-
-                      {expandedBuildingFloors[b.name] && (
-                        <div className="pt-2 border-t border-slate-200/60 space-y-2 animate-in fade-in">
-                          {getBuildingFloorIndices(b)
-                            .filter((flIdx) => getFloorRoomCount(b, flIdx) > 0)
-                            .map((flIdx) => {
-                            const flName = flIdx === 0 ? "Ground Floor" : flIdx === 1 ? "1st Floor" : flIdx === 2 ? "2nd Floor" : flIdx === 3 ? "3rd Floor" : `${flIdx}th Floor`;
-                            const flCount = getFloorRoomCount(b, flIdx);
-                            const roomStart = flIdx === 0 ? `G01` : `${flIdx}01`;
-                            const roomEnd = flIdx === 0 ? `G${flCount.toString().padStart(2, "0")}` : `${flIdx}${flCount.toString().padStart(2, "0")}`;
-                            return (
-                              <div key={flIdx} className="p-2 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-1">
-                                <div className="flex items-center justify-between font-bold text-slate-900">
-                                  <span>📍 {flName} ({flCount} {flCount === 1 ? "Room" : "Rooms"})</span>
-                                  <span className="text-[11px] font-extrabold text-brand-green">
-                                    {flCount === 0 ? "No PG Rooms" : flCount === 1 ? `Room ${roomStart}` : `Rooms ${roomStart} – ${roomEnd}`}
-                                  </span>
-                                </div>
-                                <p className="text-[10px] text-slate-500 font-semibold truncate">
-                                  {Array.from({ length: Math.min(flCount, 6) }, (_, rIdx) => 
-                                    flIdx === 0 ? `G${(rIdx + 1).toString().padStart(2, "0")}` : `${flIdx}${(rIdx + 1).toString().padStart(2, "0")}`
-                                  ).join(", ")}{flCount > 6 ? `... +${flCount - 6} more` : ""}
-                                </p>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-bold">
-                      <span className="text-slate-500">Monthly Revenue:</span>
-                      <span className="text-slate-900">₹{(125000 - (i % 5) * 15000).toLocaleString("en-IN")}</span>
+                    <div className="rounded-2xl border border-amber-200/80 bg-amber-50/40 p-3.5 sm:p-4 shadow-xs">
+                      <p className="text-[10px] sm:text-xs font-extrabold uppercase text-amber-700">Available Beds</p>
+                      <p className="text-lg sm:text-2xl font-black text-amber-800 mt-0.5">{totalVacBedsAll}</p>
                     </div>
                   </div>
-                ))}
+                );
+              })()}
+
+              {/* Building Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                {scopedBuildingsList.map((b) => {
+                  const stats = getBuildingOccupancyDetails(b.name);
+                  const occPct = stats.totalBeds > 0 ? Math.round((stats.occupiedBedsCount / stats.totalBeds) * 100) : 0;
+
+                  // Compute real collected revenue for this building
+                  const bldBookings = scopedBookings.filter((bk) => (bk.allocatedBuilding || bk.building) === b.name);
+                  let bldRevenue = 0;
+                  bldBookings.forEach((bk) => {
+                    if (bk.paymentHistory && bk.paymentHistory.length > 0) {
+                      bk.paymentHistory.forEach((p: any) => {
+                        if (p.status === "verified" || (!p.status && p.transactionId)) {
+                          bldRevenue += p.amount || 0;
+                        }
+                      });
+                    } else if (bk.paidAmount) {
+                      bldRevenue += bk.paidAmount;
+                    }
+                  });
+
+                  return (
+                    <div key={b.name} className="rounded-2xl sm:rounded-3xl border border-slate-200/90 bg-white p-4 sm:p-6 shadow-sm space-y-4 hover:shadow-md transition">
+                      <div className="flex items-center justify-between">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-green text-white shadow-md">
+                          <Building2 className="h-5 w-5" />
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700">Active</span>
+                          <button
+                            title="Edit Building Details"
+                            onClick={() => setEditingBuilding({ originalName: b.name, name: b.name, floors: b.floors, roomsPerFloor: b.roomsPerFloor })}
+                            className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-brand-green hover:text-white transition cursor-pointer"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            title="Delete Building"
+                            onClick={() => handleDeleteBuilding(b.name)}
+                            className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition cursor-pointer"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h3 className="text-base sm:text-lg font-black text-slate-900">{b.name}</h3>
+                        <p className="text-xs font-medium text-slate-500 mt-0.5">
+                          {(() => {
+                            const gfExcluded = isGroundFloorExcluded(b);
+                            const maxFl = gfExcluded ? b.floors : Math.max(0, b.floors - 1);
+                            return gfExcluded
+                              ? `${b.floors} Active Floors (1st to ${maxFl}${getOrdinalSuffix(maxFl)} Floor)`
+                              : `${b.floors} Floors (Ground to ${maxFl}${getOrdinalSuffix(maxFl)} Floor)`;
+                          })()} • {stats.totalRooms} Rooms
+                        </p>
+                      </div>
+
+                      {/* Real Occupancy Progress Bar */}
+                      <div className="space-y-1.5 p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                        <div className="flex items-center justify-between text-xs font-bold">
+                          <span className="text-slate-600">Bed Occupancy:</span>
+                          <span className="text-slate-900 font-extrabold">{occPct}% ({stats.occupiedBedsCount}/{stats.totalBeds})</span>
+                        </div>
+                        <div className="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              occPct >= 90 ? "bg-rose-500" : occPct >= 60 ? "bg-emerald-600" : "bg-amber-500"
+                            }`}
+                            style={{ width: `${Math.min(100, occPct)}%` }}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 pt-0.5">
+                          <span className="text-emerald-700">🟢 {stats.occupiedBedsCount} Occupied</span>
+                          <span className="text-amber-700">🟡 {stats.vacantBedsCount} Free Beds</span>
+                        </div>
+                      </div>
+
+                      {/* Accordion / Collapsible Floor & Room Layout */}
+                      <div className="rounded-2xl bg-slate-50 border border-slate-200/70 p-3 space-y-2 text-xs">
+                        <button
+                          type="button"
+                          onClick={() => toggleBuildingAccordion(b.name)}
+                          className="w-full flex items-center justify-between font-extrabold text-slate-700 hover:text-brand-green transition cursor-pointer"
+                        >
+                          <span className="flex items-center gap-1.5">
+                            <Layers className="h-4 w-4 text-brand-green" />
+                            View Floor & Room Layout
+                          </span>
+                          <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${expandedBuildingFloors[b.name] ? "rotate-180 text-brand-green" : "text-slate-400"}`} />
+                        </button>
+
+                        {expandedBuildingFloors[b.name] && (
+                          <div className="pt-2 border-t border-slate-200/60 space-y-2 animate-in fade-in">
+                            {getBuildingFloorIndices(b)
+                              .filter((flIdx) => getFloorRoomCount(b, flIdx) > 0)
+                              .map((flIdx) => {
+                              const flName = flIdx === 0 ? "Ground Floor" : flIdx === 1 ? "1st Floor" : flIdx === 2 ? "2nd Floor" : flIdx === 3 ? "3rd Floor" : `${flIdx}th Floor`;
+                              const flCount = getFloorRoomCount(b, flIdx);
+                              const roomStart = flIdx === 0 ? `G01` : `${flIdx}01`;
+                              const roomEnd = flIdx === 0 ? `G${flCount.toString().padStart(2, "0")}` : `${flIdx}${flCount.toString().padStart(2, "0")}`;
+                              return (
+                                <div key={flIdx} className="p-2 rounded-xl bg-white border border-slate-200/80 shadow-2xs space-y-1">
+                                  <div className="flex items-center justify-between font-bold text-slate-900">
+                                    <span>📍 {flName} ({flCount} {flCount === 1 ? "Room" : "Rooms"})</span>
+                                    <span className="text-[11px] font-extrabold text-brand-green">
+                                      {flCount === 0 ? "No PG Rooms" : flCount === 1 ? `Room ${roomStart}` : `Rooms ${roomStart} – ${roomEnd}`}
+                                    </span>
+                                  </div>
+                                  <p className="text-[10px] text-slate-500 font-semibold truncate">
+                                    {Array.from({ length: Math.min(flCount, 6) }, (_, rIdx) => 
+                                      flIdx === 0 ? `G${(rIdx + 1).toString().padStart(2, "0")}` : `${flIdx}${(rIdx + 1).toString().padStart(2, "0")}`
+                                    ).join(", ")}{flCount > 6 ? `... +${flCount - 6} more` : ""}
+                                  </p>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Revenue & Action Footer */}
+                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-bold">
+                        <div>
+                          <span className="text-[10px] uppercase text-slate-400 block font-extrabold">Collected Revenue</span>
+                          <span className="text-sm font-black text-slate-900">₹{bldRevenue.toLocaleString("en-IN")}</span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setBmsBuilding(b.name);
+                            handleTabClick("Allocation");
+                          }}
+                          className="inline-flex items-center gap-1 text-xs font-extrabold text-brand-green hover:underline cursor-pointer"
+                        >
+                          Manage Beds →
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
 
                 {/* Add New Building Interactive Card */}
                 <button
                   onClick={() => setIsAddBuildingModalOpen(true)}
-                  className="rounded-[2rem] border-2 border-dashed border-slate-200 hover:border-brand-green bg-slate-50/50 hover:bg-emerald-50/30 p-6 flex flex-col items-center justify-center space-y-3 transition-all cursor-pointer min-h-[190px] group"
+                  className="rounded-2xl sm:rounded-3xl border-2 border-dashed border-slate-200 hover:border-brand-green bg-slate-50/50 hover:bg-emerald-50/30 p-6 flex flex-col items-center justify-center space-y-3 transition-all cursor-pointer min-h-[220px] group"
                 >
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-green/10 text-brand-green group-hover:bg-brand-green group-hover:text-white transition-all">
                     <Plus className="h-6 w-6" />
                   </div>
                   <div className="text-center">
                     <h3 className="text-base font-black text-slate-900 group-hover:text-brand-green transition-colors">Add New Building</h3>
-                    <p className="text-xs font-semibold text-slate-400 mt-0.5">Create a new PG property</p>
+                    <p className="text-xs font-semibold text-slate-400 mt-0.5">Create a new PG property or branch</p>
                   </div>
                 </button>
               </div>

@@ -2,6 +2,38 @@
 
 ---
 
+### 📍 Version 8.73 — Buildings & Infrastructure Management Overhaul (Feature 3) 🏢🚀✨
+
+```mermaid
+flowchart TD
+    subgraph BuildingsMetrics ["Real Infrastructure KPI Summary"]
+        B1["Total Properties Count"]
+        B2["Total PG Rooms Count"]
+        B3["Live Overall Occupancy Rate %"]
+        B4["Total Free Beds Available"]
+    end
+
+    subgraph PropertyCardsGrid ["Production Property Cards"]
+        CardTop["Property Title, Active Status & Tailwind Circular Action Buttons"]
+        OccupancyBar["Live Color-Coded Bed Occupancy Progress Bar (Green / Amber / Red)"]
+        AccordionLayout["Accordion Collapsible Floor & Room Matrix (G01..N)"]
+        RevenueFooter["Real Collected Revenue & 'Manage Beds →' Direct Allocation Shortcut"]
+        
+        CardTop --> OccupancyBar
+        OccupancyBar --> AccordionLayout
+        AccordionLayout --> RevenueFooter
+    end
+
+    subgraph AddBuildingCTA ["Add Building Integration"]
+        DashedCard["Dashed Card + Header '+ Add New Building' Action Button"]
+    end
+
+    BuildingsMetrics --> PropertyCardsGrid
+    PropertyCardsGrid --> AddBuildingCTA
+```
+
+---
+
 ### 📍 Version 8.72 — Residents & Applicants Directory Overhaul (Feature 2) 👥🚀✨
 
 ```mermaid
