@@ -2,6 +2,23 @@
 
 ---
 
+### 📍 Version 8.84 — Mobile Payment Modes Grid & Clean Responsive Non-Clipping Footer 📱✨🛠️
+
+```mermaid
+flowchart TD
+    subgraph PaymentGridSection ["2x4 Responsive Payment Modes Grid"]
+        Modes["4 Mode Options (CASH, UPI, BANK TRANSFER, OTHER) in full-height auto-scaling grid without vertical clipping"]
+    end
+
+    subgraph ResponsiveFooterBar ["Clean Gold-Bordered Solid Navy Footer"]
+        FooterContent["Responsive Flex Footer (Phone, Email, Address) with zero text wrapping overlap and flexible height"]
+    end
+
+    PaymentGridSection --> ResponsiveFooterBar
+```
+
+---
+
 ### 📍 Version 8.83 — Full-Width Scaled A4 Document Studio & Enhanced High-Contrast Typography 📄📏✨
 
 ```mermaid

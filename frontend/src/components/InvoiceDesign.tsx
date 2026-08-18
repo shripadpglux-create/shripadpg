@@ -971,11 +971,11 @@ export function InvoiceDesign({
                     />
                   </div>
                 </div>
-                <div className="overflow-hidden rounded-xl border border-slate-200">
+                <div className="overflow-hidden rounded-xl border border-slate-200 flex flex-col">
                   <div className="bg-[#0f1b3d] py-2 text-center text-xs sm:text-sm font-bold text-white uppercase">
                     PAYMENT MODE
                   </div>
-                  <div className="flex flex-wrap items-center justify-around gap-3 bg-emerald-50/60 px-5 py-4 h-full">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-emerald-50/60 p-4 flex-1 items-center">
                     {modes.map((m) => (
                       <label
                         key={m}
@@ -986,9 +986,9 @@ export function InvoiceDesign({
                           checked={selectedModes.includes(m)}
                           disabled={isEffectiveReadOnly}
                           onChange={() => togglePaymentMode(m)}
-                          className="h-4 w-4 accent-emerald-700 rounded cursor-pointer disabled:cursor-not-allowed"
+                          className="h-4 w-4 accent-emerald-700 rounded cursor-pointer disabled:cursor-not-allowed shrink-0"
                         />
-                        {m}
+                        <span className="whitespace-nowrap">{m}</span>
                       </label>
                     ))}
                   </div>
@@ -1075,30 +1075,27 @@ export function InvoiceDesign({
             </section>
 
             {/* Footer */}
-            <footer className="relative mt-auto h-[105px] shrink-0 pt-4 overflow-hidden">
-              <div className="absolute inset-x-0 bottom-0 h-[80px] bg-[#D49A3B] [clip-path:polygon(0_45%,6%_12%,100%_12%,100%_100%,0_100%)]" />
-              <div className="absolute inset-x-0 bottom-0 h-[74px] bg-emerald-800 [clip-path:polygon(0_28%,6%_0,100%_0,100%_100%,0_100%)]" />
-              <div className="absolute inset-x-0 bottom-0 h-[68px] bg-[#0f1b3d] [clip-path:polygon(0_30%,6%_0,100%_0,100%_100%,0_100%)]" />
-              <div className="relative flex h-full items-end justify-center gap-6 pb-3.5 text-xs sm:text-sm font-bold text-white z-10">
-                <span className="flex items-center gap-2">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full border border-emerald-400 text-emerald-400">
+            <footer className="relative mt-8 shrink-0 overflow-hidden bg-[#0f1b3d] border-t-4 border-[#D49A3B]">
+              <div className="relative py-4 px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-8 text-xs sm:text-sm font-bold text-white z-10">
+                <span className="flex items-center gap-2 whitespace-nowrap">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full border border-emerald-400 text-emerald-400 shrink-0">
                     <Phone className="h-3 w-3" />
                   </span>
                   +91 87675 31345
                 </span>
-                <span className="h-5 w-px bg-[#D49A3B]" />
-                <span className="flex items-center gap-2">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full border border-emerald-400 text-emerald-400">
+                <span className="hidden sm:inline h-4 w-px bg-[#D49A3B]" />
+                <span className="flex items-center gap-2 whitespace-nowrap">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full border border-emerald-400 text-emerald-400 shrink-0">
                     <Mail className="h-3 w-3" />
                   </span>
                   shripadpglux@gmail.com
                 </span>
-                <span className="h-5 w-px bg-[#D49A3B]" />
-                <span className="flex items-center gap-2">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full border border-emerald-400 text-emerald-400">
+                <span className="hidden sm:inline h-4 w-px bg-[#D49A3B]" />
+                <span className="flex items-center gap-2 whitespace-nowrap">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full border border-emerald-400 text-emerald-400 shrink-0">
                     <MapPin className="h-3 w-3" />
                   </span>
-                  <span className="leading-tight">Shripad PG, Pune, MH, India</span>
+                  Shripad PG, Pune, MH, India
                 </span>
               </div>
             </footer>
