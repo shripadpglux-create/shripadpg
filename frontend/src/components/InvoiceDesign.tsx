@@ -570,49 +570,49 @@ export function InvoiceDesign({
 
   return (
     <div className="space-y-6">
-      {/* Sub-Navigation Header Tabs (Admin / Staff Only) */}
+      {/* Sub-Navigation Header Segmented Control (Admin / Staff Only) */}
       {!isEffectiveHideTabs && (
-        <div className="no-print mx-auto flex w-full max-w-[210mm] items-center justify-between gap-3 border-b border-slate-200/80 pb-4 overflow-hidden">
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none w-full max-w-full pb-1 flex-nowrap">
+        <div className="no-print mx-auto w-full max-w-[210mm]">
+          <div className="grid grid-cols-3 gap-1 p-1 rounded-2xl bg-slate-100/90 border border-slate-200/80 shadow-2xs">
             <button
               onClick={() => setActiveSubTab("editor")}
-              className={`flex items-center gap-2 rounded-2xl px-4 sm:px-5 py-2.5 text-xs font-black transition cursor-pointer whitespace-nowrap shrink-0 ${
+              className={`flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-xs font-black transition cursor-pointer ${
                 activeSubTab === "editor"
-                  ? "bg-brand-green text-white shadow-md shadow-brand-green/20"
-                  : "bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  ? "bg-brand-green text-white shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              <Sparkles className={`h-4 w-4 ${activeSubTab === "editor" ? "text-amber-300" : "text-brand-green"}`} />
-              <span>Invoice Editor & Studio</span>
+              <Sparkles className={`h-3.5 w-3.5 ${activeSubTab === "editor" ? "text-amber-300" : "text-brand-green"}`} />
+              <span className="truncate">Studio</span>
             </button>
             <button
               onClick={() => setActiveSubTab("history")}
-              className={`flex items-center gap-2 rounded-2xl px-4 sm:px-5 py-2.5 text-xs font-black transition cursor-pointer whitespace-nowrap shrink-0 ${
+              className={`flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-xs font-black transition cursor-pointer ${
                 activeSubTab === "history"
-                  ? "bg-brand-green text-white shadow-md shadow-brand-green/20"
-                  : "bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  ? "bg-brand-green text-white shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              <Clock className={`h-4 w-4 ${activeSubTab === "history" ? "text-white" : "text-slate-500"}`} />
-              <span>All Invoices & History</span>
-              <span className={`ml-1 rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
-                activeSubTab === "history" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-700"
+              <Clock className="h-3.5 w-3.5" />
+              <span className="truncate">Invoices</span>
+              <span className={`ml-0.5 rounded-full px-1.5 py-0.2 text-[10px] font-black ${
+                activeSubTab === "history" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"
               }`}>
                 {scopedInvoicesList.length}
               </span>
             </button>
             <button
               onClick={() => setActiveSubTab("pending")}
-              className={`flex items-center gap-2 rounded-2xl px-4 sm:px-5 py-2.5 text-xs font-black transition cursor-pointer whitespace-nowrap shrink-0 ${
+              className={`flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-xs font-black transition cursor-pointer ${
                 activeSubTab === "pending"
-                  ? "bg-brand-green text-white shadow-md shadow-brand-green/20"
-                  : "bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  ? "bg-brand-green text-white shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              <AlertCircle className={`h-4 w-4 ${pendingRequests.length > 0 ? "text-amber-400 animate-pulse" : "text-slate-400"}`} />
-              <span>Pending Verifications</span>
+              <AlertCircle className={`h-3.5 w-3.5 ${pendingRequests.length > 0 ? "text-amber-400 animate-pulse" : ""}`} />
+              <span className="truncate">Pending</span>
               {pendingRequests.length > 0 && (
-                <span className="ml-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-[10px] font-black text-white shadow-xs animate-bounce">
+                <span className="ml-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[9px] font-black text-white">
                   {pendingRequests.length}
                 </span>
               )}
@@ -620,7 +620,7 @@ export function InvoiceDesign({
           </div>
 
           {saveNotification && (
-            <div className="hidden sm:flex items-center gap-2 rounded-2xl bg-emerald-50 border border-emerald-300 px-3.5 py-2 text-xs font-extrabold text-emerald-800 animate-fade-in shadow-2xs">
+            <div className="mt-3 flex items-center gap-2 rounded-2xl bg-emerald-50 border border-emerald-300 px-3.5 py-2 text-xs font-extrabold text-emerald-800 animate-fade-in shadow-2xs">
               <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
               <span>{saveNotification}</span>
             </div>
@@ -628,85 +628,73 @@ export function InvoiceDesign({
         </div>
       )}
 
-      {saveNotification && (
-        <div className="no-print sm:hidden mx-auto w-full max-w-[210mm] rounded-2xl bg-emerald-50 border border-emerald-300 p-3 text-xs font-extrabold text-emerald-800 flex items-center gap-2">
-          <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
-          <span>{saveNotification}</span>
-        </div>
-      )}
-
       {/* SUB-TAB 1: INVOICE EDITOR */}
       {activeSubTab === "editor" && (
         <>
-          {/* Top Controls Toolbar */}
+          {/* Top Controls Toolbar (No PDF button) */}
           {!hideTopBar && (
-            <div className="no-print mx-auto flex w-full max-w-[210mm] flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 rounded-3xl border border-slate-200/90 bg-white p-3.5 sm:p-5 shadow-xs backdrop-blur-xl">
+            <div className="no-print mx-auto flex w-full max-w-[210mm] flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-2xl sm:rounded-3xl border border-slate-200/90 bg-white p-3.5 sm:p-4 shadow-xs">
               {isEffectiveReadOnly ? (
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs">
-                    <ShieldCheck className="h-5 w-5" />
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    <ShieldCheck className="h-4.5 w-4.5" />
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-xs sm:text-sm font-black text-slate-900">Official Rent Receipt & Tax Invoice</h2>
-                      <span className="rounded-full bg-emerald-100 border border-emerald-300/80 px-2 py-0.5 text-[10px] font-black text-emerald-800 uppercase tracking-wide">
+                    <div className="flex items-center gap-1.5">
+                      <h2 className="text-xs sm:text-sm font-black text-slate-900">{invoiceNo}</h2>
+                      <span className="rounded-full bg-emerald-100 border border-emerald-300/80 px-2 py-0.5 text-[9px] font-black text-emerald-800 uppercase tracking-wide">
                         Verified
                       </span>
                     </div>
                     <p className="text-[10px] sm:text-xs font-medium text-slate-500">
-                      {invoiceNo} • Shripad PG Pune
+                      Official Rent Receipt • Shripad PG
                     </p>
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-green/10 text-brand-green border border-brand-green/20 shadow-2xs">
-                    <Sparkles className="h-5 w-5" />
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-green/10 text-brand-green border border-brand-green/20">
+                    <Sparkles className="h-4.5 w-4.5" />
                   </div>
                   <div>
-                    <h2 className="text-xs sm:text-sm font-black text-slate-900">Invoice Editor & Studio</h2>
-                    <p className="text-[10px] sm:text-xs font-medium text-slate-500">Fill terms, calculate rent & issue receipt</p>
+                    <h2 className="text-xs sm:text-sm font-black text-slate-900">Invoice Editor</h2>
+                    <p className="text-[10px] sm:text-xs font-medium text-slate-500">Fill terms & issue receipt</p>
                   </div>
                 </div>
               )}
 
-              <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 flex-wrap sm:flex-nowrap">
+              <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 flex-wrap">
                 {/* ADMIN IN EDIT MODE: RESIDENT SELECTOR */}
                 {!readOnly && isAdminOrStaff && isEditing && residentsList.length > 0 && (
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] font-bold text-slate-600 shrink-0">Resident:</span>
-                    <select
-                      value={selectedResidentId}
-                      onChange={(e) => handleSelectResident(e.target.value)}
-                      className="w-36 sm:w-44 rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 text-xs font-bold text-slate-800 focus:border-brand-green focus:bg-white focus:outline-none shadow-2xs"
-                    >
-                      <option value="">-- Manual Input --</option>
-
-                      {residentsList.filter((r) => r.room && r.room !== "Unallocated").length > 0 && (
-                        <optgroup label="🏠 Allocated Residents">
-                          {residentsList
-                            .filter((r) => r.room && r.room !== "Unallocated")
-                            .map((r) => (
-                              <option key={r.id} value={r.id}>
-                                {r.name} — {r.building || "PG A"} ({r.room}{r.bed ? `, ${r.bed}` : ""})
-                              </option>
-                            ))}
-                        </optgroup>
-                      )}
-
-                      {residentsList.filter((r) => !r.room || r.room === "Unallocated").length > 0 && (
-                        <optgroup label="📋 Pending / Inquiries">
-                          {residentsList
-                            .filter((r) => !r.room || r.room === "Unallocated")
-                            .map((r) => (
-                              <option key={r.id} value={r.id}>
-                                {r.name} (Pending Allocation)
-                              </option>
-                            ))}
-                        </optgroup>
-                      )}
-                    </select>
-                  </div>
+                  <select
+                    value={selectedResidentId}
+                    onChange={(e) => handleSelectResident(e.target.value)}
+                    className="w-36 sm:w-44 rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:border-brand-green focus:bg-white focus:outline-none shadow-2xs"
+                  >
+                    <option value="">-- Manual Input --</option>
+                    {residentsList.filter((r) => r.room && r.room !== "Unallocated").length > 0 && (
+                      <optgroup label="🏠 Allocated Residents">
+                        {residentsList
+                          .filter((r) => r.room && r.room !== "Unallocated")
+                          .map((r) => (
+                            <option key={r.id} value={r.id}>
+                              {r.name} — {r.building || "PG A"} ({r.room}{r.bed ? `, ${r.bed}` : ""})
+                            </option>
+                          ))}
+                      </optgroup>
+                    )}
+                    {residentsList.filter((r) => !r.room || r.room === "Unallocated").length > 0 && (
+                      <optgroup label="📋 Pending / Inquiries">
+                        {residentsList
+                          .filter((r) => !r.room || r.room === "Unallocated")
+                          .map((r) => (
+                            <option key={r.id} value={r.id}>
+                              {r.name} (Pending Allocation)
+                            </option>
+                          ))}
+                      </optgroup>
+                    )}
+                  </select>
                 )}
 
                 {/* ADMIN IN EDIT MODE: SAVE & ISSUE BUTTON */}
@@ -714,24 +702,12 @@ export function InvoiceDesign({
                   <button
                     onClick={handleSaveInvoice}
                     disabled={isSaving}
-                    className="flex items-center justify-center gap-1.5 rounded-xl bg-brand-green hover:bg-emerald-700 px-3.5 py-2 text-xs font-black text-white shadow-sm shadow-brand-green/20 transition active:scale-95 cursor-pointer whitespace-nowrap disabled:opacity-50"
+                    className="flex items-center justify-center gap-1.5 rounded-xl bg-brand-green hover:bg-emerald-700 px-3.5 py-1.5 text-xs font-black text-white shadow-xs transition active:scale-95 cursor-pointer disabled:opacity-50"
                   >
                     <Save className="h-3.5 w-3.5" />
                     <span>{isSaving ? "Saving..." : "Save & Issue"}</span>
                   </button>
                 )}
-
-                {/* PDF DOWNLOAD BUTTON */}
-                <button
-                  type="button"
-                  onClick={handleDownloadPdf}
-                  disabled={isDownloadingPdf}
-                  className="flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 px-3 py-2 text-xs font-bold text-white shadow-xs transition active:scale-95 cursor-pointer whitespace-nowrap disabled:opacity-50"
-                  title="Download High-Resolution PDF"
-                >
-                  <Download className="h-3.5 w-3.5" />
-                  <span>{isDownloadingPdf ? "Exporting..." : "PDF"}</span>
-                </button>
 
                 {/* WHATSAPP SHARE BUTTON */}
                 <button
@@ -755,7 +731,7 @@ export function InvoiceDesign({
                       : `https://wa.me/?text=${text}`;
                     window.open(waUrl, "_blank");
                   }}
-                  className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3 py-2 text-xs font-bold text-white shadow-xs transition active:scale-95 cursor-pointer whitespace-nowrap"
+                  className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white shadow-xs transition active:scale-95 cursor-pointer"
                   title="Send Receipt directly on WhatsApp"
                 >
                   <span>WhatsApp 📱</span>
@@ -767,7 +743,7 @@ export function InvoiceDesign({
                   onClick={() => {
                     if (typeof window !== "undefined") window.print();
                   }}
-                  className="flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 px-3 py-2 text-xs font-bold text-white shadow-xs transition active:scale-95 cursor-pointer whitespace-nowrap"
+                  className="flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 px-3 py-1.5 text-xs font-bold text-white shadow-xs transition active:scale-95 cursor-pointer"
                 >
                   <Printer className="h-3.5 w-3.5 text-emerald-400" />
                   <span>Print</span>
@@ -778,7 +754,7 @@ export function InvoiceDesign({
                   <button
                     type="button"
                     onClick={() => setIsEditing(true)}
-                    className="flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 px-3 py-2 text-xs font-bold text-white shadow-xs transition active:scale-95 cursor-pointer whitespace-nowrap"
+                    className="flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs transition active:scale-95 cursor-pointer"
                   >
                     <Edit className="h-3.5 w-3.5" />
                     <span>Edit</span>
@@ -790,7 +766,7 @@ export function InvoiceDesign({
                   <button
                     type="button"
                     onClick={handleStartNewInvoice}
-                    className="flex items-center justify-center gap-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 px-3 py-2 text-xs font-bold text-slate-700 shadow-xs transition active:scale-95 cursor-pointer whitespace-nowrap"
+                    className="flex items-center justify-center gap-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 shadow-xs transition active:scale-95 cursor-pointer"
                   >
                     <Plus className="h-3.5 w-3.5 text-emerald-600" />
                     <span>New</span>
@@ -1131,214 +1107,132 @@ export function InvoiceDesign({
         </>
       )}
 
-      {/* SUB-TAB 2: ALL INVOICES HISTORY & MANAGEMENT */}
+      {/* SUB-TAB 2: ALL INVOICES (MATCHING REFERENCE UI) */}
       {activeSubTab === "history" && (
-        <div className="no-print mx-auto w-full max-w-6xl space-y-6">
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">
-                  Total Issued Invoices
-                </span>
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
-                  <FileSpreadsheet className="h-5 w-5" />
-                </div>
-              </div>
-              <p className="mt-3 text-2xl font-black text-slate-900">{scopedInvoicesList.length}</p>
-              <p className="mt-1 text-xs font-semibold text-slate-500">Recorded in system</p>
+        <div className="no-print mx-auto w-full max-w-4xl space-y-4">
+          {/* Header Title */}
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              Generated Invoices
+            </h2>
+            <button
+              type="button"
+              onClick={handleStartNewInvoice}
+              className="inline-flex items-center gap-1.5 rounded-full bg-brand-green hover:bg-emerald-700 text-white px-4 py-2 text-xs font-black shadow-xs transition active:scale-95 cursor-pointer"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Create Invoice</span>
+            </button>
+          </div>
+
+          {/* Search Input (Ref Design) */}
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search by Invoice ID or Customer Name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-2xl border border-slate-200 bg-white pl-11 pr-4 py-3 text-xs sm:text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:border-brand-green focus:outline-none shadow-xs"
+            />
+          </div>
+
+          {/* Total Invoices Pill (Ref Design) & Status Filter */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50/80 border border-blue-200 text-blue-900 text-xs font-bold shadow-2xs">
+              <Printer className="h-3.5 w-3.5 text-blue-600" />
+              <span>Total Invoices:</span>
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-600 text-white font-black text-[10px] px-1.5">
+                {scopedInvoicesList.length}
+              </span>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">
-                  Total Rent Collected
-                </span>
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
-                  <TrendingUp className="h-5 w-5" />
-                </div>
-              </div>
-              <p className="mt-3 text-2xl font-black text-emerald-700">
-                ₹{totalCollected.toLocaleString("en-IN")}
-              </p>
-              <p className="mt-1 text-xs font-semibold text-slate-500">Verified received payments</p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">
-                  Outstanding Balance
-                </span>
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
-                  <AlertCircle className="h-5 w-5" />
-                </div>
-              </div>
-              <p className="mt-3 text-2xl font-black text-amber-700">
-                ₹{totalBalanceDue.toLocaleString("en-IN")}
-              </p>
-              <p className="mt-1 text-xs font-semibold text-slate-500">Pending tenant dues</p>
+            <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100/90 border border-slate-200/80">
+              {(["ALL", "PAID", "PARTIAL", "UNPAID"] as const).map((st) => (
+                <button
+                  key={st}
+                  onClick={() => setStatusFilter(st)}
+                  className={`rounded-lg px-3 py-1 text-[11px] font-black transition cursor-pointer ${
+                    statusFilter === st
+                      ? "bg-white text-slate-900 shadow-2xs"
+                      : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  {st}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Search, Filter & Actions Bar */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="relative w-full sm:w-80">
-              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search invoice #, name, room..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 py-2 text-xs font-semibold text-slate-800 focus:border-brand-green focus:bg-white focus:outline-none"
-              />
-            </div>
+          {/* Invoices List Cards (Reference App Card Layout) */}
+          <div className="rounded-3xl border border-slate-200/80 bg-white p-3 sm:p-5 shadow-xs divide-y divide-slate-100">
+            {isLoadingInvoices ? (
+              <div className="py-10 text-center text-slate-400 font-bold text-xs">
+                Loading invoices...
+              </div>
+            ) : filteredInvoices.length === 0 ? (
+              <div className="py-10 text-center text-slate-400 font-bold text-xs">
+                No invoices found matching your search.
+              </div>
+            ) : (
+              filteredInvoices.map((inv) => (
+                <div
+                  key={inv.id}
+                  className="py-4 first:pt-2 last:pb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/70 p-3 rounded-2xl transition"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-black text-xs text-blue-700 tracking-wide">{inv.invoiceNo}</span>
+                      <span className="rounded-full bg-slate-100 text-slate-500 border border-slate-200 px-2 py-0.5 text-[9px] font-bold">
+                        🔒 Locked
+                      </span>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase ${
+                          inv.status === "PAID"
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            : inv.status === "PARTIAL"
+                            ? "bg-amber-50 text-amber-700 border border-amber-200"
+                            : "bg-rose-50 text-rose-700 border border-rose-200"
+                        }`}
+                      >
+                        {inv.status}
+                      </span>
+                    </div>
 
-            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-slate-500" />
-                <span className="text-xs font-bold text-slate-600">Status:</span>
-                <div className="flex items-center gap-1 rounded-xl bg-slate-100 p-1">
-                  {(["ALL", "PAID", "PARTIAL", "UNPAID"] as const).map((st) => (
+                    <h4 className="text-sm font-black text-slate-900">{inv.tenantName}</h4>
+                    <p className="text-xs font-semibold text-slate-500">
+                      {inv.building} • Room {inv.room} {inv.bed ? `(${inv.bed})` : ""}
+                    </p>
+                    <p className="text-[11px] font-medium text-slate-400">{inv.date}</p>
+                    <p className="text-sm font-black text-emerald-700">₹ {Number(inv.paidAmount || inv.rentAmount || 0).toLocaleString("en-IN")}</p>
+                  </div>
+
+                  <div className="flex items-center gap-2 self-start sm:self-center">
                     <button
-                      key={st}
-                      onClick={() => setStatusFilter(st)}
-                      className={`rounded-lg px-3 py-1 text-[11px] font-extrabold transition cursor-pointer ${
-                        statusFilter === st
-                          ? "bg-white text-slate-900 shadow-2xs"
-                          : "text-slate-500 hover:text-slate-800"
-                      }`}
+                      onClick={() => handleLoadInvoice(inv, false)}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-black text-xs px-3.5 py-1.5 transition cursor-pointer shadow-2xs"
                     >
-                      {st}
+                      <Eye className="h-3.5 w-3.5" />
+                      <span>View</span>
                     </button>
-                  ))}
+                    <button
+                      onClick={() => handleLoadInvoice(inv, true)}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 font-bold text-xs px-3 py-1.5 transition cursor-pointer"
+                    >
+                      <Edit className="h-3 w-3" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      onClick={() => handleDeleteInvoice(inv.id, inv.invoiceNo)}
+                      className="p-1.5 rounded-full text-rose-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                      title="Delete Invoice"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-
-              {/* CREATE NEW INVOICE BUTTON */}
-              <button
-                type="button"
-                onClick={handleStartNewInvoice}
-                className="flex items-center gap-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 px-3.5 py-2 text-xs font-black text-white shadow-sm transition active:scale-95 cursor-pointer whitespace-nowrap"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Create Invoice</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Invoices Datatable */}
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="border-b border-slate-200 bg-slate-50 font-extrabold text-slate-600 uppercase tracking-wider">
-                  <tr>
-                    <th className="px-4 py-3.5">Invoice #</th>
-                    <th className="px-4 py-3.5">Resident</th>
-                    <th className="px-4 py-3.5">Building & Room</th>
-                    <th className="px-4 py-3.5">Issued Date</th>
-                    <th className="px-4 py-3.5">Rent Amount</th>
-                    <th className="px-4 py-3.5">Paid</th>
-                    <th className="px-4 py-3.5">Balance</th>
-                    <th className="px-4 py-3.5">Status</th>
-                    <th className="px-4 py-3.5 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 font-semibold text-slate-800">
-                  {isLoadingInvoices ? (
-                    <tr>
-                      <td colSpan={9} className="py-8 text-center text-slate-500 font-medium">
-                        Loading invoice records...
-                      </td>
-                    </tr>
-                  ) : filteredInvoices.length === 0 ? (
-                    <tr>
-                      <td colSpan={9} className="py-8 text-center text-slate-500 font-medium">
-                        No invoice records found matching criteria.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredInvoices.map((inv) => (
-                      <tr key={inv.id} className="hover:bg-slate-50/80 transition">
-                        <td className="px-4 py-3.5 font-bold text-[#0f1b3d]">{inv.invoiceNo}</td>
-                        <td className="px-4 py-3.5">
-                          <div className="font-bold text-slate-900">{inv.tenantName}</div>
-                          <div className="text-[10px] text-slate-500 font-medium">{inv.contact}</div>
-                        </td>
-                        <td className="px-4 py-3.5">
-                          <div>{inv.building}</div>
-                          <div className="text-[10px] text-slate-500 font-medium">
-                            {inv.room} {inv.bed ? `(${inv.bed})` : ""}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3.5">{inv.date}</td>
-                        <td className="px-4 py-3.5 font-bold">₹{Number(inv.rentAmount || 0).toLocaleString("en-IN")}</td>
-                        <td className="px-4 py-3.5 font-bold text-emerald-700">₹{Number(inv.paidAmount || 0).toLocaleString("en-IN")}</td>
-                        <td className="px-4 py-3.5 font-bold text-amber-700">₹{Number(inv.balanceDue || 0).toLocaleString("en-IN")}</td>
-                        <td className="px-4 py-3.5">
-                          <span
-                            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wide ${
-                              inv.status === "PAID"
-                                ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                                : inv.status === "PARTIAL"
-                                ? "bg-amber-100 text-amber-800 border border-amber-300"
-                                : "bg-rose-100 text-rose-800 border border-rose-300"
-                            }`}
-                          >
-                            {inv.status === "PAID" && <CheckCircle className="h-3 w-3" />}
-                            {inv.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3.5 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            {/* VIEW (READ-ONLY LOCKED) */}
-                            <button
-                              onClick={() => handleLoadInvoice(inv, false)}
-                              title="View Official Invoice (Read Only)"
-                              className="flex items-center gap-1.5 rounded-lg bg-emerald-50 border border-emerald-200 px-2.5 py-1 text-[11px] font-black text-emerald-800 hover:bg-emerald-100 transition cursor-pointer"
-                            >
-                              <Eye className="h-3.5 w-3.5" />
-                              <span>View</span>
-                            </button>
-
-                            {/* EDIT (EXPLICIT EDIT MODE) */}
-                            <button
-                              onClick={() => handleLoadInvoice(inv, true)}
-                              title="Edit & Update Invoice"
-                              className="flex items-center gap-1.5 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-1 text-[11px] font-black text-amber-800 hover:bg-amber-100 transition cursor-pointer"
-                            >
-                              <Edit className="h-3.5 w-3.5" />
-                              <span>Edit</span>
-                            </button>
-
-                            {/* PRINT / PDF */}
-                            <button
-                              onClick={() => {
-                                handleLoadInvoice(inv, false);
-                                setTimeout(() => window.print(), 250);
-                              }}
-                              title="Print Receipt / Save as PDF"
-                              className="flex items-center gap-1.5 rounded-lg bg-[#0f1b3d] px-2.5 py-1 text-[11px] font-black text-white hover:bg-slate-800 transition cursor-pointer"
-                            >
-                              <Printer className="h-3.5 w-3.5 text-emerald-400" />
-                              <span>Print</span>
-                            </button>
-
-                            {/* DELETE */}
-                            <button
-                              onClick={() => handleDeleteInvoice(inv.id, inv.invoiceNo)}
-                              title="Delete Record"
-                              className="rounded-lg p-1 text-rose-500 hover:bg-rose-50 hover:text-rose-700 transition cursor-pointer"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+              ))
+            )}
           </div>
         </div>
       )}

@@ -2,6 +2,43 @@
 
 ---
 
+### 📍 Version 8.81 — High-End Reference-Matched Mobile Invoice Experience & Clean Segmented Tabs 📱✨💎
+
+```mermaid
+flowchart TD
+    subgraph MobileSegmentedNav ["Zero-Overflow 3-Column Segmented Tab Dock"]
+        Tabs["3-Grid Segmented Bar: ⚡ Studio | 📄 Invoices (Count) | ⏳ Pending (Count)"]
+    end
+
+    subgraph GeneratedInvoicesView ["Generated Invoices Clean Card View (Reference Matched)"]
+        SearchBox["Search by Invoice ID or Customer Name..."]
+        SummaryPill["🖨️ Total Invoices: Count"]
+        StatusFilter["Status Filter Pills: ALL | PAID | PARTIAL | UNPAID"]
+        
+        InvoiceCard["Invoice Card:
+        • Top Row: INV-ID (Blue) + 🔒 Locked + Status Badge
+        • Resident Name (Bold Slate-900)
+        • Property & Room (PG A • Room 101 Bed A)
+        • Date & Rent Amount (₹ Bold Emerald)
+        • Direct Action: 👁️ View (Pill Button) | ✏️ Edit | 🗑️ Delete"]
+        
+        SearchBox --> SummaryPill
+        SummaryPill --> StatusFilter
+        StatusFilter --> InvoiceCard
+    end
+
+    subgraph InvoiceStudio ["Streamlined Invoice Canvas & Action Bar"]
+        StudioBar["Action Bar: 💾 Save & Issue | 📱 WhatsApp Dispatch | 🖨️ Print Receipt | ✏️ Edit (PDF Option Removed)"]
+        A4Canvas["Locked A4 Clean Official Receipt Canvas"]
+        StudioBar --> A4Canvas
+    end
+
+    MobileSegmentedNav --> GeneratedInvoicesView
+    MobileSegmentedNav --> InvoiceStudio
+```
+
+---
+
 ### 📍 Version 8.80 — Executive Invoice Studio & Multi-Channel Export Pipeline 📄🚀✨
 
 ```mermaid
