@@ -82,6 +82,8 @@ import {
   generateRevenueReport,
   generateMasterReport,
 } from "../../lib/excelReportGenerator";
+import { generateCustomerCredentials } from "../../lib/credentialUtils";
+
 function normalizeTabName(t?: string): string {
   if (!t) return "Dashboard";
   const lower = t.toLowerCase().trim();
