@@ -150,10 +150,10 @@ export function InvoiceDesign({
   const [tenantName, setTenantName] = useState<string>(initialInvoiceData?.tenantName || initPipeline?.name || "");
   const [contact, setContact] = useState<string>(initialInvoiceData?.contact || initPipeline?.phone || "");
   const [email, setEmail] = useState<string>(initialInvoiceData?.email || initPipeline?.email || "");
-  const [building, setBuilding] = useState<string>(initialInvoiceData?.building || initPipeline?.building || "PG A");
-  const [floor, setFloor] = useState<string>(initialInvoiceData?.floor || initPipeline?.floor || "Floor 1");
-  const [room, setRoom] = useState<string>(initialInvoiceData?.room || initPipeline?.room || "Room 101");
-  const [bed, setBed] = useState<string>(initialInvoiceData?.bed || initPipeline?.bed || "Bed A");
+  const [building, setBuilding] = useState<string>(initialInvoiceData?.building || initPipeline?.building || "");
+  const [floor, setFloor] = useState<string>(initialInvoiceData?.floor || initPipeline?.floor || "");
+  const [room, setRoom] = useState<string>(initialInvoiceData?.room || initPipeline?.room || "");
+  const [bed, setBed] = useState<string>(initialInvoiceData?.bed || initPipeline?.bed || "");
 
   const [rentAmount, setRentAmount] = useState<number>(initialInvoiceData?.rentAmount ?? initPipeline?.rentAmount ?? 0);
   const [paidAmount, setPaidAmount] = useState<number>(initialInvoiceData?.paidAmount ?? initPipeline?.rentAmount ?? 0);
@@ -374,7 +374,18 @@ export function InvoiceDesign({
   // Synchronize resident selection when selected from dropdown
   const handleSelectResident = (resId: string) => {
     setSelectedResidentId(resId);
-    if (!resId) return;
+    if (!resId) {
+      setTenantName("");
+      setContact("");
+      setEmail("");
+      setBuilding("");
+      setFloor("");
+      setRoom("");
+      setBed("");
+      setRentAmount(0);
+      setPaidAmount(0);
+      return;
+    }
     const found = residentsList.find((r) => r.id === resId);
     if (found) {
       const p = resolveResidentPipelineData(found);
@@ -485,10 +496,10 @@ export function InvoiceDesign({
     setTenantName("");
     setContact("");
     setEmail("");
-    setBuilding("PG A - Main Branch");
-    setFloor("1st Floor");
-    setRoom("Room 101");
-    setBed("Bed A");
+    setBuilding("");
+    setFloor("");
+    setRoom("");
+    setBed("");
     setDate(new Date().toISOString().split("T")[0] || "");
     setDueDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0] || "");
     setRentAmount(0);
