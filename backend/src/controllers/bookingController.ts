@@ -85,9 +85,9 @@ export class BookingController {
           const buffer = matches ? Buffer.from(matches[2], "base64") : Buffer.from(documentData, "base64");
           const sanitizeName = documentName.replace(/[^a-zA-Z0-9._-]/g, "_");
           const filename = `doc_${Date.now()}_${sanitizeName}`;
-          const filePath = path.join(UPLOADS_DOC_DIR, filename);
-          await fs.writeFile(filePath, buffer);
-          storedDoc = `http://localhost:5000/uploads/documents/${filename}`;
+          const host = req.get("host") || "localhost:5000";
+          const protocol = req.protocol === "https" || req.get("x-forwarded-proto") === "https" ? "https" : "http";
+          storedDoc = `${protocol}://${host}/uploads/documents/${filename}`;
         } catch (fileErr) {
           console.error("⚠️ Failed to write document file, falling back to document name:", fileErr);
           storedDoc = documentName || documents || "Aadhaar Card Uploaded";

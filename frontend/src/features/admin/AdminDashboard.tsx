@@ -82,11 +82,41 @@ import {
   generateRevenueReport,
   generateMasterReport,
 } from "../../lib/excelReportGenerator";
-import { generateCustomerCredentials } from "../../lib/credentialUtils";
+function normalizeTabName(t?: string): string {
+  if (!t) return "Dashboard";
+  const lower = t.toLowerCase().trim();
+  const map: Record<string, string> = {
+    bookings: "Customers",
+    booking: "Customers",
+    customers: "Customers",
+    resident: "Customers",
+    residents: "Customers",
+    rooms: "Buildings",
+    room: "Buildings",
+    buildings: "Buildings",
+    building: "Buildings",
+    finance: "Revenue",
+    revenue: "Revenue",
+    reports: "Reports",
+    report: "Reports",
+    invoice: "Invoice",
+    invoices: "Invoice",
+    allocation: "Allocation",
+    allotment: "Allocation",
+    overview: "Dashboard",
+    dashboard: "Dashboard",
+    settings: "Settings",
+  };
+  return map[lower] || t;
+}
 
 export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab?: string; isStaffMode?: boolean }) {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState(tab);
+  const [activeTab, setActiveTab] = useState(() => normalizeTabName(tab));
+
+  useEffect(() => {
+    setActiveTab(normalizeTabName(tab));
+  }, [tab]);
 
   const [allotmentSuccessData, setAllotmentSuccessData] = useState<{
     residentName: string;
@@ -6586,7 +6616,7 @@ function doPost(e) {
             <div className="space-y-2.5">
               <a
                 href={`https://wa.me/91${allotmentSuccessData.phone.replace(/\D/g, "")}?text=${encodeURIComponent(
-                  `Welcome to Shripad PG! Your room allocation is complete:\n\n📍 Building: ${allotmentSuccessData.building}\n🛏️ Room: ${allotmentSuccessData.room} (${allotmentSuccessData.bed})\n\n🔑 Resident Portal: http://localhost:8080/login\n🆔 User ID: ${allotmentSuccessData.customerId}\n🔒 Password: ${allotmentSuccessData.customerPassword}\n\nPlease login and change your default password.`
+                  `Welcome to Shripad PG! Your room allocation is complete:\n\n📍 Building: ${allotmentSuccessData.building}\n🛏️ Room: ${allotmentSuccessData.room} (${allotmentSuccessData.bed})\n\n🔑 Resident Portal: ${typeof window !== "undefined" ? window.location.origin : "https://shripadpg.pages.dev"}/login\n🆔 User ID: ${allotmentSuccessData.customerId}\n🔒 Password: ${allotmentSuccessData.customerPassword}\n\nPlease login and change your default password.`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -6598,7 +6628,8 @@ function doPost(e) {
 
               <button
                 onClick={() => {
-                  const textToCopy = `Welcome to Shripad PG!\nResident Portal: http://localhost:8080/login\nUser ID: ${allotmentSuccessData.customerId}\nPassword: ${allotmentSuccessData.customerPassword}`;
+                  const portalOrigin = typeof window !== "undefined" ? window.location.origin : "https://shripadpg.pages.dev";
+                  const textToCopy = `Welcome to Shripad PG!\nResident Portal: ${portalOrigin}/login\nUser ID: ${allotmentSuccessData.customerId}\nPassword: ${allotmentSuccessData.customerPassword}`;
                   navigator.clipboard.writeText(textToCopy);
                   setCopiedCredentialText(true);
                   setTimeout(() => setCopiedCredentialText(false), 2000);
@@ -8968,7 +8999,8 @@ function doPost(e) {
                         <button
                           type="button"
                           onClick={() => {
-                            const text = `📋 SHRIPAD PG - DEDICATED STAFF CREDENTIALS\n\n👤 Staff Name: ${st.name}\n📞 Phone: ${st.phone}\n🏢 Dedicated Property: ${st.assignedBuildings.join(", ")}\n🌐 Staff Portal URL: http://localhost:8081/staff/login\n✉️ Login ID (Email): ${st.email}\n🔑 Fixed Password: ${st.password || "ramesh123"}`;
+                            const staffPortalOrigin = typeof window !== "undefined" ? window.location.origin : "https://shripadpg.pages.dev";
+                            const text = `📋 SHRIPAD PG - DEDICATED STAFF CREDENTIALS\n\n👤 Staff Name: ${st.name}\n📞 Phone: ${st.phone}\n🏢 Dedicated Property: ${st.assignedBuildings.join(", ")}\n🌐 Staff Portal URL: ${staffPortalOrigin}/staff/login\n✉️ Login ID (Email): ${st.email}\n🔑 Fixed Password: ${st.password || "ramesh123"}`;
                             navigator.clipboard.writeText(text);
                             setCopiedStaffId(st.id);
                             setTimeout(() => setCopiedStaffId(null), 2500);

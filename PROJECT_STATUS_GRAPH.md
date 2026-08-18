@@ -2,6 +2,37 @@
 
 ---
 
+### 📍 Version 8.95 — Full-Stack Flow Synchronization & Mismatch Fixes 🔄🛠️✨
+
+```mermaid
+flowchart TD
+    subgraph FlowFixes ["Full-Stack Flow Alignment Engine"]
+        WAUrls["WhatsApp Share URLs:
+        • Replaced localhost:8080/8081 with dynamic window.location.origin
+        • Mobile residents & staff receive real cloud portal links"]
+
+        DocUploads["Dynamic Document URLs:
+        • Backend bookingController resolves host & protocol dynamically
+        • Aadhaar / ID proofs accessible on production & mobile"]
+
+        TabNormalizer["Tab Normalizer in AdminDashboard:
+        • Maps /staff/bookings, /staff/rooms, /staff/finance to active tabs
+        • Syncs activeTab state with tab route prop"]
+
+        CacheKeys["Unified Offline Caching:
+        • CustomerLogin & CustomerPortal support both shripad_cached_bookings & shripad_admin_bookings
+        • Robust offline login and state sync"]
+
+        StaffAuth["Staff Re-Auth JWT Session:
+        • StaffDashboard modal re-auth now calls /api/auth/staff-login
+        • Updates shripad_auth_token & shripad_staff_session"]
+
+        WAUrls & DocUploads & TabNormalizer & CacheKeys & StaffAuth --> ProductionHarmony["100% End-to-End Cohesive Production Flow"]
+    end
+```
+
+---
+
 ### 📍 Version 8.94 — Elimination of Mobile Sidebar Vertical Gap & Clean Drawer Routing 📱✨🧹
 
 ```mermaid

@@ -40,7 +40,9 @@ export function CustomerLogin() {
         localStorage.setItem("shripad_customer_session", JSON.stringify(data.booking));
         navigate({ to: "/my-rooms" as any });
       } else {
-        const localBookingsStr = localStorage.getItem("shripad_admin_bookings");
+        const localBookingsStr =
+          localStorage.getItem("shripad_cached_bookings") ||
+          localStorage.getItem("shripad_admin_bookings");
         if (localBookingsStr) {
           const bookings: any[] = JSON.parse(localBookingsStr);
           const match = bookings.find((b) => {
@@ -65,7 +67,9 @@ export function CustomerLogin() {
         setErrorMsg(data.message || "Invalid Customer ID or Password. Please check credentials sent by Admin.");
       }
     } catch (err) {
-      const localBookingsStr = localStorage.getItem("shripad_admin_bookings");
+      const localBookingsStr =
+        localStorage.getItem("shripad_cached_bookings") ||
+        localStorage.getItem("shripad_admin_bookings");
       if (localBookingsStr) {
         const bookings: any[] = JSON.parse(localBookingsStr);
         const match = bookings.find((b) => {

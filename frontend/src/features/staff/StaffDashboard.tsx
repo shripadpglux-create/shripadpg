@@ -150,7 +150,7 @@ export default function StaffDashboard() {
     setLoginError("");
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/staff/login`, {
+      const res = await fetch(`${API_BASE_URL}/api/auth/staff-login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: loginEmail, password: loginPassword }),
@@ -160,6 +160,10 @@ export default function StaffDashboard() {
       if (data.success && data.staff) {
         setSelectedStaffId(data.staff.id);
         localStorage.setItem("shripad_staff_id", data.staff.id);
+        localStorage.setItem("shripad_staff_session", JSON.stringify(data.staff));
+        if (data.token) {
+          localStorage.setItem("shripad_auth_token", data.token);
+        }
         setIsLoginModalOpen(false);
         setLoginEmail("");
         setLoginPassword("");

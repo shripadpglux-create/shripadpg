@@ -338,15 +338,21 @@ export function CustomerPortal() {
   };
 
   const syncLocalAdminBookings = (updatedCust: any) => {
-    const localBookingsStr = localStorage.getItem("shripad_admin_bookings");
-    if (localBookingsStr) {
-      const bookings = JSON.parse(localBookingsStr);
-      const idx = bookings.findIndex((b: any) => b.id === updatedCust.id);
-      if (idx !== -1) {
-        bookings[idx] = updatedCust;
-        localStorage.setItem("shripad_admin_bookings", JSON.stringify(bookings));
+    ["shripad_cached_bookings", "shripad_admin_bookings"].forEach((key) => {
+      const localStr = localStorage.getItem(key);
+      if (localStr) {
+        try {
+          const bookings = JSON.parse(localStr);
+          const idx = bookings.findIndex((b: any) => b.id === updatedCust.id);
+          if (idx !== -1) {
+            bookings[idx] = updatedCust;
+            localStorage.setItem(key, JSON.stringify(bookings));
+          }
+        } catch (e) {
+          // ignore parse errors
+        }
       }
-    }
+    });
   };
 
   // Payment Upload Handler - Smart handling for Cash vs Online payments
