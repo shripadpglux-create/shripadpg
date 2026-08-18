@@ -2408,10 +2408,10 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
           <header className="mx-auto max-w-7xl rounded-full border border-slate-200/80 bg-white/95 shadow-lg shadow-slate-200/50 backdrop-blur-xl px-2.5 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between gap-2 sm:gap-3 transition-all">
             {/* Left: Menu, Role Scope, WhatsApp & Complaints */}
             <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 flex-nowrap">
-              {/* Mobile Menu Button (Opens More Drawer directly) */}
+              {/* Mobile Menu Button (Opens Left Sidebar Drawer) */}
               <button
                 type="button"
-                onClick={() => setIsMoreDrawerOpen(true)}
+                onClick={() => setIsMobileMenuOpen(true)}
                 className="flex lg:hidden h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full border border-slate-200/80 bg-slate-50 text-slate-600 hover:bg-slate-100 shadow-2xs cursor-pointer active:scale-95"
                 title="Navigation Menu"
               >
@@ -8221,6 +8221,187 @@ function doPost(e) {
               <Plus className="h-7 w-7 stroke-[3]" />
             </button>
           </div>
+
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {/* MOBILE LEFT SIDEBAR SLIDER (WHEN isMobileMenuOpen IS TRUE)        */}
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {isMobileMenuOpen && (
+            <>
+              {/* Backdrop */}
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsMobileMenuOpen(false);
+                }}
+                onTouchEnd={(e) => {
+                  e.stopPropagation();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="fixed inset-0 z-[75] bg-slate-900/60 backdrop-blur-[2px] animate-in fade-in duration-200 lg:hidden cursor-pointer"
+              />
+
+              {/* Sidebar Drawer Container */}
+              <aside className="fixed inset-y-0 left-0 z-[76] w-72 max-w-[85vw] flex flex-col justify-between border-r border-slate-200/80 bg-white/98 backdrop-blur-xl px-5 py-5 shadow-2xl transition-transform duration-300 ease-in-out overflow-y-auto scrollbar-none animate-in slide-in-from-left duration-250 lg:hidden">
+                {/* Top Header Name Logo & Close Button */}
+                <div className="mb-5 flex items-center justify-between relative w-full px-1 shrink-0">
+                  <ShripadNameLogo />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    onTouchEnd={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    aria-label="Close Navigation Menu"
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 active:scale-90 active:bg-slate-300 transition cursor-pointer shadow-xs"
+                  >
+                    <X className="h-4.5 w-4.5 stroke-[2.5]" />
+                  </button>
+                </div>
+
+                {/* Curved Pill Navigation Items */}
+                <nav className="flex-1 space-y-1.5 shrink-0">
+                  {[
+                    { name: "Dashboard", icon: LayoutDashboard },
+                    { name: "Revenue", icon: Wallet },
+                    { name: "Reports", icon: FileSpreadsheet },
+                    { name: "Invoice", icon: Receipt, badgeCount: pendingPaymentsCount },
+                  ].map((item) => {
+                    const isActive = activeTab === item.name;
+                    return (
+                      <button
+                        key={item.name}
+                        onClick={() => {
+                          handleTabClick(item.name);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`group relative flex w-full items-center gap-3.5 rounded-full px-4.5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold transition-all duration-300 ${
+                          isActive
+                            ? "bg-brand-green text-white shadow-lg shadow-brand-green/30 translate-x-1"
+                            : "text-slate-600 hover:bg-slate-100/90 hover:text-slate-900 hover:translate-x-1"
+                        }`}
+                      >
+                        <item.icon
+                          className={`h-4.5 w-4.5 sm:h-5 sm:w-5 transition-transform group-hover:scale-110 ${
+                            isActive ? "text-white" : "text-slate-500"
+                          }`}
+                        />
+                        <span>{item.name}</span>
+                        {item.badgeCount && item.badgeCount > 0 ? (
+                          <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-[10px] font-black text-white shadow-xs animate-bounce">
+                            {item.badgeCount}
+                          </span>
+                        ) : (
+                          isActive && (
+                            <span className="ml-auto h-2 w-2 rounded-full bg-white animate-pulse shadow-xs" />
+                          )
+                        )}
+                      </button>
+                    );
+                  })}
+
+                  {/* Central Plus Create Button */}
+                  <div className="py-0.5">
+                    <button
+                      onClick={() => {
+                        setIsCreateModalOpen(true);
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="group relative flex w-full items-center gap-3.5 rounded-full px-4.5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100/90 hover:text-slate-900 hover:translate-x-1 transition-all duration-300 cursor-pointer"
+                    >
+                      <Plus className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-slate-500 transition-transform group-hover:scale-110 group-hover:rotate-90 duration-300" />
+                      <span>Create</span>
+                    </button>
+                  </div>
+
+                  {[
+                    { name: "Buildings", icon: Building2 },
+                    { name: "Customers", icon: Users },
+                    { name: "Allocation", icon: KeyRound },
+                  ].map((item) => {
+                    const isActive = activeTab === item.name;
+                    return (
+                      <button
+                        key={item.name}
+                        onClick={() => {
+                          handleTabClick(item.name);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`group relative flex w-full items-center gap-3.5 rounded-full px-4.5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold transition-all duration-300 ${
+                          isActive
+                            ? "bg-brand-green text-white shadow-lg shadow-brand-green/30 translate-x-1"
+                            : "text-slate-600 hover:bg-slate-100/90 hover:text-slate-900 hover:translate-x-1"
+                        }`}
+                      >
+                        <item.icon
+                          className={`h-4.5 w-4.5 sm:h-5 sm:w-5 transition-transform group-hover:scale-110 ${
+                            isActive ? "text-white" : "text-slate-500"
+                          }`}
+                        />
+                        <span>{item.name}</span>
+                        {isActive && (
+                          <span className="ml-auto h-2 w-2 rounded-full bg-white animate-pulse shadow-xs" />
+                        )}
+                      </button>
+                    );
+                  })}
+
+                  {/* Admin Management Actions in Sidebar */}
+                  {!isStaffMode && (
+                    <div className="pt-1.5 border-t border-slate-100 space-y-1.5">
+                      <button
+                        onClick={() => {
+                          setIsStaffModalOpen(true);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="group relative flex w-full items-center gap-3.5 rounded-full px-4.5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100/90 hover:text-slate-900 hover:translate-x-1 transition-all duration-300 cursor-pointer"
+                        title="Manage Staff & Building Assignments"
+                      >
+                        <UserCheck className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-slate-500 transition-transform group-hover:scale-110" />
+                        <span>Staff & Buildings</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setIsPaymentSettingsModalOpen(true);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="group relative flex w-full items-center gap-3.5 rounded-full px-4.5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100/90 hover:text-slate-900 hover:translate-x-1 transition-all duration-300 cursor-pointer"
+                        title="Configure Real Payment Details & QR Code"
+                      >
+                        <QrCode className="h-4.5 w-4.5 sm:h-5 sm:w-5 text-slate-500 transition-transform group-hover:scale-110" />
+                        <span>Payment & QR</span>
+                      </button>
+                    </div>
+                  )}
+                </nav>
+
+                {/* Shripad PG Logo Showcase Footer */}
+                <div className="mt-4 mb-2 rounded-2xl bg-gradient-to-br from-brand-green-light/40 via-emerald-50/50 to-white p-3 border border-brand-green/20 text-center space-y-1.5 shadow-2xs shrink-0">
+                  <div className="mx-auto flex justify-center py-0.5">
+                    <img
+                      src={brandLogo}
+                      alt="Shripad PG Large Logo"
+                      className="h-14 w-auto max-w-full object-contain transition-transform hover:scale-105 filter drop-shadow-xs"
+                    />
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-[11px] font-black text-brand-navy tracking-wide uppercase">
+                      SHRIPAD PG PORTAL
+                    </p>
+                    <p className="text-[9px] font-semibold text-slate-500 flex items-center justify-center gap-1">
+                      <ShieldCheck className="h-3 w-3 text-brand-green" /> Premium Living & Care
+                    </p>
+                  </div>
+                </div>
+              </aside>
+            </>
+          )}
 
           {/* More Drawer — Mounted ONLY when isMoreDrawerOpen is true */}
           {isMoreDrawerOpen && (

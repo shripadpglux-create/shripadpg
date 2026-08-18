@@ -2,6 +2,29 @@
 
 ---
 
+### 📍 Version 8.98 — Mobile Left Sidebar Slider Overlay & Hamburger Menu Action 📱🚪✨
+
+```mermaid
+flowchart TD
+    subgraph MobileLeftSidebar ["Mobile Left Sidebar Slider System"]
+        HamburgerTap["Top Navbar 3-Line Button:
+        • Triggers setIsMobileMenuOpen(true) on mobile (< lg)"]
+
+        PortalDrawer["React Portal document.body Mounting:
+        • Left Sidebar Slider mounted directly on document.body (z-[76])
+        • Renders ShripadPG brand header, full navigation pill list, and portal card
+        • Includes dedicated mobile (X) close button"]
+
+        Dismissal["Smooth Dismissal & Navigation:
+        • Closes automatically on item navigation or backdrop tap (z-[75])
+        • Completely isolated from body scrolling constraints"]
+
+        HamburgerTap --> PortalDrawer --> Dismissal
+    end
+```
+
+---
+
 ### 📍 Version 8.97 — React Portal Mobile Navigation Dock & Drawer Isolation 📱🚪🚀
 
 ```mermaid
