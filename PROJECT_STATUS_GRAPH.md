@@ -2,6 +2,28 @@
 
 ---
 
+### 📍 Version 8.75 — Quick Actions & Create Pipeline (Feature 5) ⚡➕🚀
+
+```mermaid
+flowchart TD
+    subgraph FABActions ["Floating Action Button Speed-Dial (5 Quick Actions)"]
+        FA1["👤 Add Customer ➔ Direct Admission Modal"]
+        FA2["🏢 Add Building ➔ Direct Building Modal"]
+        FA3["🔑 Allocate Room ➔ Direct Allocation Hub"]
+        FA4["💳 Record Expense ➔ Direct Expense Modal"]
+        FA5["📄 Create Invoice ➔ Direct Invoice Creator"]
+    end
+
+    subgraph AdmissionModalArchitecture ["Multi-Channel Admission Pipeline"]
+        ManualForm["1. Manual Resident Form: Name, Phone, Guardian, Govt ID Document"]
+        GoogleSheetSync["2. Live Google Form / Sheet Sync: Dynamic URL & Ingestion"]
+    end
+
+    FABActions --> AdmissionModalArchitecture
+```
+
+---
+
 ### 📍 Version 8.74 — Payments & Financial Hub Dual-Mode Architecture (Feature 4) 💳💰🚀
 
 ```mermaid

@@ -8115,9 +8115,9 @@ function doPost(e) {
           <div className="mb-3 flex flex-col items-end gap-2.5 animate-in slide-in-from-bottom-4 fade-in duration-200">
             {[
               { label: "Add Customer", icon: UserPlus, action: () => { setIsCreateModalOpen(true); setIsFabMenuOpen(false); }, color: "bg-emerald-600" },
-              { label: "Add Building", icon: Building2, action: () => { handleTabClick("Buildings"); setIsFabMenuOpen(false); }, color: "bg-blue-600" },
+              { label: "Add Building", icon: Building2, action: () => { setIsAddBuildingModalOpen(true); setIsFabMenuOpen(false); }, color: "bg-blue-600" },
               { label: "Allocate Room", icon: KeyRound, action: () => { handleTabClick("Allocation"); setIsFabMenuOpen(false); }, color: "bg-indigo-600" },
-              { label: "Record Payment", icon: CreditCard, action: () => { handleTabClick("Revenue"); setIsFabMenuOpen(false); }, color: "bg-amber-600" },
+              { label: "Record Expense", icon: CreditCard, action: () => { resetExpenseForm(); setIsExpenseModalOpen(true); setIsFabMenuOpen(false); }, color: "bg-amber-600" },
               { label: "Create Invoice", icon: Receipt, action: () => { handleTabClick("Invoice"); setIsFabMenuOpen(false); }, color: "bg-purple-600" },
             ].map((item, i) => (
               <button
