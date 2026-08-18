@@ -2,6 +2,44 @@
 
 ---
 
+### 📍 Version 8.72 — Residents & Applicants Directory Overhaul (Feature 2) 👥🚀✨
+
+```mermaid
+flowchart TD
+    subgraph CustomersMetrics ["Summary Metrics Grid"]
+        M1["Total Records"]
+        M2["Allocated Tenants"]
+        M3["Pending Allocation"]
+        M4["Online Bookings"]
+    end
+
+    subgraph CustomersControls ["Directory Search & Multi-Level Filtering"]
+        SearchBox["Fast Search (Name, Phone, Room, Guardian)"]
+        BuildingFilter["Building Dropdown (All, PG A, PG B, etc.)"]
+        StatusTabs["Status Filter Pills (All, Allocated, Pending)"]
+        AdmitBtn["+ Admit Customer Primary Action"]
+        
+        SearchBox --> StatusTabs
+        BuildingFilter --> StatusTabs
+    end
+
+    subgraph CustomerCards ["Interactive Resident Directory Cards"]
+        CardInfo["Resident Profile (Avatar, Room Badge, Phone, Guardian, Email)"]
+        Actions["Tailwind Circular Actions:
+        • 'Allocate Room' Direct CTA (if pending)
+        • Deallocate (if allocated)
+        • Edit Resident Profile
+        • Delete Record"]
+        
+        CardInfo --> Actions
+    end
+
+    CustomersMetrics --> CustomersControls
+    CustomersControls --> CustomerCards
+```
+
+---
+
 ### 📍 Version 8.71 — Dashboard Production-Level UI/UX Overhaul (Feature 1) 📊🚀✨
 
 ```mermaid

@@ -188,6 +188,9 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const [reportSelectedBuilding, setReportSelectedBuilding] = useState("All");
   const [reportActivePreviewTab, setReportActivePreviewTab] = useState<"contact" | "allocation" | "building" | "revenue">("revenue");
   const [searchQuery, setSearchQuery] = useState("");
+  const [customerDirectorySearch, setCustomerDirectorySearch] = useState("");
+  const [customerDirectoryBuilding, setCustomerDirectoryBuilding] = useState("All");
+  const [customerDirectoryStatus, setCustomerDirectoryStatus] = useState<"all" | "allocated" | "pending">("all");
   const [timeRange, setTimeRange] = useState("Last 60 Days");
   const [customerTimeFilter, setCustomerTimeFilter] = useState<"24h" | "7d" | "1m" | "custom">("24h");
   const [customStartDate, setCustomStartDate] = useState("2026-08-01");
@@ -3999,86 +4002,250 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
           {/* TAB 4: CUSTOMERS TAB */}
           {activeTab === "Customers" && (
-            <div className="space-y-6 sm:space-y-7">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-5 sm:space-y-6 animate-in fade-in duration-300">
+              {/* Header & Quick Action */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
-                    Residents & Applicants 👥
+                  <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2">
+                    Residents & Applicants Directory 👥
                   </h1>
                   <p className="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
-                    View active PG residents, pending applications, and contact details.
+                    Search, filter, and manage all PG tenants, room allocations, and pending applications.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="inline-flex items-center gap-2 rounded-2xl bg-brand-green hover:bg-emerald-700 text-white font-extrabold text-xs px-4 py-2.5 shadow-md shadow-brand-green/20 transition cursor-pointer active:scale-95 self-start sm:self-auto"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>+ Admit Customer</span>
+                </button>
+              </div>
+
+              {/* Quick Summary Metrics Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
+                <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 sm:p-4 shadow-xs">
+                  <p className="text-[10px] sm:text-xs font-extrabold uppercase text-slate-400">Total Records</p>
+                  <p className="text-lg sm:text-2xl font-black text-slate-900 mt-0.5">{scopedBookings.length}</p>
+                </div>
+                <div className="rounded-2xl border border-emerald-200/80 bg-emerald-50/40 p-3.5 sm:p-4 shadow-xs">
+                  <p className="text-[10px] sm:text-xs font-extrabold uppercase text-emerald-700">Allocated Tenants</p>
+                  <p className="text-lg sm:text-2xl font-black text-emerald-800 mt-0.5">
+                    {scopedBookings.filter((b) => b.status === "allocated").length}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-amber-200/80 bg-amber-50/40 p-3.5 sm:p-4 shadow-xs">
+                  <p className="text-[10px] sm:text-xs font-extrabold uppercase text-amber-700">Pending Allocation</p>
+                  <p className="text-lg sm:text-2xl font-black text-amber-800 mt-0.5">
+                    {scopedBookings.filter((b) => b.status !== "allocated").length}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-indigo-200/80 bg-indigo-50/40 p-3.5 sm:p-4 shadow-xs">
+                  <p className="text-[10px] sm:text-xs font-extrabold uppercase text-indigo-700">Online Bookings</p>
+                  <p className="text-lg sm:text-2xl font-black text-indigo-900 mt-0.5">
+                    {scopedBookings.filter((b) => b.source === "online").length}
                   </p>
                 </div>
               </div>
 
-              <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-base font-black text-slate-900">Active Residents Directory</h3>
-                  <span className="text-xs font-bold text-slate-500">
-                    Total: {scopedBookings.filter((b) => b.status === "allocated").length} Residents
-                  </span>
-                </div>
-                <div className="space-y-3">
-                  {scopedBookings.filter((b) => b.status === "allocated").length === 0 ? (
-                    <div className="p-8 text-center text-slate-400 font-semibold border border-dashed border-slate-200 rounded-3xl">
-                      No active residents found. Go to the Allocation tab to assign rooms and beds.
+              {/* Main Directory Card with Integrated Search & Filter Controls */}
+              <div className="rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-6 shadow-sm space-y-4">
+                {/* Search Bar & Filter Controls */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-2 border-b border-slate-100">
+                  {/* Search Input */}
+                  <div className="relative flex-1 max-w-md">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <input
+                      type="text"
+                      value={customerDirectorySearch}
+                      onChange={(e) => setCustomerDirectorySearch(e.target.value)}
+                      placeholder="Search by name, phone, room, or guardian..."
+                      className="w-full pl-10 pr-9 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-green focus:bg-white transition"
+                    />
+                    {customerDirectorySearch && (
+                      <button
+                        onClick={() => setCustomerDirectorySearch("")}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Filter Dropdown & Status Tabs */}
+                  <div className="flex items-center gap-2 overflow-x-auto scrollbar-none flex-nowrap">
+                    {/* Building Filter */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Filter className="h-3.5 w-3.5 text-slate-400" />
+                      <select
+                        value={customerDirectoryBuilding}
+                        onChange={(e) => setCustomerDirectoryBuilding(e.target.value)}
+                        className="rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-green cursor-pointer"
+                      >
+                        <option value="All">All Buildings</option>
+                        {scopedBuildingsList.map((b) => (
+                          <option key={b.name} value={b.name}>
+                            {b.name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                  ) : (
-                    scopedBookings
-                      .filter((b) => b.status === "allocated")
-                      .map((res, i) => (
+
+                    {/* Status Filter Tabs */}
+                    <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl shrink-0">
+                      {[
+                        { id: "all", label: "All" },
+                        { id: "allocated", label: "Allocated" },
+                        { id: "pending", label: "Pending" },
+                      ].map((tab) => (
+                        <button
+                          key={tab.id}
+                          onClick={() => setCustomerDirectoryStatus(tab.id as any)}
+                          className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer whitespace-nowrap ${
+                            customerDirectoryStatus === tab.id
+                              ? "bg-white text-slate-900 shadow-xs"
+                              : "text-slate-500 hover:text-slate-800"
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Directory List Container */}
+                <div className="space-y-3">
+                  {(() => {
+                    const filtered = scopedBookings.filter((b) => {
+                      const matchesBuilding =
+                        customerDirectoryBuilding === "All" ||
+                        b.allocatedBuilding === customerDirectoryBuilding ||
+                        b.building === customerDirectoryBuilding;
+
+                      const matchesStatus =
+                        customerDirectoryStatus === "all" ||
+                        (customerDirectoryStatus === "allocated" && b.status === "allocated") ||
+                        (customerDirectoryStatus === "pending" && b.status !== "allocated");
+
+                      const q = customerDirectorySearch.toLowerCase().trim();
+                      const matchesSearch =
+                        !q ||
+                        b.name.toLowerCase().includes(q) ||
+                        b.phone.includes(q) ||
+                        (b.allocatedRoom && b.allocatedRoom.toLowerCase().includes(q)) ||
+                        (b.guardianPhone && b.guardianPhone.includes(q));
+
+                      return matchesBuilding && matchesStatus && matchesSearch;
+                    });
+
+                    if (filtered.length === 0) {
+                      return (
+                        <div className="p-8 sm:p-10 text-center text-slate-400 font-semibold border-2 border-dashed border-slate-200 rounded-2xl sm:rounded-3xl space-y-2">
+                          <Users className="h-8 w-8 text-slate-300 mx-auto" />
+                          <p className="text-xs sm:text-sm font-bold text-slate-600">No resident records matched your filters.</p>
+                          <p className="text-[11px] text-slate-400">Try adjusting your search terms or clearing status filters.</p>
+                        </div>
+                      );
+                    }
+
+                    return filtered.map((res) => {
+                      const hasAllocation = res.status === "allocated";
+                      const isOnline = res.source === "online";
+                      const badgeBg = isOnline ? "bg-indigo-50 text-indigo-600 border-indigo-200/50" : "bg-emerald-50 text-emerald-600 border-emerald-200/50";
+
+                      return (
                         <div
                           key={res.id}
                           onClick={() => setSelectedHistoryResident(res)}
-                          className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-slate-100/80 hover:border-slate-200 hover:shadow-xs transition cursor-pointer active:scale-[0.995] gap-3"
+                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition cursor-pointer active:scale-[0.995] gap-3"
                         >
+                          {/* Left: Avatar & Resident Info */}
                           <div className="flex items-center gap-3 min-w-0 flex-1">
-                            <div
-                              className="flex items-center justify-center bg-brand-green text-white font-black text-sm shadow-2xs p-0 shrink-0"
-                              style={{ width: "40px", height: "40px", minWidth: "40px", minHeight: "40px", borderRadius: "50%" }}
-                            >
+                            <div className={`relative flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-2xl font-black text-sm border ${badgeBg}`}>
                               {res.name[0]?.toUpperCase()}
+                              {isOnline && (
+                                <div className="absolute -top-1 -right-1 bg-indigo-500 rounded-full p-0.5 border-2 border-white">
+                                  <Globe className="h-2.5 w-2.5 text-white" />
+                                </div>
+                              )}
                             </div>
+
                             <div className="min-w-0 flex-1">
-                              <p className="text-sm font-bold text-slate-900 truncate">{res.name}</p>
-                              <p className="text-xs font-medium text-slate-500 truncate">
-                                {res.allocatedBuilding} - Room {res.allocatedRoom} ({res.allocatedBed}) • {res.phone}
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="text-xs sm:text-sm font-black text-slate-900 truncate">{res.name}</p>
+                                <span className={`inline-block rounded-full px-2 py-0.5 text-[9px] font-extrabold border ${
+                                  hasAllocation
+                                    ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                                    : "bg-amber-100 text-amber-800 border-amber-200 animate-pulse"
+                                }`}>
+                                  {hasAllocation ? "Active Tenant" : "Pending Allocation"}
+                                </span>
+                              </div>
+
+                              <p className="text-[11px] font-semibold text-slate-500 truncate mt-0.5">
+                                {hasAllocation
+                                  ? `${res.allocatedBuilding} • Room ${res.allocatedRoom} (${res.allocatedBed})`
+                                  : "Awaiting Room Assignment"}
                               </p>
+
+                              <div className="text-[10px] font-bold text-slate-400 mt-1 flex flex-wrap items-center gap-1.5">
+                                <span className="text-slate-600">📱 {res.phone}</span>
+                                {res.guardianPhone && res.guardianPhone !== "N/A" && (
+                                  <span>👨‍👩‍👧‍👦 {res.guardianPhone}</span>
+                                )}
+                                {res.email && <span className="truncate">✉️ {res.email}</span>}
+                              </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                            <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-700">Active</span>
+
+                          {/* Right: Quick Action Buttons */}
+                          <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200/60" onClick={(e) => e.stopPropagation()}>
+                            {!hasAllocation && (
+                              <button
+                                title="Allocate Room Now"
+                                onClick={() => handleTabClick("Allocation")}
+                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-brand-green text-white text-xs font-bold shadow-xs hover:bg-emerald-700 transition cursor-pointer active:scale-95"
+                              >
+                                <KeyRound className="h-3 w-3" />
+                                <span>Allocate Room</span>
+                              </button>
+                            )}
+
+                            {hasAllocation && (
+                              <button
+                                title="Deallocate Room"
+                                onClick={(e) => handleDeallocateCustomer(res.id, res.name, e)}
+                                className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition cursor-pointer shrink-0"
+                              >
+                                <RotateCcw className="h-3.5 w-3.5" />
+                              </button>
+                            )}
+
                             <button
-                              title="Deallocate Room"
-                              onClick={(e) => handleDeallocateCustomer(res.id, res.name, e)}
-                              className="flex items-center justify-center p-0 bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition cursor-pointer shrink-0"
-                              style={{ width: "32px", height: "32px", minWidth: "32px", minHeight: "32px", borderRadius: "50%" }}
-                            >
-                              <RotateCcw className="h-3.5 w-3.5" />
-                            </button>
-                            <button
-                              title="Edit Resident"
+                              title="Edit Resident Profile"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setEditingCustomer({ ...res });
                               }}
-                              className="flex items-center justify-center p-0 bg-slate-100 text-slate-600 hover:bg-brand-green hover:text-white transition cursor-pointer shrink-0"
-                              style={{ width: "32px", height: "32px", minWidth: "32px", minHeight: "32px", borderRadius: "50%" }}
+                              className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-brand-green hover:text-white transition cursor-pointer shrink-0"
                             >
                               <Pencil className="h-3.5 w-3.5" />
                             </button>
+
                             <button
-                              title="Delete Resident"
+                              title="Delete Resident Record"
                               onClick={(e) => handleDeleteCustomer(res.id, res.name, e)}
-                              className="flex items-center justify-center p-0 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition cursor-pointer shrink-0"
-                              style={{ width: "32px", height: "32px", minWidth: "32px", minHeight: "32px", borderRadius: "50%" }}
+                              className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition cursor-pointer shrink-0"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </button>
                           </div>
                         </div>
-                      ))
-                  )}
+                      );
+                    });
+                  })()}
                 </div>
               </div>
             </div>
