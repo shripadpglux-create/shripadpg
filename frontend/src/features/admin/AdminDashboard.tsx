@@ -8186,125 +8186,126 @@ function doPost(e) {
       {/* MORE DRAWER — SLIDE-UP SHEET (MOBILE ONLY)                       */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
 
-      {/* More Drawer Backdrop */}
+      {/* More Drawer — Mounted ONLY when isMoreDrawerOpen is true */}
       {isMoreDrawerOpen && (
-        <div
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsMoreDrawerOpen(false);
-          }}
-          onTouchEnd={(e) => {
-            e.stopPropagation();
-            setIsMoreDrawerOpen(false);
-          }}
-          className="fixed inset-0 z-[55] bg-slate-900/50 backdrop-blur-[2px] transition-opacity lg:hidden cursor-pointer"
-        />
-      )}
-
-      {/* More Drawer Sheet */}
-      <div className={`fixed bottom-0 left-0 right-0 z-[56] lg:hidden transition-transform duration-300 ease-out ${
-        isMoreDrawerOpen ? "translate-y-0" : "translate-y-full pointer-events-none"
-      }`}>
-        <div className="bg-white rounded-t-3xl shadow-2xl border-t border-slate-200 px-5 pt-3 pb-8 max-h-[75vh] overflow-y-auto">
-          {/* Drawer Handle (Tappable to close) */}
+        <>
+          {/* Backdrop */}
           <div
-            onClick={() => setIsMoreDrawerOpen(false)}
-            className="flex justify-center py-2 -mt-1 cursor-pointer"
-            title="Tap to close"
-          >
-            <div className="h-1.5 w-12 rounded-full bg-slate-300 hover:bg-slate-400 active:scale-95 transition" />
-          </div>
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsMoreDrawerOpen(false);
+            }}
+            onTouchEnd={(e) => {
+              e.stopPropagation();
+              setIsMoreDrawerOpen(false);
+            }}
+            className="fixed inset-0 z-[55] bg-slate-900/60 backdrop-blur-[2px] animate-in fade-in duration-200 lg:hidden cursor-pointer"
+          />
 
-          {/* Drawer Title */}
-          <div className="flex items-center justify-between mb-5">
-            <h3 className="text-base font-black text-slate-900">More Features</h3>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setIsMoreDrawerOpen(false);
-              }}
-              onTouchEnd={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setIsMoreDrawerOpen(false);
-              }}
-              aria-label="Close More Features"
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 active:scale-90 active:bg-slate-300 transition cursor-pointer shadow-xs"
-            >
-              <X className="h-4.5 w-4.5 stroke-[2.5]" />
-            </button>
-          </div>
-
-          {/* Drawer Menu Grid */}
-          <div className="grid grid-cols-3 gap-3 mb-5">
-            {[
-              { name: "Revenue", icon: Wallet, color: "bg-emerald-100 text-emerald-700", borderColor: "border-emerald-200" },
-              { name: "Reports", icon: FileSpreadsheet, color: "bg-blue-100 text-blue-700", borderColor: "border-blue-200" },
-              { name: "Invoice", icon: Receipt, color: "bg-purple-100 text-purple-700", borderColor: "border-purple-200", badge: pendingPaymentsCount },
-              { name: "Allocation", icon: KeyRound, color: "bg-indigo-100 text-indigo-700", borderColor: "border-indigo-200" },
-              { name: "Settings", icon: Settings, color: "bg-slate-100 text-slate-700", borderColor: "border-slate-200" },
-            ].map((item) => (
-              <button
-                key={item.name}
-                onClick={() => {
-                  handleTabClick(item.name);
-                  setIsMoreDrawerOpen(false);
-                }}
-                className={`relative flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all active:scale-95 cursor-pointer ${
-                  activeTab === item.name
-                    ? `${item.color} ${item.borderColor} shadow-sm`
-                    : `bg-white border-slate-200 hover:bg-slate-50`
-                }`}
+          {/* More Drawer Sheet */}
+          <div className="fixed bottom-0 left-0 right-0 z-[56] lg:hidden animate-in slide-in-from-bottom duration-250 ease-out">
+            <div className="bg-white rounded-t-3xl shadow-2xl border-t border-slate-200 px-5 pt-3 pb-8 max-h-[75vh] overflow-y-auto">
+              {/* Drawer Handle (Tappable to close) */}
+              <div
+                onClick={() => setIsMoreDrawerOpen(false)}
+                className="flex justify-center py-2 -mt-1 cursor-pointer"
+                title="Tap to close"
               >
-                <item.icon className={`h-6 w-6 ${
-                  activeTab === item.name ? "" : "text-slate-500"
-                }`} />
-                <span className={`text-[11px] font-bold ${
-                  activeTab === item.name ? "" : "text-slate-600"
-                }`}>{item.name}</span>
-                {item.badge && item.badge > 0 && (
-                  <span className="absolute top-2 right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 text-[9px] font-black text-white px-1">
-                    {item.badge}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
+                <div className="h-1.5 w-12 rounded-full bg-slate-300 hover:bg-slate-400 active:scale-95 transition" />
+              </div>
 
-          {/* Admin-Only Actions Section */}
-          {!isStaffMode && (
-            <div className="border-t border-slate-100 pt-4 space-y-2">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Admin Management</p>
-              <button
-                onClick={() => {
-                  setIsStaffModalOpen(true);
-                  setIsMoreDrawerOpen(false);
-                }}
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 hover:bg-emerald-50 transition cursor-pointer active:scale-[0.98]"
-              >
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
-                  <UserCheck className="h-4.5 w-4.5" />
+              {/* Drawer Title */}
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-base font-black text-slate-900">More Features</h3>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsMoreDrawerOpen(false);
+                  }}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsMoreDrawerOpen(false);
+                  }}
+                  aria-label="Close More Features"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 active:scale-90 active:bg-slate-300 transition cursor-pointer shadow-xs"
+                >
+                  <X className="h-4.5 w-4.5 stroke-[2.5]" />
+                </button>
+              </div>
+
+              {/* Drawer Menu Grid */}
+              <div className="grid grid-cols-3 gap-3 mb-5">
+                {[
+                  { name: "Revenue", icon: Wallet, color: "bg-emerald-100 text-emerald-700", borderColor: "border-emerald-200" },
+                  { name: "Reports", icon: FileSpreadsheet, color: "bg-blue-100 text-blue-700", borderColor: "border-blue-200" },
+                  { name: "Invoice", icon: Receipt, color: "bg-purple-100 text-purple-700", borderColor: "border-purple-200", badge: pendingPaymentsCount },
+                  { name: "Allocation", icon: KeyRound, color: "bg-indigo-100 text-indigo-700", borderColor: "border-indigo-200" },
+                  { name: "Settings", icon: Settings, color: "bg-slate-100 text-slate-700", borderColor: "border-slate-200" },
+                ].map((item) => (
+                  <button
+                    key={item.name}
+                    onClick={() => {
+                      handleTabClick(item.name);
+                      setIsMoreDrawerOpen(false);
+                    }}
+                    className={`relative flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all active:scale-95 cursor-pointer ${
+                      activeTab === item.name
+                        ? `${item.color} ${item.borderColor} shadow-sm`
+                        : `bg-white border-slate-200 hover:bg-slate-50`
+                    }`}
+                  >
+                    <item.icon className={`h-6 w-6 ${
+                      activeTab === item.name ? "" : "text-slate-500"
+                    }`} />
+                    <span className={`text-[11px] font-bold ${
+                      activeTab === item.name ? "" : "text-slate-600"
+                    }`}>{item.name}</span>
+                    {item.badge && item.badge > 0 && (
+                      <span className="absolute top-2 right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 text-[9px] font-black text-white px-1">
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              {/* Admin-Only Actions Section */}
+              {!isStaffMode && (
+                <div className="border-t border-slate-100 pt-4 space-y-2">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Admin Management</p>
+                  <button
+                    onClick={() => {
+                      setIsStaffModalOpen(true);
+                      setIsMoreDrawerOpen(false);
+                    }}
+                    className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 hover:bg-emerald-50 transition cursor-pointer active:scale-[0.98]"
+                  >
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+                      <UserCheck className="h-4.5 w-4.5" />
+                    </div>
+                    <span>Staff & Buildings</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsPaymentSettingsModalOpen(true);
+                      setIsMoreDrawerOpen(false);
+                    }}
+                    className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 hover:bg-amber-50 transition cursor-pointer active:scale-[0.98]"
+                  >
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
+                      <QrCode className="h-4.5 w-4.5" />
+                    </div>
+                    <span>Payment & QR</span>
+                  </button>
                 </div>
-                <span>Staff & Buildings</span>
-              </button>
-              <button
-                onClick={() => {
-                  setIsPaymentSettingsModalOpen(true);
-                  setIsMoreDrawerOpen(false);
-                }}
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 hover:bg-amber-50 transition cursor-pointer active:scale-[0.98]"
-              >
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
-                  <QrCode className="h-4.5 w-4.5" />
-                </div>
-                <span>Payment & QR</span>
-              </button>
+              )}
             </div>
-          )}
-        </div>
-      </div>
+          </div>
+        </>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
       {/* BOTTOM NAVIGATION BAR — 5-ITEM DOCK (MOBILE ONLY)                */}

@@ -2,6 +2,23 @@
 
 ---
 
+### 📍 Version 8.92 — Elimination of Mobile Drawer Auto-Display & Strict Conditional DOM Mounting 📱🛑✨
+
+```mermaid
+flowchart TD
+    subgraph DrawerMountFix ["More Features Modal Zero-Ghost Mounting"]
+        MountCheck["Strict React Conditional Unmounting:
+        • Replaced CSS translate-y-full with pure {isMoreDrawerOpen && (<Drawer />)}
+        • Eliminates mobile viewport-height calculation glitches
+        • Zero drawer DOM nodes present on initial page load
+        • Only mounts when the user explicitly taps 'More •'"]
+        
+        MountCheck --> CleanMobileView["Clean, Ghost-Free Mobile Interface on All Device Sizes"]
+    end
+```
+
+---
+
 ### 📍 Version 8.91 — More Features Mobile Drawer Touch & Close Handler Optimization 📱✨✕
 
 ```mermaid
