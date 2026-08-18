@@ -2,6 +2,22 @@
 
 ---
 
+### 📍 Version 8.85 — Single-Page A4 Print Alignment, Top-Left Radius Flush & 2-Col Mode Collision Fix 🖨️📄✨
+
+```mermaid
+flowchart TD
+    subgraph PrintPrecisionEngine ["Pixel-Perfect Single-Page A4 Print Engine"]
+        TopFlush["Top-Left Header Polygon Flush (0_0 with border-radius: 0)"]
+        Grid2Col["Payment Mode 2x2 Grid with Zero Horizontal Collision"]
+        HeightFit["Compact Proportional Spacing (pt-2.5) Guaranteeing Single-Page A4 Height (<=297mm)"]
+        FooterPin["Complete Footer Rendered & Pinned to Page 1"]
+        
+        TopFlush --> Grid2Col --> HeightFit --> FooterPin
+    end
+```
+
+---
+
 ### 📍 Version 8.84 — Mobile Payment Modes Grid & Clean Responsive Non-Clipping Footer 📱✨🛠️
 
 ```mermaid
