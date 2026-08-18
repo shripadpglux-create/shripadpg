@@ -1343,7 +1343,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     }
   };
 
-  // Edit Building State
+  // Edit Building State & Per-Room Bed Decider
   const [editingBuilding, setEditingBuilding] = useState<{
     originalName: string;
     name: string;
@@ -1351,6 +1351,45 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     roomsPerFloor: number;
     floorRoomCounts?: Record<number, number>;
   } | null>(null);
+  const [editingBuildingRoomBeds, setEditingBuildingRoomBeds] = useState<Record<string, number>>({});
+  const [expandedEditFloorBeds, setExpandedEditFloorBeds] = useState<Record<number, boolean>>({});
+
+  const handleOpenEditBuilding = (b: { name: string; floors: number; roomsPerFloor: number; floorRoomCounts?: Record<number, number> }) => {
+    setEditingBuilding({
+      originalName: b.name,
+      name: b.name,
+      floors: b.floors,
+      roomsPerFloor: b.roomsPerFloor,
+      floorRoomCounts: b.floorRoomCounts ? { ...b.floorRoomCounts } : {},
+    });
+    // Load current room beds from customRoomSharing
+    const roomBeds: Record<string, number> = {};
+    const indices = getBuildingFloorIndices(b);
+    for (const f of indices) {
+      const rCount = getFloorRoomCount(b, f);
+      for (let r = 1; r <= rCount; r++) {
+        const rNo = f === 0 ? `G${r.toString().padStart(2, "0")}` : `${f}${r.toString().padStart(2, "0")}`;
+        roomBeds[rNo] = customRoomSharing[`${b.name}_${rNo}`] || 2;
+      }
+    }
+    setEditingBuildingRoomBeds(roomBeds);
+    setExpandedEditFloorBeds({});
+  };
+
+  const getTotalBedsForEditingBuilding = () => {
+    if (!editingBuilding) return 0;
+    let total = 0;
+    const indices = getBuildingFloorIndices(editingBuilding);
+    for (const f of indices) {
+      const rCount = getFloorRoomCount(editingBuilding, f);
+      for (let r = 1; r <= rCount; r++) {
+        const rNo = f === 0 ? `G${r.toString().padStart(2, "0")}` : `${f}${r.toString().padStart(2, "0")}`;
+        const bedCount = editingBuildingRoomBeds[rNo] !== undefined ? editingBuildingRoomBeds[rNo] : 2;
+        total += bedCount;
+      }
+    }
+    return total;
+  };
 
   // Accordion Floors state for Building Cards
   const [expandedBuildingFloors, setExpandedBuildingFloors] = useState<Record<string, boolean>>({});
@@ -1419,13 +1458,14 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     });
   };
 
-  // Update Building Handler (Backend Persisted)
+  // Update Building Handler (Backend Persisted + Bed Capacities Sync)
   const handleUpdateBuilding = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingBuilding && editingBuilding.name.trim()) {
       const origName = editingBuilding.originalName;
+      const newName = editingBuilding.name.trim();
       const updatedPayload = {
-        name: editingBuilding.name.trim(),
+        name: newName,
         floors: Number(editingBuilding.floors),
         roomsPerFloor: Number(editingBuilding.roomsPerFloor),
         floorRoomCounts: editingBuilding.floorRoomCounts || {},
@@ -1440,19 +1480,48 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
         const data = await res.json();
         if (data.success && Array.isArray(data.buildings)) {
           setBuildingsList(data.buildings);
+          localStorage.setItem("shripad_cached_buildings", JSON.stringify(data.buildings));
         } else {
-          setBuildingsList((prev) =>
-            prev.map((b) => (b.name === origName ? { ...b, ...updatedPayload } : b))
-          );
+          setBuildingsList((prev) => {
+            const updated = prev.map((b) => (b.name === origName ? { ...b, ...updatedPayload } : b));
+            localStorage.setItem("shripad_cached_buildings", JSON.stringify(updated));
+            return updated;
+          });
         }
       } catch (err) {
         console.error("Failed to update building in backend:", err);
-        setBuildingsList((prev) =>
-          prev.map((b) => (b.name === origName ? { ...b, ...updatedPayload } : b))
-        );
+        setBuildingsList((prev) => {
+          const updated = prev.map((b) => (b.name === origName ? { ...b, ...updatedPayload } : b));
+          localStorage.setItem("shripad_cached_buildings", JSON.stringify(updated));
+          return updated;
+        });
+      }
+
+      // Persist per-room custom beds to customRoomSharing
+      const updatedSharing = { ...customRoomSharing };
+      if (origName !== newName) {
+        Object.keys(updatedSharing).forEach((k) => {
+          if (k.startsWith(`${origName}_`)) {
+            delete updatedSharing[k];
+          }
+        });
+      }
+      const indices = getBuildingFloorIndices(editingBuilding);
+      for (const f of indices) {
+        const rCount = getFloorRoomCount(editingBuilding, f);
+        for (let r = 1; r <= rCount; r++) {
+          const rNo = f === 0 ? `G${r.toString().padStart(2, "0")}` : `${f}${r.toString().padStart(2, "0")}`;
+          const bedCount = editingBuildingRoomBeds[rNo] !== undefined ? editingBuildingRoomBeds[rNo] : (customRoomSharing[`${origName}_${rNo}`] || 2);
+          updatedSharing[`${newName}_${rNo}`] = bedCount;
+        }
+      }
+      setCustomRoomSharing(updatedSharing);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("shripad_custom_room_sharing", JSON.stringify(updatedSharing));
       }
 
       setEditingBuilding(null);
+      showToast(`Property "${newName}" updated with room bed layout!`, "success");
     }
   };
 
@@ -4410,8 +4479,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                           <span className="rounded-full bg-[#F0F4FF] px-2.5 py-0.5 text-[10px] font-black text-[#00022E] border border-blue-200/80">Active Property</span>
                           <button
                             title="Edit Building Details"
-                            onClick={() => setEditingBuilding({ originalName: b.name, name: b.name, floors: b.floors, roomsPerFloor: b.roomsPerFloor })}
-                            className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-brand-green hover:text-white transition cursor-pointer"
+                            onClick={() => handleOpenEditBuilding(b)}
+                            className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-[#00022E] hover:text-white transition cursor-pointer"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </button>
@@ -6311,29 +6380,34 @@ function doPost(e) {
         </div>
       )}
 
-      {/* EDIT BUILDING MODAL */}
+      {/* EDIT BUILDING MODAL WITH GRANULAR PER-ROOM BED DECIDER */}
       {editingBuilding && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-[2px] animate-in fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in"
           onClick={() => setEditingBuilding(null)}
         >
           <div
-            className="relative w-full max-w-md rounded-[2.5rem] bg-white p-6 sm:p-8 shadow-2xl border border-slate-200/90 space-y-5 animate-in zoom-in-95"
+            className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] bg-white p-5 sm:p-7 shadow-2xl border border-slate-200/90 space-y-5 animate-in zoom-in-95"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Header */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-green/10 text-brand-green border border-brand-green/20">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#F0F4FF] text-[#00022E] border border-blue-200">
                   <Pencil className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-black text-slate-900">Edit Building Details</h2>
-                  <p className="text-[11px] font-semibold text-slate-400">Modify property name & room configuration</p>
+                  <h2 className="text-lg sm:text-xl font-black text-slate-900 flex items-center gap-2">
+                    Edit Building Details 🏢✏️
+                  </h2>
+                  <p className="text-xs font-semibold text-slate-500">
+                    Modify property name, room layout & bed configurations (Up to 8 Beds)
+                  </p>
                 </div>
               </div>
               <button
                 onClick={() => setEditingBuilding(null)}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -6341,19 +6415,19 @@ function doPost(e) {
 
             <form onSubmit={handleUpdateBuilding} className="space-y-4 text-xs font-bold">
               <div>
-                <label className="block text-slate-600 mb-1.5">Building Name / Code *</label>
+                <label className="block text-slate-600 mb-1.5 font-extrabold">Building Name / Code *</label>
                 <input
                   type="text"
                   required
                   value={editingBuilding.name}
                   onChange={(e) => setEditingBuilding({ ...editingBuilding, name: e.target.value })}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 text-slate-800 outline-none focus:border-brand-green focus:bg-white transition"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 text-slate-800 outline-none focus:border-[#00022E] focus:bg-white transition"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-600 mb-1.5">Total Floors *</label>
+                  <label className="block text-slate-600 mb-1.5 font-extrabold">Total Floors *</label>
                   <input
                     type="number"
                     min="1"
@@ -6364,11 +6438,11 @@ function doPost(e) {
                       const parsed = val === "" ? 0 : parseInt(val.replace(/^0+/, "") || "0", 10);
                       setEditingBuilding({ ...editingBuilding, floors: isNaN(parsed) ? 0 : parsed });
                     }}
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 text-slate-800 outline-none focus:border-brand-green focus:bg-white transition"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 text-slate-800 outline-none focus:border-[#00022E] focus:bg-white transition"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-600 mb-1.5">Standard Rooms per Floor *</label>
+                  <label className="block text-slate-600 mb-1.5 font-extrabold">Standard Rooms per Floor *</label>
                   <input
                     type="number"
                     min="1"
@@ -6379,83 +6453,189 @@ function doPost(e) {
                       const parsed = val === "" ? 0 : parseInt(val.replace(/^0+/, "") || "0", 10);
                       setEditingBuilding({ ...editingBuilding, roomsPerFloor: isNaN(parsed) ? 0 : parsed });
                     }}
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 text-slate-800 outline-none focus:border-brand-green focus:bg-white transition"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 text-slate-800 outline-none focus:border-[#00022E] focus:bg-white transition"
                   />
                 </div>
               </div>
 
-              {/* LIVE PER-FLOOR PG ROOM CUSTOMIZER IN EDIT MODAL */}
+              {/* LIVE PER-FLOOR & PER-ROOM BED CUSTOMIZER IN EDIT MODAL */}
               <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2.5 text-xs">
                 <div className="flex items-center justify-between font-extrabold text-slate-700">
-                  <span className="flex items-center gap-1.5 text-brand-green">
-                    <Layers className="h-4 w-4" /> Customize PG Rooms per Floor
+                  <span className="flex items-center gap-1.5 text-[#00022E]">
+                    <Layers className="h-4 w-4" /> Customize Floor Layout & Beds
                   </span>
-                  <span className="text-[11px] font-extrabold text-[#00022E] bg-[#F0F4FF]/70 border border-blue-200 px-2.5 py-0.5 rounded-full">
-                    {getTotalRoomsForBuilding(editingBuilding)} Total PG Rooms
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[11px] font-extrabold text-slate-700 bg-white border border-slate-200 px-2.5 py-0.5 rounded-full shadow-2xs">
+                      {getTotalRoomsForBuilding(editingBuilding)} Rooms
+                    </span>
+                    <span className="text-[11px] font-black text-[#00022E] bg-[#F0F4FF] border border-blue-200 px-2.5 py-0.5 rounded-full shadow-2xs">
+                      🛏️ {getTotalBedsForEditingBuilding()} Total Beds
+                    </span>
+                  </div>
                 </div>
                 <p className="text-[11px] text-slate-500 font-medium">
-                  Set specific room counts (e.g., Ground Floor = 1 room, 1st Floor = 2 rooms):
+                  Set specific room counts, or click <strong className="text-slate-700">"Customize Room Beds"</strong> to configure exact beds (1 to 8) for each room:
                 </p>
 
-                <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                <div className="max-h-64 overflow-y-auto space-y-2.5 pr-1">
                   {getBuildingFloorIndices(editingBuilding).map((flIdx) => {
                     const flName = flIdx === 0 ? "Ground Floor" : flIdx === 1 ? "1st Floor" : flIdx === 2 ? "2nd Floor" : flIdx === 3 ? "3rd Floor" : `${flIdx}th Floor`;
                     const currentRooms = getFloorRoomCount(editingBuilding, flIdx);
                     const startRoom = flIdx === 0 ? `G01` : `${flIdx}01`;
                     const endRoom = flIdx === 0 ? `G${currentRooms.toString().padStart(2, "0")}` : `${flIdx}${currentRooms.toString().padStart(2, "0")}`;
+                    const isBedsExpanded = !!expandedEditFloorBeds[flIdx];
 
                     return (
-                      <div key={flIdx} className={`p-2.5 rounded-xl border transition-all flex items-center justify-between gap-2 shadow-2xs ${currentRooms === 0 ? "bg-amber-50/60 border-amber-200" : "bg-white border-slate-200/80"}`}>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-bold text-slate-800 block truncate">🏢 {flName}</span>
+                      <div key={flIdx} className={`p-3 rounded-2xl border transition-all space-y-2 shadow-2xs ${currentRooms === 0 ? "bg-amber-50/60 border-amber-200" : "bg-white border-slate-200/80"}`}>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="font-bold text-slate-800 text-xs truncate">🏢 {flName}</span>
                             {flIdx === 0 && currentRooms === 0 && (
-                              <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 border border-amber-300">Ground Floor Excluded</span>
+                              <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 border border-amber-300 shrink-0">
+                                Ground Floor Excluded
+                              </span>
                             )}
                           </div>
-                          <span className={`text-[10px] font-extrabold block ${currentRooms === 0 ? "text-amber-800" : "text-brand-green"}`}>
-                            {currentRooms === 0 ? "🚫 0 Rooms (Parking / Commercial / Reception)" : currentRooms === 1 ? `Room ${startRoom}` : `Rooms ${startRoom} – ${endRoom}`}
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="text-[10px] text-slate-500 font-semibold">PG Rooms:</span>
+                            <input
+                              type="number"
+                              min="0"
+                              max="50"
+                              placeholder="0"
+                              value={currentRooms === 0 ? "" : currentRooms}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                const num = val === "" ? 0 : parseInt(val.replace(/^0+/, "") || "0", 10);
+                                setEditingBuilding({
+                                  ...editingBuilding,
+                                  floorRoomCounts: {
+                                    ...editingBuilding.floorRoomCounts,
+                                    [flIdx]: isNaN(num) ? 0 : num,
+                                  },
+                                });
+                              }}
+                              className="w-16 rounded-xl border border-slate-200 bg-slate-50 p-1.5 text-center text-xs font-bold text-slate-900 outline-none focus:border-[#00022E] focus:bg-white shadow-2xs"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-2 pt-0.5 flex-wrap">
+                          <span className={`text-[10px] font-extrabold truncate ${currentRooms === 0 ? "text-amber-800" : "text-[#00022E]"}`}>
+                            {currentRooms === 0 ? "🚫 0 Rooms (Parking / Reception)" : currentRooms === 1 ? `Room ${startRoom}` : `Rooms ${startRoom} – ${endRoom}`}
                           </span>
+
+                          <div className="flex items-center gap-1.5">
+                            {currentRooms > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => setExpandedEditFloorBeds((prev) => ({ ...prev, [flIdx]: !prev[flIdx] }))}
+                                className="text-[10px] font-extrabold text-[#00022E] bg-[#F0F4FF] hover:bg-blue-100 px-2.5 py-1 rounded-lg border border-blue-200 transition cursor-pointer flex items-center gap-1"
+                              >
+                                <Bed className="h-3 w-3" />
+                                <span>{isBedsExpanded ? "Hide Room Beds ▲" : "Customize Room Beds ▼"}</span>
+                              </button>
+                            )}
+
+                            {flIdx === 0 && (
+                              currentRooms > 0 ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingBuilding({
+                                    ...editingBuilding,
+                                    floorRoomCounts: {
+                                      ...editingBuilding.floorRoomCounts,
+                                      0: 0,
+                                    },
+                                  })}
+                                  className="text-[10px] font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 px-2 py-0.5 rounded-lg border border-rose-200 transition cursor-pointer shrink-0"
+                                  title="Set Ground Floor to 0 Rooms if used for Parking or Reception"
+                                >
+                                  Exclude GF (0 Rooms)
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingBuilding({
+                                    ...editingBuilding,
+                                    floorRoomCounts: {
+                                      ...editingBuilding.floorRoomCounts,
+                                      0: editingBuilding.roomsPerFloor || 4,
+                                    },
+                                  })}
+                                  className="text-[10px] font-bold text-[#00022E] bg-[#F0F4FF] hover:bg-[#F0F4FF] px-2 py-0.5 rounded-lg border border-blue-200 transition cursor-pointer shrink-0"
+                                >
+                                  Restore GF Rooms
+                                </button>
+                              )
+                            )}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          {flIdx === 0 && currentRooms > 0 && (
-                            <button
-                              type="button"
-                              onClick={() => setEditingBuilding({
-                                ...editingBuilding,
-                                floorRoomCounts: {
-                                  ...editingBuilding.floorRoomCounts,
-                                  0: 0,
-                                },
+
+                        {/* Granular Per-Room Bed Decider Grid for this Floor (Max 8 Beds) */}
+                        {isBedsExpanded && currentRooms > 0 && (
+                          <div className="pt-2 border-t border-slate-100 space-y-2.5 bg-slate-50/70 p-2.5 rounded-xl animate-in fade-in">
+                            <div className="flex items-center justify-between flex-wrap gap-1">
+                              <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider">
+                                Set Beds per Room (Max 8 Beds):
+                              </span>
+                              <div className="flex items-center gap-1">
+                                <span className="text-[9px] text-slate-500 font-semibold">Set Floor:</span>
+                                {[1, 2, 3, 4, 5, 6, 7, 8].map((bNum) => (
+                                  <button
+                                    key={bNum}
+                                    type="button"
+                                    onClick={() => {
+                                      const updated = { ...editingBuildingRoomBeds };
+                                      for (let r = 1; r <= currentRooms; r++) {
+                                        const rNo = flIdx === 0 ? `G${r.toString().padStart(2, "0")}` : `${flIdx}${r.toString().padStart(2, "0")}`;
+                                        updated[rNo] = bNum;
+                                      }
+                                      setEditingBuildingRoomBeds(updated);
+                                    }}
+                                    className="px-1.5 py-0.5 rounded bg-white hover:bg-[#00022E] hover:text-white border border-slate-200 text-[9px] font-black text-slate-700 transition cursor-pointer"
+                                    title={`Set all rooms on ${flName} to ${bNum} beds`}
+                                  >
+                                    {bNum}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {Array.from({ length: currentRooms }, (_, rIdx) => {
+                                const rNo = flIdx === 0 ? `G${(rIdx + 1).toString().padStart(2, "0")}` : `${flIdx}${(rIdx + 1).toString().padStart(2, "0")}`;
+                                const roomBedVal = editingBuildingRoomBeds[rNo] !== undefined ? editingBuildingRoomBeds[rNo] : 2;
+
+                                return (
+                                  <div key={rNo} className="p-2 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center justify-between gap-2">
+                                    <div className="min-w-0">
+                                      <span className="font-extrabold text-[11px] text-slate-900 block truncate">Room {rNo}</span>
+                                      <span className="text-[9px] font-bold text-[#00022E]">🛏️ {roomBedVal} {roomBedVal === 1 ? "Bed" : "Beds"}</span>
+                                    </div>
+                                    <div className="flex items-center gap-0.5">
+                                      {[1, 2, 3, 4, 5, 6, 7, 8].map((bCount) => (
+                                        <button
+                                          key={bCount}
+                                          type="button"
+                                          onClick={() => setEditingBuildingRoomBeds((prev) => ({ ...prev, [rNo]: bCount }))}
+                                          className={`h-6 w-6 rounded-md text-[10px] font-black flex items-center justify-center transition cursor-pointer ${
+                                            roomBedVal === bCount
+                                              ? "bg-[#00022E] text-white shadow-xs scale-105"
+                                              : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/80"
+                                          }`}
+                                          title={`Set Room ${rNo} to ${bCount} beds`}
+                                        >
+                                          {bCount}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                );
                               })}
-                              className="text-[10px] font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 px-2 py-1 rounded-lg border border-rose-200 transition cursor-pointer"
-                              title="Set Ground Floor to 0 Rooms if used for Parking or Reception"
-                            >
-                              Exclude GF (0 Rooms)
-                            </button>
-                          )}
-                          <span className="text-[10px] text-slate-500 font-semibold">PG Rooms:</span>
-                          <input
-                            type="number"
-                            min="0"
-                            max="50"
-                            placeholder="0"
-                            value={currentRooms === 0 ? "" : currentRooms}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              const num = val === "" ? 0 : parseInt(val.replace(/^0+/, "") || "0", 10);
-                              setEditingBuilding({
-                                ...editingBuilding,
-                                floorRoomCounts: {
-                                  ...editingBuilding.floorRoomCounts,
-                                  [flIdx]: isNaN(num) ? 0 : num,
-                                },
-                              });
-                            }}
-                            className="w-16 rounded-xl border border-slate-200 bg-slate-50 p-1.5 text-center text-xs font-bold text-slate-900 outline-none focus:border-brand-green focus:bg-white"
-                          />
-                        </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -6466,14 +6646,15 @@ function doPost(e) {
                 <button
                   type="button"
                   onClick={() => setEditingBuilding(null)}
-                  className="rounded-full px-5 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+                  className="rounded-full px-5 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-full bg-brand-green hover:bg-brand-gold text-white px-6 py-2.5 text-xs font-black shadow-md transition-all active:scale-95 cursor-pointer"
+                  className="rounded-full bg-[#00022E] hover:bg-[#00044A] text-white px-6 py-2.5 text-xs font-black shadow-md transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
                 >
+                  <Save className="h-4 w-4" />
                   Save Changes
                 </button>
               </div>

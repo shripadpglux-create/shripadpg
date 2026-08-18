@@ -2,6 +2,30 @@
 
 ---
 
+### 📍 Version 9.17 — Granular Per-Room Bed Decider (Up to 8 Beds) for Existing Buildings 🏢✏️🛏️
+
+```mermaid
+flowchart TD
+    subgraph EditBuildingBedCustomization ["Granular Per-Room Bed Control in Edit Building Details"]
+        EditModal["1. 'Edit Building Details' Modal:
+        • Open via Pencil Icon on any Building Card (loads current room bed map)
+        • Floor Accordions (Ground, 1st, 2nd, 3rd... up to Nth Floor)
+        • Per-Room Bed Decider Chips: [1][2][3][4][5][6][7][8] Beds per room
+        • Floor Bulk Actions: 'Set Floor: [1][2][3][4][5][6][7][8]'
+        • Dynamic Live Bed Counter: {Total Rooms} • {Total Beds}"]
+
+        EditModal --> SyncHandler["handleUpdateBuilding & Key Migration Engine:
+        • Updates building name, floor counts, room counts in Backend & LocalStorage
+        • If renamed, migrates customRoomSharing keys seamlessly
+        • Updates room bed capacities (e.g. 101: 3 Beds, 102: 2 Beds, 104: 3 Beds)"]
+
+        SyncHandler --> Storage["localStorage (shripad_custom_room_sharing) & State Sync"]
+        Storage --> LiveMetrics["Live Overview KPIs & Occupancy Explorer Recalculation"]
+    end
+```
+
+---
+
 ### 📍 Version 9.16 — Granular Per-Room Bed Decider (Up to 8 Beds) & Live Customizer 🛏️⚡🏢
 
 ```mermaid
