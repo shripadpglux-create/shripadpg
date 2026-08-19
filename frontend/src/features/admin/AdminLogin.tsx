@@ -14,6 +14,19 @@ export function AdminLogin() {
 
   const API_BASE = API_BASE_URL;
 
+  // Persistent Session Guard
+  React.useEffect(() => {
+    try {
+      const adminSessionStr = localStorage.getItem("shripad_admin_session");
+      if (adminSessionStr) {
+        const parsed = JSON.parse(adminSessionStr);
+        if (parsed && parsed.authenticated) {
+          navigate({ to: "/admin/dashboard" as any });
+        }
+      }
+    } catch {}
+  }, [navigate]);
+
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim() || !password.trim()) {

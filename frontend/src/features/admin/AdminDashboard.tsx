@@ -322,6 +322,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     phone?: string | null;
     pushName?: string | null;
     sessionId?: string | null;
+    openwaUrl?: string | null;
   } | null>(null);
   const [whatsappQrCode, setWhatsappQrCode] = useState<string | null>(null);
   const [isCheckingWhatsApp, setIsCheckingWhatsApp] = useState(false);
@@ -543,6 +544,11 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
         setNewPaymentTxnId("");
         setNewPaymentSmsText("");
         setSmsVerifyStatus(data.smsMatchResult ? { isMatch: data.smsMatchResult.isMatch, message: data.smsMatchResult.reason } : null);
+        // Sync to customer session for real-time portal updates
+        try {
+          const cs = localStorage.getItem("shripad_customer_session");
+          if (cs) { const s = JSON.parse(cs); if (s.id === data.booking.id) localStorage.setItem("shripad_customer_session", JSON.stringify(data.booking)); }
+        } catch {}
       }
     } catch (err) {
       console.error("Failed to submit payment:", err);
@@ -563,6 +569,11 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       if (data.success && data.booking) {
         setBookings((prev) => prev.map((b) => (b.id === data.booking.id ? data.booking : b)));
         setSelectedHistoryResident(data.booking);
+        // Sync to customer session for real-time portal updates
+        try {
+          const cs = localStorage.getItem("shripad_customer_session");
+          if (cs) { const s = JSON.parse(cs); if (s.id === data.booking.id) localStorage.setItem("shripad_customer_session", JSON.stringify(data.booking)); }
+        } catch {}
       }
     } catch (err) {
       console.error("Failed to verify payment:", err);
@@ -582,6 +593,11 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
         setBookings((prev) => prev.map((b) => (b.id === data.booking.id ? data.booking : b)));
         setSelectedHistoryResident(data.booking);
         setActiveTab("Invoice");
+        // Sync to customer session for real-time portal updates
+        try {
+          const cs = localStorage.getItem("shripad_customer_session");
+          if (cs) { const s = JSON.parse(cs); if (s.id === data.booking.id) localStorage.setItem("shripad_customer_session", JSON.stringify(data.booking)); }
+        } catch {}
       }
     } catch (err) {
       console.error("Failed to verify payment and raise invoice:", err);
@@ -601,6 +617,11 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       if (data.success && data.booking) {
         setBookings((prev) => prev.map((b) => (b.id === data.booking.id ? data.booking : b)));
         setSelectedHistoryResident(data.booking);
+        // Sync to customer session for real-time portal updates
+        try {
+          const cs = localStorage.getItem("shripad_customer_session");
+          if (cs) { const s = JSON.parse(cs); if (s.id === data.booking.id) localStorage.setItem("shripad_customer_session", JSON.stringify(data.booking)); }
+        } catch {}
       }
     } catch (err) {
       console.error("Failed to reject payment:", err);
@@ -638,6 +659,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     floors: number;
     roomsPerFloor: number;
     floorRoomCounts?: Record<number, number>;
+    roomBeds?: Record<string, number>;
     blockedRooms?: string[];
   }>>(() => {
     if (typeof window !== "undefined") {
@@ -660,6 +682,24 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
         setBuildingsList(data.buildings);
         if (typeof window !== "undefined") {
           localStorage.setItem("shripad_cached_buildings", JSON.stringify(data.buildings));
+
+          // Auto-sync roomBeds from database into customRoomSharing
+          const currentSharing = { ...customRoomSharing };
+          let changed = false;
+          data.buildings.forEach((b: any) => {
+            if (b.roomBeds && typeof b.roomBeds === "object") {
+              Object.entries(b.roomBeds).forEach(([rNo, bCount]) => {
+                if (currentSharing[`${b.name}_${rNo}`] !== Number(bCount)) {
+                  currentSharing[`${b.name}_${rNo}`] = Number(bCount);
+                  changed = true;
+                }
+              });
+            }
+          });
+          if (changed) {
+            setCustomRoomSharing(currentSharing);
+            localStorage.setItem("shripad_custom_room_sharing", JSON.stringify(currentSharing));
+          }
         }
       }
     } catch (err) {
@@ -1231,48 +1271,128 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     return total;
   };
 
-  // Bed Capacity Modifier Handlers
+  // Bed Capacity Modifier Handlers (Auto-Synced with Backend and Local State)
   const setRoomBedCapacity = (bldName: string, roomNo: string, bedsCount: number) => {
     const cleanRoom = (roomNo || "").toString().replace(/^Room\s+/i, "").trim();
     const updated = {
       ...customRoomSharing,
       [`${bldName}_${cleanRoom}`]: bedsCount,
+      [`${bldName}_${roomNo}`]: bedsCount,
     };
     setCustomRoomSharing(updated);
     if (typeof window !== "undefined") {
       localStorage.setItem("shripad_custom_room_sharing", JSON.stringify(updated));
     }
+
+    // Update building in buildingsList state & persist to backend
+    setBuildingsList((prev) =>
+      prev.map((b) => {
+        if (b.name.toLowerCase() === bldName.toLowerCase()) {
+          const updatedRoomBeds = { ...(b.roomBeds || {}), [cleanRoom]: bedsCount, [roomNo]: bedsCount };
+          fetch(`${API_BASE_URL}/api/buildings/${encodeURIComponent(b.name)}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: b.name,
+              floors: b.floors,
+              roomsPerFloor: b.roomsPerFloor,
+              floorRoomCounts: b.floorRoomCounts || {},
+              roomBeds: updatedRoomBeds,
+            }),
+          }).catch((err) => console.warn("Bed sync warning:", err));
+
+          return { ...b, roomBeds: updatedRoomBeds };
+        }
+        return b;
+      })
+    );
   };
 
   const setFloorBedCapacity = (bldName: string, floorIdx: number, bedsCount: number) => {
     const bldObj = buildingsList.find((b) => b.name === bldName) || { floors: 4, roomsPerFloor: 4 };
     const rCount = getFloorRoomCount(bldObj, floorIdx);
     const updated = { ...customRoomSharing };
+    const newRoomBeds: Record<string, number> = {};
+
     for (let r = 1; r <= rCount; r++) {
       const rNo = floorIdx === 0 ? `G${r.toString().padStart(2, "0")}` : `${floorIdx}${r.toString().padStart(2, "0")}`;
+      const cleanNo = rNo.replace(/^Room\s+/i, "");
       updated[`${bldName}_${rNo}`] = bedsCount;
+      updated[`${bldName}_${cleanNo}`] = bedsCount;
+      newRoomBeds[rNo] = bedsCount;
+      newRoomBeds[cleanNo] = bedsCount;
     }
     setCustomRoomSharing(updated);
     if (typeof window !== "undefined") {
       localStorage.setItem("shripad_custom_room_sharing", JSON.stringify(updated));
     }
+
+    setBuildingsList((prev) =>
+      prev.map((b) => {
+        if (b.name.toLowerCase() === bldName.toLowerCase()) {
+          const updatedRoomBeds = { ...(b.roomBeds || {}), ...newRoomBeds };
+          fetch(`${API_BASE_URL}/api/buildings/${encodeURIComponent(b.name)}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: b.name,
+              floors: b.floors,
+              roomsPerFloor: b.roomsPerFloor,
+              floorRoomCounts: b.floorRoomCounts || {},
+              roomBeds: updatedRoomBeds,
+            }),
+          }).catch((err) => console.warn("Floor bed sync warning:", err));
+
+          return { ...b, roomBeds: updatedRoomBeds };
+        }
+        return b;
+      })
+    );
   };
 
   const setBuildingAllBedCapacity = (bldName: string, bedsCount: number) => {
     const bldObj = buildingsList.find((b) => b.name === bldName) || { floors: 4, roomsPerFloor: 4 };
     const updated = { ...customRoomSharing };
     const indices = getBuildingFloorIndices(bldObj);
+    const newRoomBeds: Record<string, number> = {};
+
     for (const f of indices) {
       const rCount = getFloorRoomCount(bldObj, f);
       for (let r = 1; r <= rCount; r++) {
         const rNo = f === 0 ? `G${r.toString().padStart(2, "0")}` : `${f}${r.toString().padStart(2, "0")}`;
+        const cleanNo = rNo.replace(/^Room\s+/i, "");
         updated[`${bldName}_${rNo}`] = bedsCount;
+        updated[`${bldName}_${cleanNo}`] = bedsCount;
+        newRoomBeds[rNo] = bedsCount;
+        newRoomBeds[cleanNo] = bedsCount;
       }
     }
     setCustomRoomSharing(updated);
     if (typeof window !== "undefined") {
       localStorage.setItem("shripad_custom_room_sharing", JSON.stringify(updated));
     }
+
+    setBuildingsList((prev) =>
+      prev.map((b) => {
+        if (b.name.toLowerCase() === bldName.toLowerCase()) {
+          const updatedRoomBeds = { ...(b.roomBeds || {}), ...newRoomBeds };
+          fetch(`${API_BASE_URL}/api/buildings/${encodeURIComponent(b.name)}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: b.name,
+              floors: b.floors,
+              roomsPerFloor: b.roomsPerFloor,
+              floorRoomCounts: b.floorRoomCounts || {},
+              roomBeds: updatedRoomBeds,
+            }),
+          }).catch((err) => console.warn("All bed sync warning:", err));
+
+          return { ...b, roomBeds: updatedRoomBeds };
+        }
+        return b;
+      })
+    );
   };
 
   const handleAddBuilding = async (e: React.FormEvent) => {
@@ -1282,11 +1402,27 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
         ? newBuildingName.trim()
         : `PG ${newBuildingName.trim()}`;
 
+      const bldObj = {
+        floors: Number(newBuildingFloors) || 1,
+        roomsPerFloor: Number(newBuildingRoomsPerFloor) || 1,
+        floorRoomCounts: { ...newFloorRoomCounts },
+      };
+      const generatedRoomBeds: Record<string, number> = {};
+      const indices = getBuildingFloorIndices(bldObj);
+      for (const f of indices) {
+        const rCount = getFloorRoomCount(bldObj, f);
+        for (let r = 1; r <= rCount; r++) {
+          const rNo = f === 0 ? `G${r.toString().padStart(2, "0")}` : `${f}${r.toString().padStart(2, "0")}`;
+          generatedRoomBeds[rNo] = newBuildingRoomBeds[rNo] !== undefined ? newBuildingRoomBeds[rNo] : (newBuildingDefaultBeds || 2);
+        }
+      }
+
       const payload = {
         name: formatted,
         floors: Number(newBuildingFloors) || 1,
         roomsPerFloor: Number(newBuildingRoomsPerFloor) || 1,
         floorRoomCounts: { ...newFloorRoomCounts },
+        roomBeds: generatedRoomBeds,
       };
 
       try {
@@ -1317,16 +1453,9 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
       // Initialize room bed sharing for this new building with custom per-room overrides
       const updatedSharing = { ...customRoomSharing };
-      const bldObj = { floors: Number(newBuildingFloors) || 1, roomsPerFloor: Number(newBuildingRoomsPerFloor) || 1, floorRoomCounts: { ...newFloorRoomCounts } };
-      const indices = getBuildingFloorIndices(bldObj);
-      for (const f of indices) {
-        const rCount = getFloorRoomCount(bldObj, f);
-        for (let r = 1; r <= rCount; r++) {
-          const rNo = f === 0 ? `G${r.toString().padStart(2, "0")}` : `${f}${r.toString().padStart(2, "0")}`;
-          const customBeds = newBuildingRoomBeds[rNo] !== undefined ? newBuildingRoomBeds[rNo] : (newBuildingDefaultBeds || 2);
-          updatedSharing[`${formatted}_${rNo}`] = customBeds;
-        }
-      }
+      Object.entries(generatedRoomBeds).forEach(([rNo, count]) => {
+        updatedSharing[`${formatted}_${rNo}`] = count;
+      });
       setCustomRoomSharing(updatedSharing);
       if (typeof window !== "undefined") {
         localStorage.setItem("shripad_custom_room_sharing", JSON.stringify(updatedSharing));
@@ -1352,26 +1481,42 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     floors: number;
     roomsPerFloor: number;
     floorRoomCounts?: Record<number, number>;
+    roomBeds?: Record<string, number>;
   } | null>(null);
   const [editingBuildingRoomBeds, setEditingBuildingRoomBeds] = useState<Record<string, number>>({});
   const [expandedEditFloorBeds, setExpandedEditFloorBeds] = useState<Record<number, boolean>>({});
 
-  const handleOpenEditBuilding = (b: { name: string; floors: number; roomsPerFloor: number; floorRoomCounts?: Record<number, number> }) => {
+  const handleOpenEditBuilding = (b: { name: string; floors: number; roomsPerFloor: number; floorRoomCounts?: Record<number, number>; roomBeds?: Record<string, number> }) => {
+    // Look up latest building record from buildingsList
+    const latestBld = buildingsList.find((item) => item.name === b.name) || b;
+
     setEditingBuilding({
-      originalName: b.name,
-      name: b.name,
-      floors: b.floors,
-      roomsPerFloor: b.roomsPerFloor,
-      floorRoomCounts: b.floorRoomCounts ? { ...b.floorRoomCounts } : {},
+      originalName: latestBld.name,
+      name: latestBld.name,
+      floors: latestBld.floors,
+      roomsPerFloor: latestBld.roomsPerFloor,
+      floorRoomCounts: latestBld.floorRoomCounts ? { ...latestBld.floorRoomCounts } : {},
+      roomBeds: latestBld.roomBeds ? { ...latestBld.roomBeds } : {},
     });
-    // Load current room beds from customRoomSharing
+
+    // Load current room beds directly using single source of truth: getRoomBedState!
     const roomBeds: Record<string, number> = {};
-    const indices = getBuildingFloorIndices(b);
+    const indices = getBuildingFloorIndices(latestBld);
     for (const f of indices) {
-      const rCount = getFloorRoomCount(b, f);
+      const rCount = getFloorRoomCount(latestBld, f);
       for (let r = 1; r <= rCount; r++) {
         const rNo = f === 0 ? `G${r.toString().padStart(2, "0")}` : `${f}${r.toString().padStart(2, "0")}`;
-        roomBeds[rNo] = customRoomSharing[`${b.name}_${rNo}`] || 2;
+        const cleanNo = rNo.replace(/^Room\s+/i, "");
+        const capacityFromPipeline = getRoomBedState(latestBld.name, rNo).capacity;
+
+        roomBeds[rNo] =
+          latestBld.roomBeds?.[rNo] ??
+          latestBld.roomBeds?.[cleanNo] ??
+          customRoomSharing[`${latestBld.name}_${rNo}`] ??
+          customRoomSharing[`${latestBld.name}_${cleanNo}`] ??
+          customRoomSharing[`${b.name}_${rNo}`] ??
+          customRoomSharing[`${b.name}_${cleanNo}`] ??
+          capacityFromPipeline;
       }
     }
     setEditingBuildingRoomBeds(roomBeds);
@@ -1386,8 +1531,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       const rCount = getFloorRoomCount(editingBuilding, f);
       for (let r = 1; r <= rCount; r++) {
         const rNo = f === 0 ? `G${r.toString().padStart(2, "0")}` : `${f}${r.toString().padStart(2, "0")}`;
-        const bedCount = editingBuildingRoomBeds[rNo] !== undefined ? editingBuildingRoomBeds[rNo] : 2;
-        total += bedCount;
+        const cleanNo = rNo.replace(/^Room\s+/i, "");
+        const capacityFromPipeline = getRoomBedState(editingBuilding.originalName || editingBuilding.name, rNo).capacity;
+        const bedCount =
+          editingBuildingRoomBeds[rNo] !== undefined
+            ? editingBuildingRoomBeds[rNo]
+            : (editingBuilding.roomBeds?.[rNo] ?? editingBuilding.roomBeds?.[cleanNo] ?? customRoomSharing[`${editingBuilding.name}_${rNo}`] ?? capacityFromPipeline);
+        total += Number(bedCount);
       }
     }
     return total;
@@ -1466,11 +1616,27 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     if (editingBuilding && editingBuilding.name.trim()) {
       const origName = editingBuilding.originalName;
       const newName = editingBuilding.name.trim();
+
+      const indices = getBuildingFloorIndices(editingBuilding);
+      const generatedRoomBeds: Record<string, number> = {};
+      for (const f of indices) {
+        const rCount = getFloorRoomCount(editingBuilding, f);
+        for (let r = 1; r <= rCount; r++) {
+          const rNo = f === 0 ? `G${r.toString().padStart(2, "0")}` : `${f}${r.toString().padStart(2, "0")}`;
+          const cleanNo = rNo.replace(/^Room\s+/i, "");
+          generatedRoomBeds[rNo] =
+            editingBuildingRoomBeds[rNo] !== undefined
+              ? editingBuildingRoomBeds[rNo]
+              : (customRoomSharing[`${origName}_${rNo}`] ?? customRoomSharing[`${origName}_${cleanNo}`] ?? 2);
+        }
+      }
+
       const updatedPayload = {
         name: newName,
         floors: Number(editingBuilding.floors),
         roomsPerFloor: Number(editingBuilding.roomsPerFloor),
         floorRoomCounts: editingBuilding.floorRoomCounts || {},
+        roomBeds: generatedRoomBeds,
       };
 
       try {
@@ -1508,15 +1674,9 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
           }
         });
       }
-      const indices = getBuildingFloorIndices(editingBuilding);
-      for (const f of indices) {
-        const rCount = getFloorRoomCount(editingBuilding, f);
-        for (let r = 1; r <= rCount; r++) {
-          const rNo = f === 0 ? `G${r.toString().padStart(2, "0")}` : `${f}${r.toString().padStart(2, "0")}`;
-          const bedCount = editingBuildingRoomBeds[rNo] !== undefined ? editingBuildingRoomBeds[rNo] : (customRoomSharing[`${origName}_${rNo}`] || 2);
-          updatedSharing[`${newName}_${rNo}`] = bedCount;
-        }
-      }
+      Object.entries(generatedRoomBeds).forEach(([rNo, count]) => {
+        updatedSharing[`${newName}_${rNo}`] = count;
+      });
       setCustomRoomSharing(updatedSharing);
       if (typeof window !== "undefined") {
         localStorage.setItem("shripad_custom_room_sharing", JSON.stringify(updatedSharing));
@@ -1814,25 +1974,39 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     });
   };
 
-  // Centralized Room & Bed Occupancy Pipeline (Supports 1-Sharing, 2-Sharing, 3-Sharing, 4-Sharing, 5-Sharing, 6-Sharing)
+  // Centralized Room & Bed Occupancy Pipeline (Supports 1-Sharing to 10-Sharing)
   const getRoomBedState = (buildingName: string, roomNo: string) => {
     const allocations = getAllocationsForRoom(buildingName, roomNo);
     const cleanRoom = (roomNo || "").toString().replace(/^Room\s+/i, "").trim();
 
-    // Determine room sharing capacity: check custom setting, or infer from allocations, fallback to 2
-    let capacity = customRoomSharing[`${buildingName}_${cleanRoom}`] || 2;
+    // Look up building object to check bld.roomBeds
+    const targetBld = buildingsList.find(
+      (b) =>
+        b.name.toLowerCase() === (buildingName || "").toLowerCase() ||
+        b.name.replace(/[\s\-_]/g, "").toLowerCase() === (buildingName || "").replace(/[\s\-_]/g, "").toLowerCase()
+    );
 
-    // Expand capacity if there are existing bookings for Bed C, D, E, F, G, H, I, J, etc.
+    let capacity =
+      targetBld?.roomBeds?.[cleanRoom] ??
+      targetBld?.roomBeds?.[roomNo] ??
+      customRoomSharing[`${buildingName}_${cleanRoom}`] ??
+      customRoomSharing[`${targetBld?.name || buildingName}_${cleanRoom}`] ??
+      customRoomSharing[`${buildingName}_${roomNo}`] ??
+      2;
+
+    // Expand capacity only if there are explicit bookings for Bed C, Bed D, Bed E, etc.
     allocations.forEach((bk) => {
-      const bkBed = (bk.allocatedBed || bk.bed || "").toLowerCase();
-      if (bkBed.includes("c") || bkBed.includes("3")) capacity = Math.max(capacity, 3);
-      if (bkBed.includes("d") || bkBed.includes("4")) capacity = Math.max(capacity, 4);
-      if (bkBed.includes("e") || bkBed.includes("5")) capacity = Math.max(capacity, 5);
-      if (bkBed.includes("f") || bkBed.includes("6")) capacity = Math.max(capacity, 6);
-      if (bkBed.includes("g") || bkBed.includes("7")) capacity = Math.max(capacity, 7);
-      if (bkBed.includes("h") || bkBed.includes("8")) capacity = Math.max(capacity, 8);
-      if (bkBed.includes("i") || bkBed.includes("9")) capacity = Math.max(capacity, 9);
-      if (bkBed.includes("j") || bkBed.includes("10")) capacity = Math.max(capacity, 10);
+      const rawBed = (bk.allocatedBed || bk.bed || "").toString().trim().toLowerCase();
+      const bedLetter = rawBed.replace(/^bed\s*/i, "").trim();
+
+      if (rawBed === "bed c" || bedLetter === "c" || rawBed === "bed 3" || bedLetter === "3") capacity = Math.max(capacity, 3);
+      if (rawBed === "bed d" || bedLetter === "d" || rawBed === "bed 4" || bedLetter === "4") capacity = Math.max(capacity, 4);
+      if (rawBed === "bed e" || bedLetter === "e" || rawBed === "bed 5" || bedLetter === "5") capacity = Math.max(capacity, 5);
+      if (rawBed === "bed f" || bedLetter === "f" || rawBed === "bed 6" || bedLetter === "6") capacity = Math.max(capacity, 6);
+      if (rawBed === "bed g" || bedLetter === "g" || rawBed === "bed 7" || bedLetter === "7") capacity = Math.max(capacity, 7);
+      if (rawBed === "bed h" || bedLetter === "h" || rawBed === "bed 8" || bedLetter === "8") capacity = Math.max(capacity, 8);
+      if (rawBed === "bed i" || bedLetter === "i" || rawBed === "bed 9" || bedLetter === "9") capacity = Math.max(capacity, 9);
+      if (rawBed === "bed j" || bedLetter === "j" || rawBed === "bed 10" || bedLetter === "10") capacity = Math.max(capacity, 10);
     });
 
     const letterLabels = ["Bed A", "Bed B", "Bed C", "Bed D", "Bed E", "Bed F", "Bed G", "Bed H", "Bed I", "Bed J", "Bed K", "Bed L"];
@@ -1854,18 +2028,19 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       // Match allocation for this bed
       let matchedAlloc = allocations.find((bk) => {
         if (assignedIds.has(bk.id)) return false;
-        const bkBed = (bk.allocatedBed || bk.bed || "").toLowerCase().trim();
+        const bkBed = (bk.allocatedBed || bk.bed || "").toString().toLowerCase().trim();
+        const cleanLetter = bkBed.replace(/^bed\s*/i, "").trim();
 
         // Exact match (e.g. "Bed A", "bed a", "a", "1", "Bed 1")
-        if (bkBed === `bed ${letter}` || bkBed === letter || bkBed === `bed ${numStr}` || bkBed === numStr) {
+        if (bkBed === `bed ${letter}` || cleanLetter === letter || bkBed === `bed ${numStr}` || cleanLetter === numStr) {
           return true;
         }
         // First bed fallback if bed string doesn't specify letter
-        if (bedIdx === 0 && (!bkBed || bkBed === "a" || bkBed.includes("a") || bkBed.includes("1"))) {
+        if (bedIdx === 0 && (!bkBed || bkBed === "a" || cleanLetter === "a" || cleanLetter === "1")) {
           return true;
         }
-        // Substring match
-        if (bkBed.includes(`bed ${letter}`) || bkBed.includes(`bed ${numStr}`) || bkBed.endsWith(letter) || bkBed.endsWith(numStr)) {
+        // Suffix match (e.g. "Sharing Bed A")
+        if (bkBed.endsWith(` ${letter}`) || bkBed.endsWith(` ${numStr}`)) {
           return true;
         }
         return false;
@@ -2100,14 +2275,36 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       });
     }
 
-    // 2. Update LocalStorage
+    // 2. Update LocalStorage across all storage keys
     try {
-      const localStr = localStorage.getItem("shripad_admin_bookings");
-      if (localStr) {
-        const list = JSON.parse(localStr);
-        const updatedList = list.map((b: any) => {
-          if (b.id !== bookingId) return b;
-          const history = b.complaintHistory || [];
+      ["shripad_admin_bookings", "shripad_cached_bookings"].forEach((key) => {
+        const localStr = localStorage.getItem(key);
+        if (localStr) {
+          const list = JSON.parse(localStr);
+          const updatedList = list.map((b: any) => {
+            if (b.id !== bookingId) return b;
+            const history = b.complaintHistory || b.complaints || [];
+            const updatedHistory = history.map((c: any) =>
+              (c.id || c.title) === (complaintId || c.title)
+                ? {
+                    ...c,
+                    status: newStatus,
+                    adminComment: adminComment !== undefined ? adminComment : c.adminComment,
+                    resolvedAt: newStatus === "resolved" ? new Date().toISOString() : c.resolvedAt,
+                  }
+                : c
+            );
+            return { ...b, complaintHistory: updatedHistory, complaints: updatedHistory };
+          });
+          localStorage.setItem(key, JSON.stringify(updatedList));
+        }
+      });
+
+      const custSessStr = localStorage.getItem("shripad_customer_session");
+      if (custSessStr) {
+        const sess = JSON.parse(custSessStr);
+        if (sess.id === bookingId) {
+          const history = sess.complaintHistory || sess.complaints || [];
           const updatedHistory = history.map((c: any) =>
             (c.id || c.title) === (complaintId || c.title)
               ? {
@@ -2118,9 +2315,9 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 }
               : c
           );
-          return { ...b, complaintHistory: updatedHistory };
-        });
-        localStorage.setItem("shripad_admin_bookings", JSON.stringify(updatedList));
+          const updatedSess = { ...sess, complaintHistory: updatedHistory, complaints: updatedHistory };
+          localStorage.setItem("shripad_customer_session", JSON.stringify(updatedSess));
+        }
       }
     } catch (e) {
       console.error("LocalStorage complaint update error:", e);
@@ -2153,6 +2350,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
           phone: data.phone || null,
           pushName: data.pushName || null,
           sessionId: data.sessionId || null,
+          openwaUrl: data.openwaUrl || "https://shripad-openwa-gateway.onrender.com",
         });
         if (!data.connected) {
           fetchWhatsAppQr();
@@ -2576,7 +2774,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
               <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-blue-700 text-white shadow-xs group-hover:scale-110 transition-transform">
                 <Plus className="h-4 w-4 stroke-[3]" />
               </div>
-              <span>+ New Admission</span>
+              <span>New Admission</span>
             </button>
           </div>
 
@@ -3016,13 +3214,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       selectedBuilding: scopedBuildingsList[0]?.name || "PG A",
                     })
                   }
-                  className="group rounded-3xl border border-blue-200/90 bg-white p-4 sm:p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10 hover:border-blue-300 cursor-pointer relative overflow-hidden active:scale-[0.99]"
+                  className="group rounded-3xl border border-emerald-200/80 bg-white p-4 sm:p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10 hover:border-emerald-400 cursor-pointer relative overflow-hidden active:scale-[0.99]"
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-[#F0F4FF] text-[#00022E] border border-blue-200/80 shadow-2xs group-hover:scale-110 transition-transform">
+                    <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs group-hover:scale-110 transition-transform">
                       <Bed className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
                     </div>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-[#F0F4FF] px-2.5 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-[#00022E] border border-blue-200/80 shadow-2xs">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-emerald-800 border border-emerald-200/80 shadow-2xs">
                       🟢 Available
                     </span>
                   </div>
@@ -3031,7 +3229,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                     <p className="mt-0.5 sm:mt-1 text-xl sm:text-2xl lg:text-3xl font-black text-slate-900">
                       {overallOccupancyStats.totalVacBeds} <span className="text-[11px] sm:text-xs font-bold text-slate-400">Beds</span>
                     </p>
-                    <p className="mt-1 text-[10px] sm:text-xs font-bold text-[#00022E] group-hover:underline flex items-center gap-1">
+                    <p className="mt-1 text-[10px] sm:text-xs font-bold text-emerald-700 group-hover:underline flex items-center gap-1">
                       Vacant Matrix →
                     </p>
                   </div>
@@ -3046,11 +3244,11 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       selectedBuilding: scopedBuildingsList[0]?.name || "PG A",
                     })
                   }
-                  className="group rounded-3xl border border-rose-200/90 bg-white p-4 sm:p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-rose-500/10 hover:border-rose-400 cursor-pointer relative overflow-hidden active:scale-[0.99]"
+                  className="group rounded-3xl border border-rose-200/80 bg-white p-4 sm:p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-rose-500/10 hover:border-rose-400 cursor-pointer relative overflow-hidden active:scale-[0.99]"
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 border border-rose-200/80 shadow-2xs group-hover:scale-110 transition-transform">
-                      <CheckCircle2 className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
+                    <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-2xl bg-rose-50 text-rose-700 border border-rose-200/80 shadow-2xs group-hover:scale-110 transition-transform">
+                      <Bed className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
                     </div>
                     <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-rose-800 border border-rose-200/80 shadow-2xs">
                       🔴 Occupied
@@ -3061,7 +3259,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                     <p className="mt-0.5 sm:mt-1 text-xl sm:text-2xl lg:text-3xl font-black text-slate-900">
                       {overallOccupancyStats.totalOccBeds} <span className="text-[11px] sm:text-xs font-bold text-slate-400">Beds</span>
                     </p>
-                    <p className="mt-1 text-[10px] sm:text-xs font-bold text-rose-600 group-hover:underline flex items-center gap-1">
+                    <p className="mt-1 text-[10px] sm:text-xs font-bold text-rose-700 group-hover:underline flex items-center gap-1">
                       Occupied Matrix →
                     </p>
                   </div>
@@ -3628,7 +3826,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                         className="inline-flex items-center gap-2 rounded-2xl bg-brand-green hover:bg-[#00022E] text-white font-extrabold text-xs px-4 py-2.5 shadow-md shadow-brand-green/20 transition cursor-pointer active:scale-95 self-start sm:self-auto"
                       >
                         <Plus className="h-4 w-4" />
-                        <span>+ Log Expense</span>
+                        <span>Log Expense</span>
                       </button>
                     </div>
 
@@ -3636,7 +3834,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       <div className="text-center py-10 border border-dashed border-slate-200 rounded-3xl bg-slate-50/50 space-y-2">
                         <CreditCard className="h-10 w-10 text-slate-300 mx-auto" />
                         <p className="text-xs font-bold text-slate-600">No expense records logged yet.</p>
-                        <p className="text-[11px] text-slate-400">Click "+ Log Expense" above to add your first monthly spend entry.</p>
+                        <p className="text-[11px] text-slate-400">Click "Log Expense" above to add your first monthly spend entry.</p>
                       </div>
                     ) : (
                       <div className="overflow-x-auto">
@@ -4406,10 +4604,10 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
                 <button
                   onClick={() => setIsAddBuildingModalOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-brand-green hover:bg-[#00022E] text-white font-extrabold text-xs px-5 py-3 shadow-md shadow-brand-green/20 transition cursor-pointer active:scale-95 self-start sm:self-auto shrink-0"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-[#00022E] hover:bg-[#00044A] text-white font-extrabold text-xs px-5 py-3 shadow-md shadow-[#00022E]/20 transition cursor-pointer active:scale-95 self-start sm:self-auto shrink-0"
                 >
                   <Plus className="h-4 w-4" />
-                  <span>+ Add New Building</span>
+                  <span>Add New Building</span>
                 </button>
               </div>
 
@@ -4419,13 +4617,12 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 let totalBedsAll = 0;
                 let totalOccBedsAll = 0;
                 scopedBuildingsList.forEach((bld) => {
-                  const stats = getBuildingOccupancyDetails(bld.name);
-                  totalRoomsAll += stats.totalRooms;
-                  totalBedsAll += stats.totalBeds;
-                  totalOccBedsAll += stats.occupiedBedsCount;
+                  const s = getBuildingOccupancyDetails(bld.name);
+                  totalRoomsAll += s.totalRooms;
+                  totalBedsAll += s.totalBeds;
+                  totalOccBedsAll += s.occupiedBedsCount;
                 });
                 const totalVacBedsAll = Math.max(0, totalBedsAll - totalOccBedsAll);
-                const overallPct = totalBedsAll > 0 ? Math.round((totalOccBedsAll / totalBedsAll) * 100) : 0;
 
                 return (
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
@@ -4434,38 +4631,34 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       <p className="text-lg sm:text-2xl font-black text-slate-900 mt-0.5">{scopedBuildingsList.length}</p>
                     </div>
                     <div className="rounded-3xl border border-blue-200/80 bg-white p-4 shadow-xs">
-                      <p className="text-[10px] sm:text-xs font-extrabold uppercase text-blue-700">Total PG Rooms</p>
-                      <p className="text-lg sm:text-2xl font-black text-slate-900 mt-0.5">{totalRoomsAll}</p>
+                      <p className="text-[10px] sm:text-xs font-extrabold uppercase text-[#00022E]">Total Rooms</p>
+                      <p className="text-lg sm:text-2xl font-black text-[#00022E] mt-0.5">{totalRoomsAll}</p>
                     </div>
-                    <div className="rounded-3xl border border-blue-200/80 bg-white p-4 shadow-xs">
-                      <p className="text-[10px] sm:text-xs font-extrabold uppercase text-[#00022E]">Occupancy Rate</p>
-                      <p className="text-lg sm:text-2xl font-black text-[#00022E] mt-0.5">
-                        {overallPct}% <span className="text-[10px] sm:text-xs font-bold text-slate-400">({totalOccBedsAll}/{totalBedsAll})</span>
-                      </p>
+                    <div className="rounded-3xl border border-emerald-200/80 bg-white p-4 shadow-xs">
+                      <p className="text-[10px] sm:text-xs font-extrabold uppercase text-emerald-700">Available Beds</p>
+                      <p className="text-lg sm:text-2xl font-black text-emerald-700 mt-0.5">{totalVacBedsAll}</p>
                     </div>
-                    <div className="rounded-3xl border border-amber-200/80 bg-white p-4 shadow-xs">
-                      <p className="text-[10px] sm:text-xs font-extrabold uppercase text-amber-700">Available Beds</p>
-                      <p className="text-lg sm:text-2xl font-black text-amber-800 mt-0.5">{totalVacBedsAll}</p>
+                    <div className="rounded-3xl border border-rose-200/80 bg-white p-4 shadow-xs">
+                      <p className="text-[10px] sm:text-xs font-extrabold uppercase text-rose-600">Occupied Beds</p>
+                      <p className="text-lg sm:text-2xl font-black text-rose-600 mt-0.5">{totalOccBedsAll}</p>
                     </div>
                   </div>
                 );
               })()}
 
-              {/* Building Cards Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+              {/* Dynamic Buildings Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 {scopedBuildingsList.map((b) => {
                   const stats = getBuildingOccupancyDetails(b.name);
-                  const occPct = stats.totalBeds > 0 ? Math.round((stats.occupiedBedsCount / stats.totalBeds) * 100) : 0;
-
-                  // Compute real collected revenue for this building
-                  const bldBookings = scopedBookings.filter((bk) => (bk.allocatedBuilding || bk.building) === b.name);
                   let bldRevenue = 0;
-                  bldBookings.forEach((bk) => {
-                    if (bk.paymentHistory && bk.paymentHistory.length > 0) {
+                  (scopedBookings || []).forEach((bk) => {
+                    const bkMatch =
+                      (bk.allocatedBuilding && bk.allocatedBuilding.trim().toLowerCase() === b.name.trim().toLowerCase()) ||
+                      (bk.building && bk.building.trim().toLowerCase() === b.name.trim().toLowerCase());
+                    if (!bkMatch) return;
+                    if (bk.paymentHistory && Array.isArray(bk.paymentHistory)) {
                       bk.paymentHistory.forEach((p: any) => {
-                        if (p.status === "verified" || (!p.status && p.transactionId)) {
-                          bldRevenue += p.amount || 0;
-                        }
+                        if (p.status === "verified") bldRevenue += p.amount || 0;
                       });
                     } else if (bk.paidAmount) {
                       bldRevenue += bk.paidAmount;
@@ -4510,32 +4703,36 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                         </p>
                       </div>
 
-                      {/* Real Occupancy Progress Bar */}
-                      <div className="space-y-1.5 p-3.5 rounded-2xl bg-slate-50/80 border border-slate-200/70">
+                      {/* Bed Capacity & Occupancy Progress */}
+                      <div className="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-200/70 space-y-2">
                         <div className="flex items-center justify-between text-xs font-bold">
                           <span className="text-slate-600">Bed Occupancy:</span>
-                          <span className="text-slate-900 font-extrabold">{occPct}% ({stats.occupiedBedsCount}/{stats.totalBeds})</span>
+                          <span className="text-slate-900 font-extrabold">
+                            {stats.totalBeds > 0 ? Math.round((stats.occupiedBedsCount / stats.totalBeds) * 100) : 0}% ({stats.occupiedBedsCount}/{stats.totalBeds})
+                          </span>
                         </div>
-                        <div className="h-2 w-full rounded-full bg-slate-200/80 overflow-hidden">
+                        <div className="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
                           <div
-                            className={`h-full rounded-full transition-all duration-500 ${
-                              occPct >= 90 ? "bg-rose-500" : occPct >= 60 ? "bg-[#00022E]" : "bg-amber-500"
-                            }`}
-                            style={{ width: `${Math.min(100, occPct)}%` }}
+                            className="h-full rounded-full bg-amber-500 transition-all duration-500"
+                            style={{ width: `${stats.totalBeds > 0 ? Math.min(100, Math.round((stats.occupiedBedsCount / stats.totalBeds) * 100)) : 0}%` }}
                           />
                         </div>
-                        <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 pt-0.5">
-                          <span className="text-[#00022E]">🟢 {stats.occupiedBedsCount} Occupied</span>
-                          <span className="text-amber-700">🟡 {stats.vacantBedsCount} Free Beds</span>
+                        <div className="flex items-center justify-between text-[11px] font-extrabold pt-1">
+                          <span className="text-emerald-600 flex items-center gap-1">
+                            <span className="h-2 w-2 rounded-full bg-emerald-500" /> {stats.occupiedBedsCount} Occupied
+                          </span>
+                          <span className="text-amber-600 flex items-center gap-1">
+                            <span className="h-2 w-2 rounded-full bg-amber-400" /> {stats.vacantBedsCount} Free Beds
+                          </span>
                         </div>
                       </div>
 
-                      {/* Accordion / Collapsible Floor & Room Layout */}
-                      <div className="rounded-2xl bg-slate-50/80 border border-slate-200/70 p-3.5 space-y-2 text-xs">
+                      {/* Accordion Collapsible Floor & Room Layout Matrix */}
+                      <div className="space-y-2">
                         <button
                           type="button"
                           onClick={() => toggleBuildingAccordion(b.name)}
-                          className="w-full flex items-center justify-between font-extrabold text-slate-700 hover:text-brand-green transition cursor-pointer"
+                          className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-50 hover:bg-[#F0F4FF] text-xs font-bold text-slate-700 transition cursor-pointer border border-slate-200/70"
                         >
                           <span className="flex items-center gap-1.5">
                             <Layers className="h-4 w-4 text-brand-green" />
@@ -4611,19 +4808,21 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   );
                 })}
 
-                {/* Add New Building Interactive Card */}
-                <button
-                  onClick={() => setIsAddBuildingModalOpen(true)}
-                  className="rounded-3xl border-2 border-dashed border-slate-200 hover:border-brand-green bg-white hover:bg-[#F0F4FF]/20 p-6 flex flex-col items-center justify-center space-y-3 transition-all cursor-pointer min-h-[220px] group"
-                >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F0F4FF] text-brand-green group-hover:bg-brand-green group-hover:text-white transition-all">
-                    <Plus className="h-6 w-6" />
-                  </div>
-                  <div className="text-center">
-                    <h3 className="text-base font-black text-slate-900 group-hover:text-brand-green transition-colors">Add New Building</h3>
-                    <p className="text-xs font-semibold text-slate-400 mt-0.5">Create a new PG property or branch</p>
-                  </div>
-                </button>
+                {/* Add First Building Empty State (Only rendered when 0 properties exist) */}
+                {scopedBuildingsList.length === 0 && (
+                  <button
+                    onClick={() => setIsAddBuildingModalOpen(true)}
+                    className="rounded-3xl border-2 border-dashed border-slate-200 hover:border-[#00022E] bg-white hover:bg-[#F0F4FF]/30 p-8 flex flex-col items-center justify-center space-y-3 transition-all cursor-pointer min-h-[220px] group col-span-full"
+                  >
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F0F4FF] text-[#00022E] group-hover:bg-[#00022E] group-hover:text-white transition-all">
+                      <Plus className="h-6 w-6" />
+                    </div>
+                    <div className="text-center">
+                      <h3 className="text-base font-black text-slate-900 group-hover:text-[#00022E] transition-colors">Add Your First Building</h3>
+                      <p className="text-xs font-semibold text-slate-400 mt-0.5">Create your first PG property to start managing rooms</p>
+                    </div>
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -4656,7 +4855,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   className="inline-flex items-center gap-2 rounded-2xl bg-brand-green hover:bg-[#00022E] text-white font-extrabold text-xs px-5 py-3 shadow-md shadow-brand-green/20 transition cursor-pointer active:scale-95 self-start sm:self-auto shrink-0"
                 >
                   <Plus className="h-4 w-4" />
-                  <span>+ Admit Customer</span>
+                  <span>Admit Customer</span>
                 </button>
               </div>
 
@@ -6329,9 +6528,9 @@ function doPost(e) {
 
                                 return (
                                   <div key={rNo} className="p-2 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center justify-between gap-2">
-                                    <div className="min-w-0">
-                                      <span className="font-extrabold text-[11px] text-slate-900 block truncate">Room {rNo}</span>
-                                      <span className="text-[9px] font-bold text-[#00022E]">🛏️ {roomBedVal} {roomBedVal === 1 ? "Bed" : "Beds"}</span>
+                                    <div className="shrink-0 min-w-[62px]">
+                                      <span className="font-extrabold text-[11px] text-slate-900 block whitespace-nowrap">Room {rNo}</span>
+                                      <span className="text-[9px] font-bold text-[#00022E] block whitespace-nowrap">🛏️ {roomBedVal} {roomBedVal === 1 ? "Bed" : "Beds"}</span>
                                     </div>
                                     <div className="flex items-center gap-0.5">
                                       {[1, 2, 3, 4, 5, 6, 7, 8].map((bCount) => (
@@ -6608,13 +6807,18 @@ function doPost(e) {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                               {Array.from({ length: currentRooms }, (_, rIdx) => {
                                 const rNo = flIdx === 0 ? `G${(rIdx + 1).toString().padStart(2, "0")}` : `${flIdx}${(rIdx + 1).toString().padStart(2, "0")}`;
-                                const roomBedVal = editingBuildingRoomBeds[rNo] !== undefined ? editingBuildingRoomBeds[rNo] : 2;
+                                const roomBedVal =
+                                  editingBuildingRoomBeds[rNo] !== undefined
+                                    ? editingBuildingRoomBeds[rNo]
+                                    : (editingBuilding?.roomBeds?.[rNo] ??
+                                       editingBuilding?.roomBeds?.[rNo.replace(/^Room\s+/i, "")] ??
+                                       getRoomBedState(editingBuilding?.name || bmsBuilding, rNo).capacity);
 
                                 return (
                                   <div key={rNo} className="p-2 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center justify-between gap-2">
-                                    <div className="min-w-0">
-                                      <span className="font-extrabold text-[11px] text-slate-900 block truncate">Room {rNo}</span>
-                                      <span className="text-[9px] font-bold text-[#00022E]">🛏️ {roomBedVal} {roomBedVal === 1 ? "Bed" : "Beds"}</span>
+                                    <div className="shrink-0 min-w-[62px]">
+                                      <span className="font-extrabold text-[11px] text-slate-900 block whitespace-nowrap">Room {rNo}</span>
+                                      <span className="text-[9px] font-bold text-[#00022E] block whitespace-nowrap">🛏️ {roomBedVal} {roomBedVal === 1 ? "Bed" : "Beds"}</span>
                                     </div>
                                     <div className="flex items-center gap-0.5">
                                       {[1, 2, 3, 4, 5, 6, 7, 8].map((bCount) => (
@@ -8610,16 +8814,21 @@ function doPost(e) {
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-3">
-                <div className={`flex h-11 w-11 items-center justify-center rounded-2xl border ${
+                <div className={`flex h-11 w-11 items-center justify-center rounded-2xl border shadow-2xs ${
                   occupancyExplorerModal.mode === "unoccupied"
-                    ? "bg-[#F0F4FF]/80 text-[#00022E] border-blue-200"
-                    : "bg-rose-100/80 text-rose-600 border-rose-300"
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200/90"
+                    : "bg-rose-50 text-rose-700 border-rose-200/90"
                 }`}>
-                  {occupancyExplorerModal.mode === "unoccupied" ? <Bed className="h-6 w-6" /> : <CheckCircle2 className="h-6 w-6" />}
+                  <Bed className="h-5.5 w-5.5" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-black text-slate-900">
-                    {occupancyExplorerModal.mode === "unoccupied" ? "🟢 Vacant / Available Rooms Matrix" : "🔴 Occupied Rooms Matrix"}
+                  <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
+                    <span className={`h-2.5 w-2.5 rounded-full ring-4 ${
+                      occupancyExplorerModal.mode === "unoccupied"
+                        ? "bg-emerald-500 ring-emerald-100"
+                        : "bg-rose-500 ring-rose-100"
+                    }`} />
+                    {occupancyExplorerModal.mode === "unoccupied" ? "Vacant / Available Rooms Matrix" : "Occupied Rooms Matrix"}
                   </h2>
                   <p className="text-xs font-semibold text-slate-500">
                     BookMyShow-style seat grid for building room & bed availability
@@ -8632,36 +8841,39 @@ function doPost(e) {
                   setSelectedRoomDetails(null);
                 }}
                 className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition cursor-pointer"
+                title="Close"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Mode Switcher Toggle Pill Bar (BookMyShow Standard: Green = Free, Red = Taken) */}
-            <div className="flex items-center justify-between gap-3 bg-slate-100 p-1.5 rounded-2xl">
+            {/* Mode Switcher Toggle Pill Bar (Symmetrical Production Design) */}
+            <div className="flex items-center justify-between gap-2 bg-slate-100/90 p-1.5 rounded-2xl border border-slate-200/60">
               <button
                 onClick={() => setOccupancyExplorerModal({ ...occupancyExplorerModal, mode: "unoccupied" })}
-                className={`flex-1 py-2 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
                   occupancyExplorerModal.mode === "unoccupied"
-                    ? "bg-[#00022E] text-white shadow-md"
-                    : "text-slate-600 hover:bg-slate-200/70"
+                    ? "bg-[#00022E] text-white shadow-md ring-1 ring-white/20"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/70"
                 }`}
               >
-                🟢 Vacant / Free Rooms ({overallOccupancyStats.totalUnocc})
+                <span className={`h-2 w-2 rounded-full ${occupancyExplorerModal.mode === "unoccupied" ? "bg-emerald-400 animate-pulse" : "bg-emerald-500"}`} />
+                <span>Vacant / Free Rooms ({overallOccupancyStats.totalUnocc})</span>
               </button>
               <button
                 onClick={() => setOccupancyExplorerModal({ ...occupancyExplorerModal, mode: "occupied" })}
-                className={`flex-1 py-2 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
                   occupancyExplorerModal.mode === "occupied"
-                    ? "bg-rose-600 text-white shadow-md"
-                    : "text-slate-600 hover:bg-slate-200/70"
+                    ? "bg-[#00022E] text-white shadow-md ring-1 ring-white/20"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/70"
                 }`}
               >
-                🔴 Occupied Rooms ({overallOccupancyStats.totalOcc})
+                <span className={`h-2 w-2 rounded-full ${occupancyExplorerModal.mode === "occupied" ? "bg-rose-400" : "bg-rose-500"}`} />
+                <span>Occupied Rooms ({overallOccupancyStats.totalOcc})</span>
               </button>
             </div>
 
-            {/* Step 1: Small Building Cards Selection */}
+            {/* Step 1: Small Building Cards Selection (Symmetrical Structure) */}
             <div>
               <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">
                 1. Select PG Building:
@@ -8676,20 +8888,20 @@ function doPost(e) {
                     <button
                       key={bld.name}
                       onClick={() => setOccupancyExplorerModal({ ...occupancyExplorerModal, selectedBuilding: bld.name })}
-                      className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
+                      className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer bg-white ${
                         isSelected
                           ? occupancyExplorerModal.mode === "unoccupied"
-                            ? "bg-[#F0F4FF] border-[#00022E] shadow-md ring-2 ring-emerald-500/20"
-                            : "bg-rose-50 border-rose-500 shadow-md ring-2 ring-rose-500/20"
-                          : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                            ? "border-emerald-500 bg-emerald-50/40 shadow-sm ring-2 ring-emerald-500/20"
+                            : "border-rose-500 bg-rose-50/40 shadow-sm ring-2 ring-rose-500/20"
+                          : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-extrabold text-xs text-slate-900">{bld.name}</span>
-                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                      <div className="flex items-center justify-between gap-1 mb-1.5">
+                        <span className="font-extrabold text-xs text-slate-900 truncate">{bld.name}</span>
+                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 border ${
                           occupancyExplorerModal.mode === "unoccupied"
-                            ? "bg-[#F0F4FF] text-[#00022E]"
-                            : "bg-rose-100 text-rose-800"
+                            ? "bg-emerald-100/90 text-emerald-800 border-emerald-200/80"
+                            : "bg-rose-100/90 text-rose-800 border-rose-200/80"
                         }`}>
                           {countToShow} {occupancyExplorerModal.mode === "unoccupied" ? "Vacant" : "Occupied"}
                         </span>
@@ -8701,16 +8913,23 @@ function doPost(e) {
               </div>
             </div>
 
-            {/* Step 2: BookMyShow Cinema Seat Layout Grid by Floor with Bed-level Details */}
+            {/* Step 2: BookMyShow Cinema Seat Layout Grid by Floor */}
             {(() => {
               const currentBld = scopedBuildingsList.find((b) => b.name === occupancyExplorerModal.selectedBuilding) || scopedBuildingsList[0];
               if (!currentBld) return null;
 
               return (
                 <div className="space-y-4 pt-2 border-t border-slate-100">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-slate-800 uppercase tracking-wider">
-                      2. Room & Bed Matrix ({currentBld.name} • {occupancyExplorerModal.mode === "unoccupied" ? "Green = Vacant / Free" : "Red = Occupied / Booked"})
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                    <span className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                      <span>2. Room & Bed Matrix ({currentBld.name})</span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold border ${
+                        occupancyExplorerModal.mode === "unoccupied"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : "bg-rose-50 text-rose-700 border-rose-200"
+                      }`}>
+                        {occupancyExplorerModal.mode === "unoccupied" ? "🟢 Green = Vacant / Free Beds" : "🔴 Red = Occupied / Booked Beds"}
+                      </span>
                     </span>
                     <span className="text-[11px] font-bold text-slate-500">Tap a room box to view bed breakdown</span>
                   </div>
@@ -8730,18 +8949,22 @@ function doPost(e) {
                       }).filter((r) => (occupancyExplorerModal.mode === "occupied" ? !r.rmState.isVacant : !r.rmState.isFull));
 
                       return (
-                        <div key={flIdx} className="space-y-1.5 bg-white p-3 rounded-xl border border-slate-200/70 shadow-2xs">
+                        <div key={flIdx} className="space-y-2 bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs">
                           <div className="flex items-center justify-between text-xs font-bold text-slate-800 border-b border-slate-100 pb-1.5">
                             <span>🏢 {flName}</span>
-                            <span className="text-[10px] font-extrabold text-slate-500">
+                            <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${
+                              occupancyExplorerModal.mode === "unoccupied"
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200/70"
+                                : "bg-rose-50 text-rose-700 border-rose-200/70"
+                            }`}>
                               {roomsOnThisFloor.length} {occupancyExplorerModal.mode === "unoccupied" ? "Vacant/Partial Room(s)" : "Occupied Room(s)"}
                             </span>
                           </div>
 
                           {roomsOnThisFloor.length === 0 ? (
-                            <p className="text-[11px] text-slate-400 italic py-1">
-                              No {occupancyExplorerModal.mode === "unoccupied" ? "vacant" : "occupied"} rooms on this floor.
-                            </p>
+                            <div className="p-3 rounded-xl bg-slate-50/80 border border-dashed border-slate-200 text-center text-xs font-semibold text-slate-400">
+                              {occupancyExplorerModal.mode === "unoccupied" ? "All rooms on this floor are occupied." : "No occupied rooms on this floor (100% vacant)."}
+                            </div>
                           ) : (
                             <div className="flex flex-wrap gap-2 pt-1">
                               {roomsOnThisFloor.map((rm) => {
@@ -8758,14 +8981,16 @@ function doPost(e) {
                                         flIdx: rm.flIdx,
                                       } as any);
                                     }}
-                                    className={`h-12 min-w-[62px] px-2.5 rounded-xl border-2 font-black text-xs flex flex-col items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95 ${
+                                    className={`h-13 min-w-[70px] px-2.5 py-1.5 rounded-xl border-2 font-black text-xs flex flex-col items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95 bg-white ${
                                       isGreenVacant
-                                        ? "border-[#00022E] bg-[#F0F4FF] text-[#00022E] hover:bg-[#00022E] hover:text-white shadow-emerald-100"
-                                        : "border-rose-400 bg-rose-50 text-rose-900 hover:bg-rose-600 hover:text-white shadow-rose-100"
+                                        ? "border-emerald-300 hover:border-emerald-600 hover:bg-emerald-50/60 text-slate-900 shadow-emerald-50"
+                                        : "border-rose-300 hover:border-rose-600 hover:bg-rose-50/60 text-slate-900 shadow-rose-50"
                                     }`}
                                   >
-                                    <span>{rm.roomNo}</span>
-                                    <span className="text-[8px] tracking-tight opacity-90">
+                                    <span className="text-xs font-black text-slate-900">{rm.roomNo}</span>
+                                    <span className={`text-[8.5px] font-bold tracking-tight ${
+                                      isGreenVacant ? "text-emerald-700" : "text-rose-700"
+                                    }`}>
                                       {rm.rmState.freeBedsLabel}
                                     </span>
                                   </button>
@@ -8802,14 +9027,14 @@ function doPost(e) {
                               key={b.bedName}
                               className={`p-4 rounded-2xl border-2 space-y-2.5 transition-all ${
                                 b.isOccupied
-                                  ? "bg-rose-50/70 border-rose-200 text-rose-950 shadow-2xs"
-                                  : "bg-[#F0F4FF] border-blue-200/80 text-emerald-950 shadow-2xs"
+                                  ? "bg-rose-50/40 border-rose-200/90 text-slate-900 shadow-2xs"
+                                  : "bg-emerald-50/40 border-emerald-200/90 text-slate-900 shadow-2xs"
                               }`}
                             >
                               <div className="flex items-center justify-between font-black">
                                 <span className="flex items-center gap-1.5 text-xs">🛏️ {b.bedName}</span>
                                 <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-black border ${
-                                  b.isOccupied ? "bg-rose-100 text-rose-800 border-rose-200" : "bg-[#F0F4FF] text-[#00022E] border border-blue-200"
+                                  b.isOccupied ? "bg-rose-100 text-rose-800 border-rose-200" : "bg-emerald-100 text-emerald-800 border-emerald-200"
                                 }`}>
                                   {b.isOccupied ? "🔴 Occupied" : "🟢 Vacant"}
                                 </span>
@@ -8817,7 +9042,7 @@ function doPost(e) {
                               {b.isOccupied ? (
                                 <div
                                   onClick={() => b.booking && setSelectedHistoryResident(b.booking)}
-                                  className="text-xs font-semibold space-y-1.5 bg-white hover:bg-rose-100/70 p-3 rounded-xl cursor-pointer transition border border-rose-200/90 shadow-2xs group"
+                                  className="text-xs font-semibold space-y-1.5 bg-white hover:bg-rose-50/80 p-3 rounded-xl cursor-pointer transition border border-rose-200 shadow-2xs group"
                                   title="Click to view full resident profile & history"
                                 >
                                   <div className="flex items-center justify-between gap-1">
@@ -8847,7 +9072,7 @@ function doPost(e) {
                                     setOccupancyExplorerModal(null);
                                     setActiveTab("Allocation");
                                   }}
-                                  className="mt-2 w-full py-2 rounded-xl bg-brand-green hover:bg-brand-gold text-white text-xs font-black transition cursor-pointer shadow-xs active:scale-95"
+                                  className="mt-2 w-full py-2 rounded-xl bg-[#00022E] hover:bg-brand-green text-white text-xs font-black transition cursor-pointer shadow-xs active:scale-95"
                                 >
                                   Allocate {b.bedName} Now →
                                 </button>
@@ -9296,7 +9521,7 @@ function doPost(e) {
                       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-blue-700 text-white shadow-xs group-hover:scale-110 transition-transform">
                         <Plus className="h-4 w-4 stroke-[3]" />
                       </div>
-                      <span>+ New Admission</span>
+                      <span>New Admission</span>
                     </button>
                   </div>
 
@@ -10566,7 +10791,17 @@ function doPost(e) {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 self-end sm:self-center">
+              <div className="flex items-center gap-2 self-end sm:self-center flex-wrap">
+                <a
+                  href={whatsappStatus?.openwaUrl || "https://shripad-openwa-gateway.onrender.com"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#00022E] hover:bg-[#00044A] text-white text-xs font-black transition cursor-pointer shadow-xs active:scale-95"
+                  title="Open Live OpenWA Gateway Dashboard / Swagger in new tab"
+                >
+                  <ExternalLink className="h-3.5 w-3.5 text-emerald-400" />
+                  <span>OpenWA Dashboard ↗</span>
+                </a>
                 <button
                   type="button"
                   onClick={fetchWhatsAppStatus}
@@ -10662,15 +10897,18 @@ function doPost(e) {
                       </div>
                     </div>
 
-                    {/* QR Code Container or Session Starter */}
-                    {!whatsappStatus?.connected && (
-                      <div className="pt-3 border-t border-amber-200/80 flex flex-col sm:flex-row items-center justify-between gap-3">
-                        <div className="text-xs font-semibold text-slate-700">
-                          <span>Engine Status: </span>
-                          <span className="font-mono font-black text-amber-900">{whatsappStatus?.status || "DISCONNECTED"}</span>
-                        </div>
+                    {/* OpenWA Gateway URL and Action Links */}
+                    <div className="pt-3 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-3">
+                      <div className="text-xs font-semibold text-slate-700 flex items-center gap-2 flex-wrap">
+                        <span className={`inline-block h-2 w-2 rounded-full ${whatsappStatus?.connected ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`}></span>
+                        <span>OpenWA Gateway:</span>
+                        <code className="font-mono font-bold bg-white px-2 py-0.5 rounded border border-slate-200 text-slate-800 text-[11px]">
+                          {whatsappStatus?.openwaUrl || "https://shripad-openwa-gateway.onrender.com"}
+                        </code>
+                      </div>
 
-                        <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2">
+                        {!whatsappStatus?.connected && (
                           <button
                             type="button"
                             onClick={handleStartWhatsAppSession}
@@ -10678,17 +10916,18 @@ function doPost(e) {
                           >
                             ⚡ Start Session & Get QR
                           </button>
-                          <a
-                            href="https://shripad-openwa-gateway.onrender.com"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black transition cursor-pointer shadow-sm"
-                          >
-                            Open OpenWA Gateway ↗
-                          </a>
-                        </div>
+                        )}
+                        <a
+                          href={whatsappStatus?.openwaUrl || "https://shripad-openwa-gateway.onrender.com"}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black transition cursor-pointer shadow-sm active:scale-95"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5 text-emerald-400" />
+                          <span>OpenWA Dashboard ↗</span>
+                        </a>
                       </div>
-                    )}
+                    </div>
                   </div>
 
                   {/* Automated Workflows Enabled */}

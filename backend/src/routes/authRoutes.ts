@@ -5,6 +5,7 @@ import { requireAuth } from "../middleware/auth.js";
 const router = Router();
 
 // Public auth endpoints (no JWT required)
+router.post("/unified-login", AuthController.unifiedLogin);
 router.post("/admin-login", AuthController.adminLogin);
 router.post("/staff-login", AuthController.staffLogin);
 

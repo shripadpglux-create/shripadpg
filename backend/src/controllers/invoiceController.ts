@@ -84,11 +84,22 @@ export class InvoiceController {
       // Attempt to sync resident payment history in BookingModel
       let syncedBooking = null;
       const bookings = await BookingModel.getAll();
-      const targetBooking = bookings.find((b) => {
-        if (savedInvoice.residentId && b.id === savedInvoice.residentId) return true;
-        if (savedInvoice.email && b.email && b.email.toLowerCase() === savedInvoice.email.toLowerCase()) return true;
-        if (savedInvoice.tenantName && b.name && b.name.toLowerCase() === savedInvoice.tenantName.toLowerCase()) return true;
-        if (savedInvoice.contact && b.phone && b.phone.includes(savedInvoice.contact.replace(/\D/g, ""))) return true;
+      const invPhone = (savedInvoice.contact || (savedInvoice as any).phone || "").replace(/\D/g, "");
+      const invEmail = (savedInvoice.email || "").toLowerCase().trim();
+      const invName = (savedInvoice.tenantName || (savedInvoice as any).residentName || "").toLowerCase().trim();
+
+      const targetBooking = bookings.find((b: any) => {
+        // Match by residentId (exact booking ID)
+        if (savedInvoice.residentId && (b.id === savedInvoice.residentId || (b as any)._id === savedInvoice.residentId)) return true;
+        // Match by customerId
+        if (savedInvoice.residentId && b.customerId && b.customerId.toLowerCase() === savedInvoice.residentId.toLowerCase()) return true;
+        // Match by phone (normalized digits)
+        const bPhone = (b.phone || "").replace(/\D/g, "");
+        if (invPhone && bPhone && (bPhone === invPhone || bPhone.endsWith(invPhone) || invPhone.endsWith(bPhone))) return true;
+        // Match by email (ignore placeholder emails)
+        if (invEmail && invEmail !== "na@gmail.com" && b.email && b.email.toLowerCase().trim() === invEmail) return true;
+        // Match by name (case-insensitive)
+        if (invName && b.name && b.name.toLowerCase().trim() === invName) return true;
         return false;
       });
 
@@ -100,6 +111,7 @@ export class InvoiceController {
           year: invDate.getFullYear(),
           amount: savedInvoice.paidAmount > 0 ? savedInvoice.paidAmount : savedInvoice.rentAmount,
           transactionId: savedInvoice.invoiceNo,
+          invoiceNo: savedInvoice.invoiceNo,
           payerName: savedInvoice.tenantName,
           paymentDate: savedInvoice.date,
           paymentMethod: (savedInvoice.paymentModes[0] || "upi").toLowerCase().includes("cash")

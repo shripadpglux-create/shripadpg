@@ -14,7 +14,7 @@ export class BuildingController {
 
   public static async create(req: Request, res: Response) {
     try {
-      const { name, floors, roomsPerFloor, floorRoomCounts } = req.body;
+      const { name, floors, roomsPerFloor, floorRoomCounts, roomBeds, blockedRooms } = req.body;
       if (!name) {
         return res.status(400).json({ success: false, message: "Building name is required." });
       }
@@ -24,6 +24,8 @@ export class BuildingController {
         floors: Number(floors) || 4,
         roomsPerFloor: Number(roomsPerFloor) || 4,
         floorRoomCounts,
+        roomBeds,
+        blockedRooms,
       });
 
       const buildings = await BuildingModel.getAll();
@@ -43,13 +45,15 @@ export class BuildingController {
   public static async update(req: Request, res: Response) {
     try {
       const nameOrId = req.params.name as string;
-      const { name, floors, roomsPerFloor, floorRoomCounts } = req.body;
+      const { name, floors, roomsPerFloor, floorRoomCounts, roomBeds, blockedRooms } = req.body;
 
       const updated = await BuildingModel.update(nameOrId, {
         name,
         floors: floors !== undefined ? Number(floors) : undefined,
         roomsPerFloor: roomsPerFloor !== undefined ? Number(roomsPerFloor) : undefined,
         floorRoomCounts,
+        roomBeds,
+        blockedRooms,
       });
 
       if (!updated) {

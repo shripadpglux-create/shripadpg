@@ -92,6 +92,7 @@ export function CustomerPortal() {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewingInvoicePayment, setViewingInvoicePayment] = useState<any | null>(null);
+  const [viewingInvoiceData, setViewingInvoiceData] = useState<any | null>(null); // Actual server invoice data
   const [hasSeenPayments, setHasSeenPayments] = useState(false);
   const [hasSeenComplaints, setHasSeenComplaints] = useState(false);
   const [showSecurityPass, setShowSecurityPass] = useState(false);
@@ -175,6 +176,53 @@ export function CustomerPortal() {
     includedAmenities: "Food, Water, Wi-Fi, Laundry",
   });
   const [showQrModal, setShowQrModal] = useState(false);
+  const [isRefreshingComplaints, setIsRefreshingComplaints] = useState(false);
+
+  // Centralized Resident Data Auto-Sync (Real-time polling & multi-tab storage sync)
+  const syncFreshResidentData = async (silent = true) => {
+    if (!silent) setIsRefreshingComplaints(true);
+    const sessionStr = localStorage.getItem("shripad_customer_session");
+    if (!sessionStr) return;
+
+    try {
+      const sess = JSON.parse(sessionStr);
+      const res = await fetch(`${API_BASE_URL}/api/bookings`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.bookings)) {
+        const match = data.bookings.find(
+          (b: any) =>
+            b.id === sess.id ||
+            (sess.customerId && b.customerId === sess.customerId) ||
+            (sess.phone && b.phone && b.phone.replace(/\D/g, "") === sess.phone.replace(/\D/g, ""))
+        );
+        if (match) {
+          setCustomer(match);
+          localStorage.setItem("shripad_customer_session", JSON.stringify(match));
+        }
+      }
+    } catch (err) {
+      // Local fallback sync
+      try {
+        const localBookings = localStorage.getItem("shripad_admin_bookings") || localStorage.getItem("shripad_cached_bookings");
+        if (localBookings) {
+          const list = JSON.parse(localBookings);
+          const sess = JSON.parse(sessionStr);
+          const match = list.find(
+            (b: any) =>
+              b.id === sess.id ||
+              (sess.customerId && b.customerId === sess.customerId) ||
+              (sess.phone && b.phone && b.phone.replace(/\D/g, "") === sess.phone.replace(/\D/g, ""))
+          );
+          if (match) {
+            setCustomer(match);
+            localStorage.setItem("shripad_customer_session", JSON.stringify(match));
+          }
+        }
+      } catch {}
+    } finally {
+      if (!silent) setIsRefreshingComplaints(false);
+    }
+  };
 
   useEffect(() => {
     const sessionStr = localStorage.getItem("shripad_customer_session");
@@ -194,21 +242,8 @@ export function CustomerPortal() {
         setHasSeenComplaints(true);
       }
 
-      // Sync fresh resident profile and rent details from backend
-      fetch(`${API_BASE_URL}/api/bookings`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success && Array.isArray(data.bookings)) {
-            const match = data.bookings.find(
-              (b: any) => b.id === sess.id || (sess.customerId && b.customerId === sess.customerId) || b.phone === sess.phone
-            );
-            if (match) {
-              setCustomer(match);
-              localStorage.setItem("shripad_customer_session", JSON.stringify(match));
-            }
-          }
-        })
-        .catch((err) => console.warn("Failed to sync customer profile:", err));
+      // Initial fresh sync
+      syncFreshResidentData(true);
 
       // Sync official real PG payment details & QR code from admin settings
       fetch(`${API_BASE_URL}/api/settings/payment`)
@@ -228,6 +263,28 @@ export function CustomerPortal() {
     } catch {
       navigate({ to: "/login" as any });
     }
+
+    // Real-time Storage Listener: If Admin updates complaint in another window/tab, update instantly!
+    const handleStorageChange = (e: StorageEvent) => {
+      if (
+        e.key === "shripad_customer_session" ||
+        e.key === "shripad_admin_bookings" ||
+        e.key === "shripad_cached_bookings"
+      ) {
+        syncFreshResidentData(true);
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+
+    // Live Polling every 5 seconds for status changes
+    const pollInterval = setInterval(() => {
+      syncFreshResidentData(true);
+    }, 5000);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      clearInterval(pollInterval);
+    };
   }, []);
 
   const toggleAccordion = (key: keyof AccordionState) => {
@@ -264,6 +321,8 @@ export function CustomerPortal() {
       setHasSeenComplaints(true);
       localStorage.setItem(`shripad_seen_complaints_${custId}`, "true");
     }
+    // Auto-sync fresh data from backend on tab navigation
+    syncFreshResidentData(true);
     setIsMobileMenuOpen(false);
     setIsProfileMenuOpen(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -402,9 +461,18 @@ export function CustomerPortal() {
         }),
       });
 
-      await res.json();
-      const updatedHistory = [newPayRecord, ...(customer.paymentHistory || [])];
-      const updatedCust = { ...customer, paymentHistory: updatedHistory };
+      const data = await res.json();
+      let updatedCust = { ...customer };
+      if (data.success && data.booking) {
+        updatedCust = data.booking;
+      } else if (data.success && data.payment) {
+        const updatedHistory = [data.payment, ...(customer.paymentHistory || [])];
+        updatedCust = { ...customer, paymentHistory: updatedHistory };
+      } else {
+        const updatedHistory = [newPayRecord, ...(customer.paymentHistory || [])];
+        updatedCust = { ...customer, paymentHistory: updatedHistory };
+      }
+
       setCustomer(updatedCust);
       localStorage.setItem("shripad_customer_session", JSON.stringify(updatedCust));
       syncLocalAdminBookings(updatedCust);
@@ -432,6 +500,58 @@ export function CustomerPortal() {
       setTimeout(() => setIsPayModalOpen(false), 2000);
     } finally {
       setIsSubmittingPay(false);
+    }
+  };
+
+  // Fetch real server invoice for a payment, then open modal
+  const fetchAndViewInvoice = async (payment: any) => {
+    setViewingInvoicePayment(payment);
+    setViewingInvoiceData(null); // Reset while loading
+
+    if (!customer?.id) return;
+
+    try {
+      // Try fetching all invoices for this resident from the server
+      const res = await fetch(`${API_BASE_URL}/api/invoices/resident/${encodeURIComponent(customer.id)}`);
+      const data = await res.json();
+
+      if (data.success && Array.isArray(data.invoices) && data.invoices.length > 0) {
+        const payMonth = Number(payment.month);
+        const payYear = Number(payment.year);
+        const payTxnId = (payment.transactionId || "").trim();
+        const payInvNo = (payment.invoiceNo || "").trim();
+
+        // Strategy 1: Match by explicit invoiceNo or transactionId
+        let matched = data.invoices.find((inv: any) =>
+          (payInvNo && inv.invoiceNo?.toLowerCase() === payInvNo.toLowerCase()) ||
+          (payTxnId && inv.invoiceNo?.toLowerCase() === payTxnId.toLowerCase())
+        );
+
+        // Strategy 2: Match by Month & Year of invoice date
+        if (!matched && payMonth && payYear) {
+          matched = data.invoices.find((inv: any) => {
+            const invDate = new Date(inv.date);
+            return (invDate.getMonth() + 1 === payMonth) && (invDate.getFullYear() === payYear);
+          });
+        }
+
+        // Strategy 3: Match by amount
+        if (!matched && payment.amount) {
+          matched = data.invoices.find((inv: any) => Number(inv.paidAmount || inv.rentAmount) === Number(payment.amount));
+        }
+
+        // Strategy 4: Fallback to first/latest invoice
+        if (!matched && data.invoices.length > 0) {
+          matched = data.invoices[0];
+        }
+
+        if (matched) {
+          setViewingInvoiceData(matched);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn("Could not fetch server invoice for resident:", e);
     }
   };
 
@@ -470,9 +590,18 @@ export function CustomerPortal() {
         }),
       });
 
-      await res.json();
-      const updatedHistory = [newComplaint, ...(customer.complaintHistory || [])];
-      const updatedCust = { ...customer, complaintHistory: updatedHistory };
+      const data = await res.json();
+      let updatedCust = { ...customer };
+      if (data.success && data.booking) {
+        updatedCust = data.booking;
+      } else if (data.success && data.complaint) {
+        const updatedHistory = [data.complaint, ...(customer.complaintHistory || customer.complaints || [])];
+        updatedCust = { ...customer, complaintHistory: updatedHistory, complaints: updatedHistory };
+      } else {
+        const updatedHistory = [newComplaint, ...(customer.complaintHistory || customer.complaints || [])];
+        updatedCust = { ...customer, complaintHistory: updatedHistory, complaints: updatedHistory };
+      }
+
       setCustomer(updatedCust);
       localStorage.setItem("shripad_customer_session", JSON.stringify(updatedCust));
       syncLocalAdminBookings(updatedCust);
@@ -481,8 +610,8 @@ export function CustomerPortal() {
       setComplaintTitle("");
       setComplaintDesc("");
     } catch {
-      const updatedHistory = [newComplaint, ...(customer.complaintHistory || [])];
-      const updatedCust = { ...customer, complaintHistory: updatedHistory };
+      const updatedHistory = [newComplaint, ...(customer.complaintHistory || customer.complaints || [])];
+      const updatedCust = { ...customer, complaintHistory: updatedHistory, complaints: updatedHistory };
       setCustomer(updatedCust);
       localStorage.setItem("shripad_customer_session", JSON.stringify(updatedCust));
       syncLocalAdminBookings(updatedCust);
@@ -1310,7 +1439,7 @@ export function CustomerPortal() {
                             {p.status === "verified" && (
                               <button
                                 type="button"
-                                onClick={() => setViewingInvoicePayment(p)}
+                                onClick={() => fetchAndViewInvoice(p)}
                                 className="inline-flex items-center gap-1.5 rounded-xl bg-[#00022E] hover:bg-[#00044A] text-white px-3.5 py-1 text-xs font-black shadow-xs transition active:scale-95 cursor-pointer"
                               >
                                 <Receipt className="h-3.5 w-3.5" />
@@ -1439,7 +1568,7 @@ export function CustomerPortal() {
                               <div className="flex items-center justify-end gap-2.5">
                                 <button
                                   type="button"
-                                  onClick={() => setViewingInvoicePayment(p)}
+                                  onClick={() => fetchAndViewInvoice(p)}
                                   className="flex items-center gap-1.5 text-[11px] font-black text-slate-700 hover:text-brand-green bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition cursor-pointer"
                                 >
                                   <Receipt className="h-3.5 w-3.5 text-brand-green" />
@@ -1787,23 +1916,35 @@ export function CustomerPortal() {
 
               <div className="rounded-[2rem] border border-slate-200/90 bg-white p-6 sm:p-7 shadow-md space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
-                  <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-amber-600" />
-                    My Registered Ticket History
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-amber-600" />
+                      My Registered Ticket History ({complaintsList.length})
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => syncFreshResidentData(false)}
+                      disabled={isRefreshingComplaints}
+                      title="Refresh status from Warden / Admin"
+                      className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-[#F0F4FF] text-slate-700 hover:text-[#00022E] text-[10px] font-black border border-slate-200 transition cursor-pointer flex items-center gap-1 active:scale-95"
+                    >
+                      <span className={isRefreshingComplaints ? "animate-spin inline-block" : ""}>🔄</span>
+                      <span>{isRefreshingComplaints ? "Syncing..." : "Refresh Status"}</span>
+                    </button>
+                  </div>
 
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     {(["all", "pending", "in_progress", "resolved"] as const).map((f) => (
                       <button
                         key={f}
                         onClick={() => setComplaintFilter(f)}
                         className={`px-3 py-1 rounded-full text-[11px] font-extrabold uppercase transition cursor-pointer ${
                           complaintFilter === f
-                            ? "bg-brand-navy text-white"
+                            ? "bg-[#00022E] text-white shadow-xs"
                             : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                         }`}
                       >
-                        {f.replace("_", " ")}
+                        {f === "in_progress" ? "In Process" : f.replace("_", " ")}
                       </button>
                     ))}
                   </div>
@@ -1812,49 +1953,63 @@ export function CustomerPortal() {
                 {filteredComplaints.length > 0 ? (
                   <div className="space-y-3">
                     {filteredComplaints.map((cmp) => (
-                      <div key={cmp.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2 hover:border-slate-300 transition">
+                      <div key={cmp.id} className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3 hover:border-slate-300 transition shadow-2xs">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-800">
                               {cmp.category}
                             </span>
                             <h4 className="text-sm font-black text-slate-900">{cmp.title}</h4>
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className={`text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full ${
                               cmp.priority === "urgent"
-                                ? "bg-red-100 text-red-800"
+                                ? "bg-rose-100 text-rose-800 border border-rose-200"
                                 : cmp.priority === "high"
-                                ? "bg-orange-100 text-orange-800"
-                                : "bg-blue-100 text-blue-800"
+                                ? "bg-orange-100 text-orange-800 border border-orange-200"
+                                : "bg-blue-100 text-blue-800 border border-blue-200"
                             }`}>
                               {cmp.priority} Priority
                             </span>
 
-                            <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-full ${
-                              cmp.status === "resolved"
-                                ? "bg-[#F0F4FF] text-[#00022E]"
+                            <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-full border shadow-2xs ${
+                              cmp.status === "resolved" || cmp.status === "closed"
+                                ? "bg-emerald-50 text-emerald-800 border-emerald-300"
                                 : cmp.status === "in_progress"
-                                ? "bg-blue-100 text-blue-800"
-                                : "bg-amber-100 text-amber-800"
+                                ? "bg-blue-50 text-blue-800 border-blue-300 animate-pulse"
+                                : "bg-amber-50 text-amber-800 border-amber-300"
                             }`}>
-                              {cmp.status.replace("_", " ")}
+                              {cmp.status === "resolved" || cmp.status === "closed"
+                                ? "✅ Resolved"
+                                : cmp.status === "in_progress"
+                                ? "⚡ In Process"
+                                : "⏳ Pending Review"}
                             </span>
                           </div>
                         </div>
 
-                        <p className="text-xs text-slate-600 font-medium">{cmp.description}</p>
+                        <p className="text-xs text-slate-600 font-medium leading-relaxed">{cmp.description}</p>
 
                         {cmp.adminComment && (
-                          <div className="p-3 rounded-xl bg-[#F0F4FF] border border-blue-200 text-xs text-[#00022E] font-bold">
-                            <span className="font-extrabold uppercase text-[10px] text-[#00022E] block">Warden Resolution Note:</span>
-                            {cmp.adminComment}
+                          <div className="p-3.5 rounded-xl bg-blue-50/80 border border-blue-200 text-xs text-blue-950 font-bold space-y-1">
+                            <div className="flex items-center justify-between">
+                              <span className="font-black uppercase text-[10px] text-blue-700 flex items-center gap-1">
+                                🛡️ Warden Resolution Note:
+                              </span>
+                              {cmp.resolvedAt && (
+                                <span className="text-[10px] font-semibold text-slate-500">
+                                  {new Date(cmp.resolvedAt).toLocaleDateString("en-IN")}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs font-semibold text-slate-800">{cmp.adminComment}</p>
                           </div>
                         )}
 
-                        <div className="text-[10px] text-slate-400 font-semibold pt-1">
-                          Registered: {new Date(cmp.createdAt).toLocaleString("en-IN")}
+                        <div className="text-[10px] text-slate-400 font-semibold pt-1 border-t border-slate-200/50 flex items-center justify-between flex-wrap gap-2">
+                          <span>Registered: {new Date(cmp.createdAt).toLocaleString("en-IN")}</span>
+                          <span className="text-slate-400 font-mono text-[9.5px]">ID: {cmp.id}</span>
                         </div>
                       </div>
                     ))}
@@ -2193,7 +2348,7 @@ export function CustomerPortal() {
               <div className="flex items-center gap-2">
                 <Receipt className="h-4 w-4 text-emerald-400" />
                 <span className="text-xs font-black uppercase tracking-wider text-slate-200">
-                  Official Rent Invoice — {viewingInvoicePayment.transactionId || "INV-001"}
+                  Official Rent Invoice — {viewingInvoiceData?.invoiceNo || viewingInvoicePayment.invoiceNo || (viewingInvoicePayment.transactionId?.startsWith("INV-") ? viewingInvoicePayment.transactionId : viewingInvoicePayment.transactionId || "INV-001")}
                 </span>
               </div>
               <button
@@ -2201,6 +2356,7 @@ export function CustomerPortal() {
                 onClick={(e) => {
                   e.stopPropagation();
                   setViewingInvoicePayment(null);
+                  setViewingInvoiceData(null);
                 }}
                 className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-800 text-slate-300 hover:bg-rose-600 hover:text-white transition active:scale-90 cursor-pointer shadow-md"
                 title="Close Modal"
@@ -2216,24 +2372,46 @@ export function CustomerPortal() {
                 hideHeaderTabs={true}
                 hideTopBar={true}
                 readOnly={true}
-                initialInvoiceData={{
-                  invoiceNo: viewingInvoicePayment.transactionId || `INV-${Math.floor(100000 + Math.random() * 900000)}`,
-                  tenantName: customer?.name || "Resident",
-                  contact: customer?.phone || "",
-                  email: customer?.email || "",
-                  building: customer?.allocatedBuilding || customer?.building || "PG A - Main Branch",
-                  floor: customer?.allocatedFloor ? `${customer.allocatedFloor}st Floor` : "1st Floor",
-                  room: customer?.allocatedRoom ? `Room ${customer.allocatedRoom}` : "Room 101",
-                  bed: customer?.allocatedBed || "Bed A",
-                  date: viewingInvoicePayment.paymentDate ? viewingInvoicePayment.paymentDate.split("T")[0] : (new Date().toISOString().split("T")[0] as string),
-                  dueDate: (new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0] as string),
-                  rentAmount: Number(viewingInvoicePayment.amount || customer?.rentAmount || 0),
-                  paidAmount: Number(viewingInvoicePayment.amount || customer?.rentAmount || 0),
-                  balanceDue: 0,
-                  paymentModes: [(viewingInvoicePayment.paymentMethod || "UPI").toUpperCase()],
-                  notes: "Monthly PG rent payment for comfortable living space including Wi-Fi, 3-time meals, and maintenance charges.",
-                  status: "PAID",
-                }}
+                initialInvoiceData={
+                  viewingInvoiceData
+                    ? {
+                        ...viewingInvoiceData,
+                        invoiceNo: viewingInvoiceData.invoiceNo,
+                        tenantName: viewingInvoiceData.tenantName || customer?.name || "Resident",
+                        contact: viewingInvoiceData.contact || customer?.phone || "",
+                        email: viewingInvoiceData.email || customer?.email || "",
+                        building: viewingInvoiceData.building || customer?.allocatedBuilding || customer?.building || "PG A",
+                        floor: viewingInvoiceData.floor || (customer?.allocatedFloor ? `Floor ${customer.allocatedFloor}` : "Floor 1"),
+                        room: viewingInvoiceData.room || (customer?.allocatedRoom ? `Room ${customer.allocatedRoom}` : "Room 101"),
+                        bed: viewingInvoiceData.bed || customer?.allocatedBed || "Bed A",
+                        date: viewingInvoiceData.date || (viewingInvoicePayment.paymentDate ? viewingInvoicePayment.paymentDate.split("T")[0] : new Date().toISOString().split("T")[0]),
+                        dueDate: viewingInvoiceData.dueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+                        rentAmount: Number(viewingInvoiceData.rentAmount || viewingInvoicePayment.amount || customer?.rentAmount || 0),
+                        paidAmount: Number(viewingInvoiceData.paidAmount || viewingInvoicePayment.amount || customer?.rentAmount || 0),
+                        balanceDue: Number(viewingInvoiceData.balanceDue || 0),
+                        paymentModes: viewingInvoiceData.paymentModes || [(viewingInvoicePayment.paymentMethod || "UPI").toUpperCase()],
+                        notes: viewingInvoiceData.notes || "Monthly PG rent payment for comfortable living space including Wi-Fi, 3-time meals, and maintenance charges.",
+                        status: viewingInvoiceData.status || "PAID",
+                      }
+                    : {
+                        invoiceNo: viewingInvoicePayment.invoiceNo || (viewingInvoicePayment.transactionId?.startsWith("INV-") ? viewingInvoicePayment.transactionId : `INV-${Math.floor(100000 + Math.random() * 900000)}`),
+                        tenantName: customer?.name || "Resident",
+                        contact: customer?.phone || "",
+                        email: customer?.email || "",
+                        building: customer?.allocatedBuilding || customer?.building || "PG A",
+                        floor: customer?.allocatedFloor ? `Floor ${customer.allocatedFloor}` : "Floor 1",
+                        room: customer?.allocatedRoom ? `Room ${customer.allocatedRoom}` : "Room 101",
+                        bed: customer?.allocatedBed || "Bed A",
+                        date: viewingInvoicePayment.paymentDate ? viewingInvoicePayment.paymentDate.split("T")[0] : (new Date().toISOString().split("T")[0] as string),
+                        dueDate: (new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0] as string),
+                        rentAmount: Number(viewingInvoicePayment.amount || customer?.rentAmount || 0),
+                        paidAmount: Number(viewingInvoicePayment.amount || customer?.rentAmount || 0),
+                        balanceDue: 0,
+                        paymentModes: [(viewingInvoicePayment.paymentMethod || "UPI").toUpperCase()],
+                        notes: "Monthly PG rent payment for comfortable living space including Wi-Fi, 3-time meals, and maintenance charges.",
+                        status: "PAID",
+                      }
+                }
               />
             </div>
           </div>

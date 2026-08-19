@@ -241,13 +241,24 @@ export default function StaffDashboard() {
     return scopedBookings.filter((b) => b.status === "allocated");
   }, [scopedBookings]);
 
-  // Stats calculation
+  // Dynamic stats calculation accounting for per-room bed overrides and custom floor counts
   const totalBeds = useMemo(() => {
     const activeBldObjs = buildingsList.filter((b) => assignedBuildings.includes(b.name));
     let beds = 0;
-    activeBldObjs.forEach((bld) => {
-      const totalRooms = bld.floors * bld.roomsPerFloor;
-      beds += totalRooms * 2; // Assuming double sharing standard
+    activeBldObjs.forEach((bld: any) => {
+      const floorsCount = Number(bld.floors) || 1;
+      const floorRoomCounts = bld.floorRoomCounts || {};
+      const roomBeds = bld.roomBeds || {};
+
+      for (let f = 0; f < floorsCount; f++) {
+        const rCount = floorRoomCounts[f] !== undefined ? floorRoomCounts[f] : (Number(bld.roomsPerFloor) || 4);
+        for (let r = 1; r <= rCount; r++) {
+          const rNo = f === 0 ? `G${r.toString().padStart(2, "0")}` : `${f}${r.toString().padStart(2, "0")}`;
+          const cleanNo = rNo.replace(/^Room\s+/i, "");
+          const roomBedCount = roomBeds[rNo] !== undefined ? roomBeds[rNo] : (roomBeds[cleanNo] !== undefined ? roomBeds[cleanNo] : 2);
+          beds += Number(roomBedCount);
+        }
+      }
     });
     return beds || 40;
   }, [buildingsList, assignedBuildings]);
@@ -379,7 +390,7 @@ export default function StaffDashboard() {
             className="px-5 py-3 rounded-2xl bg-brand-green hover:bg-brand-gold text-white font-black text-xs transition shadow-lg flex items-center gap-2 active:scale-95 cursor-pointer"
           >
             <CreditCard className="h-4 w-4" />
-            <span>+ Record Rent Payment</span>
+            <span>Record Rent Payment</span>
           </button>
         </div>
 

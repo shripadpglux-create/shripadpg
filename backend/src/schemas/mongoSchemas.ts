@@ -64,6 +64,7 @@ const buildingSchema = new Schema(
     floors: { type: Number, default: 4 },
     roomsPerFloor: { type: Number, default: 4 },
     floorRoomCounts: { type: Object, default: {} },
+    roomBeds: { type: Object, default: {} },
     blockedRooms: { type: Array, default: [] },
   },
   { timestamps: true, strict: false, versionKey: false }

@@ -1,15 +1,17 @@
 [
   {
+    "_id": "6a85d8b816ba2d2b71c1167b",
     "id": "staff_super",
     "name": "Master Admin",
     "phone": "9876543210",
     "email": "admin@shripadpg.com",
-    "password": "admin123",
+    "password": "$2b$10$.hnPm9f/N6PeLHxnwYASruS9/uHvU6kRZgyfkm/giDStW4Zqigy8i",
     "role": "super_admin",
     "assignedBuildings": [
       "ALL"
     ],
     "status": "active",
-    "createdAt": "2026-08-15T02:00:00.000Z"
+    "createdAt": "2026-08-15T02:00:00.000Z",
+    "updatedAt": "2026-08-19T16:24:24.538Z"
   }
 ]

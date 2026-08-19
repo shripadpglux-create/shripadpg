@@ -114,11 +114,28 @@ export class InvoiceModel {
 
   public static async getByResidentId(residentId: string): Promise<Invoice[]> {
     const invoices = await this.getAll();
-    return invoices.filter(
-      (inv) =>
-        inv.residentId === residentId ||
-        (inv.tenantName && inv.tenantName.toLowerCase().includes(residentId.toLowerCase()))
-    );
+    if (!residentId) return invoices;
+    const query = residentId.toLowerCase().trim();
+    const queryDigits = residentId.replace(/\D/g, "");
+
+    return invoices.filter((inv: any) => {
+      // 1. Direct booking / resident ID match
+      if (inv.residentId && inv.residentId === residentId) return true;
+      if (inv.id && (inv.id === residentId || inv.id.includes(residentId))) return true;
+      if (inv._id && String(inv._id) === residentId) return true;
+
+      // 2. Phone match (normalized digits)
+      const invDigits = (inv.contact || inv.phone || "").replace(/\D/g, "");
+      if (queryDigits.length >= 6 && invDigits.length >= 6 && (invDigits.includes(queryDigits) || queryDigits.includes(invDigits))) return true;
+
+      // 3. Email match (excluding generic placeholders)
+      if (inv.email && inv.email.toLowerCase().trim() === query && query !== "na@gmail.com") return true;
+
+      // 4. Name match (case-insensitive)
+      if (inv.tenantName && (inv.tenantName.toLowerCase().includes(query) || query.includes(inv.tenantName.toLowerCase()))) return true;
+
+      return false;
+    });
   }
 
   public static async createOrUpdate(invoiceData: Partial<Invoice>): Promise<Invoice> {

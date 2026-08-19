@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { StaffLogin } from "../../features/staff/StaffLogin";
+import { UnifiedPortalLogin } from "@/features/auth/UnifiedPortalLogin";
 
 export const Route = createFileRoute("/staff/login")({
   head: () => ({
@@ -8,5 +8,5 @@ export const Route = createFileRoute("/staff/login")({
       { name: "description", content: "Dedicated Staff and Caretaker Login Portal for Shripad PG." },
     ],
   }),
-  component: StaffLogin,
+  component: UnifiedPortalLogin,
 });

@@ -13,6 +13,7 @@ export interface Building {
   floors: number;
   roomsPerFloor: number;
   floorRoomCounts?: Record<number, number>;
+  roomBeds?: Record<string, number>;
   blockedRooms?: string[];
   createdAt?: string;
   updatedAt?: string;
@@ -49,7 +50,8 @@ export class BuildingModel {
             name: doc.name,
             floors: doc.floors,
             roomsPerFloor: doc.roomsPerFloor,
-            floorRoomCounts: doc.floorRoomCounts,
+            floorRoomCounts: doc.floorRoomCounts || {},
+            roomBeds: doc.roomBeds || {},
             blockedRooms: doc.blockedRooms || [],
             createdAt: doc.createdAt,
             updatedAt: doc.updatedAt,
@@ -115,6 +117,7 @@ export class BuildingModel {
       floors: Number(data.floors) || 4,
       roomsPerFloor: Number(data.roomsPerFloor) || 4,
       floorRoomCounts: data.floorRoomCounts || {},
+      roomBeds: data.roomBeds || {},
       blockedRooms: data.blockedRooms || [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -156,6 +159,7 @@ export class BuildingModel {
       floors: data.floors !== undefined ? Number(data.floors) : existing.floors,
       roomsPerFloor: data.roomsPerFloor !== undefined ? Number(data.roomsPerFloor) : existing.roomsPerFloor,
       floorRoomCounts: data.floorRoomCounts !== undefined ? data.floorRoomCounts : existing.floorRoomCounts,
+      roomBeds: data.roomBeds !== undefined ? data.roomBeds : existing.roomBeds,
       blockedRooms: data.blockedRooms !== undefined ? data.blockedRooms : existing.blockedRooms,
       updatedAt: new Date().toISOString(),
     };

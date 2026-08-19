@@ -1,1 +1,54 @@
-[]
+[
+  {
+    "id": "inv_1787173561506",
+    "invoiceNo": "INV-682432",
+    "residentId": "manual_1787133615566_729",
+    "tenantName": "MALHAR ARINGALE",
+    "contact": "7796889063",
+    "email": "malhararingale17@gmail.com",
+    "building": "PG A",
+    "floor": "Floor 2",
+    "room": "Room 206",
+    "bed": "Bed A",
+    "date": "2026-08-19",
+    "dueDate": "2026-08-26",
+    "rentAmount": 10500,
+    "paidAmount": 10500,
+    "balanceDue": 0,
+    "paymentModes": [
+      "UPI"
+    ],
+    "notes": "Monthly PG rent payment for comfortable living space including Wi-Fi, 3-time meals, and maintenance charges.",
+    "status": "PAID",
+    "createdAt": "2026-08-19T21:06:01.506Z",
+    "updatedAt": "2026-08-19T21:06:01.506Z"
+  },
+  {
+    "_id": "6a857e9603fb3904f3227be9",
+    "id": "inv_1787133590227",
+    "invoiceNo": "INV-832177",
+    "residentId": "manual_1787133407309_776",
+    "tenantName": "Ajay ambhorw",
+    "residentName": "",
+    "contact": "7972107673",
+    "phone": "",
+    "email": "na@gmail.com",
+    "building": "PG shripadPgLux-A",
+    "floor": "Floor 1",
+    "room": "Room G02",
+    "roomNo": "",
+    "bed": "Bed A",
+    "date": "2026-08-19",
+    "dueDate": "2026-08-26",
+    "rentAmount": 5000,
+    "paidAmount": 5000,
+    "balanceDue": 0,
+    "paymentModes": [
+      "UPI"
+    ],
+    "notes": "Monthly PG rent payment for comfortable living space including Wi-Fi, 3-time meals, and maintenance charges.",
+    "status": "PAID",
+    "createdAt": "2026-08-19T09:59:50.227Z",
+    "updatedAt": "2026-08-19T09:59:50.227Z"
+  }
+]

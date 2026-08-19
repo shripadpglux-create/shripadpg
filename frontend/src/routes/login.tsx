@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CustomerLogin } from "@/features/customer/CustomerLogin";
+import { UnifiedPortalLogin } from "@/features/auth/UnifiedPortalLogin";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Resident Login — Shripad PG" },
-      { name: "description", content: "Secure resident portal login for Shripad PG members." },
+      { title: "Portal Login — Shripad PG" },
+      { name: "description", content: "Fast & Secure Unified Portal Login for Admins, Staff, and Residents of Shripad PG." },
     ],
   }),
-  component: CustomerLogin,
+  component: UnifiedPortalLogin,
 });

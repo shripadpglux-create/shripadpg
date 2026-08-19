@@ -81,11 +81,16 @@ app.use(
 );
 
 // ── Rate Limiting ───────────────────────────────────────────────────
-// Strict limit for login endpoints: 10 attempts per 15 minutes
+// Smart limit for login endpoints: 60 attempts per 15 minutes, skipping successful logins and localhost in dev
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: { success: false, message: "Too many login attempts. Please try again in 15 minutes." },
+  max: 60,
+  skipSuccessfulRequests: true,
+  skip: (req) => {
+    const ip = req.ip || req.socket.remoteAddress || "";
+    return ip === "127.0.0.1" || ip === "::1" || ip.endsWith("127.0.0.1") || process.env.NODE_ENV !== "production";
+  },
+  message: { success: false, message: "Too many failed login attempts. Please try again in 15 minutes." },
   standardHeaders: true,
   legacyHeaders: false,
 });

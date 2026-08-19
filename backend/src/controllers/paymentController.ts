@@ -164,6 +164,15 @@ export class PaymentController {
           notes: "Monthly PG rent payment for comfortable living space including Wi-Fi, 3-time meals, and maintenance charges.",
           status: "PAID",
         });
+
+        // Store official invoiceNo in the payment record
+        if (createdInvoice && updatedBooking.paymentHistory) {
+          const pIdx = updatedBooking.paymentHistory.findIndex((p) => p.id === paymentId);
+          if (pIdx !== -1) {
+            updatedBooking.paymentHistory[pIdx].invoiceNo = createdInvoice.invoiceNo;
+            await BookingModel.update(updatedBooking.id, updatedBooking);
+          }
+        }
       }
 
       // Automated WhatsApp notification on payment verification

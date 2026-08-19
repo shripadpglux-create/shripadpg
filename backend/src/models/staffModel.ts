@@ -193,13 +193,18 @@ export class StaffModel {
   /**
    * Secure authentication using bcrypt comparison.
    */
-  public static async authenticateSecure(email: string, pass: string): Promise<StaffMember | null> {
+  public static async authenticateSecure(identifier: string, pass: string): Promise<StaffMember | null> {
     const staffList = await this.getAll();
-    const cleanEmail = email.trim().toLowerCase();
+    const cleanId = identifier.trim().toLowerCase();
+    const cleanPhone = identifier.trim().replace(/\D/g, "");
     const cleanPass = pass.trim();
 
     for (const s of staffList) {
-      if (s.email.trim().toLowerCase() !== cleanEmail) continue;
+      const emailMatches = s.email.trim().toLowerCase() === cleanId;
+      const sPhone = (s.phone || "").replace(/\D/g, "");
+      const phoneMatches = cleanPhone.length >= 7 && (sPhone === cleanPhone || sPhone.endsWith(cleanPhone));
+
+      if (!emailMatches && !phoneMatches) continue;
 
       const storedPass = s.password || "";
 

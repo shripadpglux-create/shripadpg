@@ -461,8 +461,14 @@ function getBuildingCapacityAndRooms(bld: BuildingReportData): { totalRooms: num
     totalRooms += rCount;
     for (let r = 1; r <= rCount; r++) {
       const rNo = f === 0 ? `G${r.toString().padStart(2, "0")}` : `${f}${r.toString().padStart(2, "0")}`;
-      const cap = customSharing[`${bld.name}_${rNo}`] || 2;
-      totalCapacity += cap;
+      const cleanNo = rNo.replace(/^Room\s+/i, "");
+      const cap =
+        (bld as any).roomBeds?.[rNo] ??
+        (bld as any).roomBeds?.[cleanNo] ??
+        customSharing[`${bld.name}_${rNo}`] ??
+        customSharing[`${bld.name}_${cleanNo}`] ??
+        2;
+      totalCapacity += Number(cap);
     }
   }
 

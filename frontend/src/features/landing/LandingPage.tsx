@@ -28,6 +28,30 @@ const featureBadges = [
 ];
 
 export function LandingPage() {
+  const [activeSession, setActiveSession] = React.useState<{ link: string; label: string } | null>(null);
+
+  React.useEffect(() => {
+    try {
+      if (typeof window !== "undefined") {
+        const admin = localStorage.getItem("shripad_admin_session");
+        if (admin && JSON.parse(admin)?.authenticated) {
+          setActiveSession({ link: "/admin/dashboard", label: "Admin Portal" });
+          return;
+        }
+        const staff = localStorage.getItem("shripad_staff_session");
+        if (staff && JSON.parse(staff)?.authenticated) {
+          setActiveSession({ link: "/staff", label: "Staff Portal" });
+          return;
+        }
+        const customer = localStorage.getItem("shripad_customer_session");
+        if (customer && (JSON.parse(customer)?.id || JSON.parse(customer)?.phone)) {
+          setActiveSession({ link: "/my-rooms", label: "My PG Room" });
+          return;
+        }
+      }
+    } catch {}
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col bg-[#F8FAFC] font-sans selection:bg-brand-green selection:text-white relative overflow-x-hidden">
       {/* Subtle Background Glow Elements */}
@@ -51,11 +75,11 @@ export function LandingPage() {
             </a>
 
             <Link
-              to="/login"
+              to={(activeSession?.link || "/login") as any}
               className="inline-flex items-center gap-2 rounded-2xl bg-brand-green hover:bg-[#00022E] text-white font-extrabold text-xs px-4 py-2.5 shadow-md shadow-brand-green/20 transition cursor-pointer active:scale-95"
             >
               <LogIn className="h-4 w-4" />
-              <span>Portal Login</span>
+              <span>{activeSession ? `Open ${activeSession.label}` : "Portal Login"}</span>
             </Link>
           </div>
         </div>

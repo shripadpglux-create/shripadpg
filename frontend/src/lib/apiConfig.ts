@@ -5,12 +5,26 @@ const getApiBaseUrl = (): string => {
     return (import.meta.env["VITE_API_URL"] as string).replace(/\/$/, "");
   }
 
-  // Production check: If running on Cloudflare Pages or any HTTPS domain, use Render production backend
   if (typeof window !== "undefined") {
     const hostname = window.location.hostname;
-    if (hostname !== "localhost" && hostname !== "127.0.0.1") {
-      return "https://shripadpg.onrender.com";
+
+    // Local development loopback
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      return "http://localhost:5000";
     }
+
+    // Local Wi-Fi / LAN mobile testing (e.g. 192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+    if (
+      hostname.startsWith("192.168.") ||
+      hostname.startsWith("10.") ||
+      /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hostname) ||
+      hostname.endsWith(".local")
+    ) {
+      return `http://${hostname}:5000`;
+    }
+
+    // Production Cloudflare Pages / custom domains
+    return "https://shripadpg.onrender.com";
   }
 
   // Fallback to local development server

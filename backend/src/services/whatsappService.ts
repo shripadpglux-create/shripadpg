@@ -168,6 +168,7 @@ export class WhatsAppService {
     phone?: string | null;
     pushName?: string | null;
     sessionId?: string;
+    openwaUrl?: string;
     details?: any;
   }> {
     try {
@@ -176,6 +177,7 @@ export class WhatsAppService {
         return {
           connected: false,
           status: "DISCONNECTED",
+          openwaUrl: this.getApiBaseUrl(),
           details: "No active WhatsApp session found in OpenWA",
         };
       }
@@ -186,12 +188,14 @@ export class WhatsAppService {
         phone: session.phone,
         pushName: session.pushName,
         sessionId: session.id,
+        openwaUrl: this.getApiBaseUrl(),
         details: session,
       };
     } catch (err: any) {
       return {
         connected: false,
         status: "DISCONNECTED",
+        openwaUrl: this.getApiBaseUrl(),
         details: err?.message || "OpenWA service unreachable",
       };
     }

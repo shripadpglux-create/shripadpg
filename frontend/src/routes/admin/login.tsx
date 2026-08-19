@@ -1,6 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AdminLogin } from "@/features/admin/AdminLogin";
+import { UnifiedPortalLogin } from "@/features/auth/UnifiedPortalLogin";
 
 export const Route = createFileRoute("/admin/login")({
-  component: AdminLogin,
+  head: () => ({
+    meta: [
+      { title: "Admin Sign In — Shripad PG" },
+      { name: "description", content: "Executive Administrative Console Sign In for Shripad PG." },
+    ],
+  }),
+  component: UnifiedPortalLogin,
 });

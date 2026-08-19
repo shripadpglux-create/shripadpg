@@ -2,6 +2,590 @@
 
 ---
 
+### 📍 Version 9.36 — OpenWA Dashboard Direct Access & Gateway URL Integration 📱⚡🌐
+
+```mermaid
+flowchart TD
+    subgraph OpenWABackend ["1. Backend Gateway Discovery"]
+        WhatsAppService["WhatsAppService.getStatus()"]
+        AttachURL["Dynamically extracts live OPENWA_API_URL
+        (e.g., https://shripad-openwa-gateway.onrender.com)"]
+        
+        WhatsAppService --> AttachURL
+    end
+
+    subgraph AdminDashboardUI ["2. Admin Dashboard WhatsApp Automation Modal"]
+        HeaderAction["Modal Header: OpenWA Dashboard ↗ button"]
+        StatusCardRow["Connection Status Card: Gateway URL display & Launch OpenWA Console ↗"]
+        DirectAccess["Admin clicks button -> Opens live Swagger/OpenWA Console in new tab"]
+        
+        HeaderAction --> DirectAccess
+        StatusCardRow --> DirectAccess
+    end
+
+    OpenWABackend -.->|Dynamic openwaUrl payload| AdminDashboardUI
+```
+
+---
+
+### 📍 Version 9.35 — Unified Server-Synchronized Invoice ID & Single-Flow Alignment 🧾🔗✨
+
+```mermaid
+flowchart TD
+    subgraph AdminAction ["1. Admin Side: Official Invoice Generation"]
+        AdminRaise["Admin raises/saves Invoice (e.g. INV-144984) via Studio/Payment Verification"]
+        SaveInvoiceDB["Invoice saved to invoices.json & MongoDB with official invoiceNo"]
+        LinkBookingPayment["BookingModel paymentHistory record linked directly with invoiceNo = 'INV-144984'"]
+        
+        AdminRaise --> SaveInvoiceDB --> LinkBookingPayment
+    end
+
+    subgraph CustomerPortalSync ["2. Customer Portal: View Invoice Single-Flow"]
+        CustomerClick["Resident clicks 'View Invoice & Download PDF' on payment row"]
+        FetchServerInvoice["fetchAndViewInvoice queries GET /api/invoices/resident/:id
+        • Strategy 1: Match by payment.invoiceNo or payment.transactionId
+        • Strategy 2: Match by Month & Year of payment
+        • Strategy 3: Match by Amount
+        • Strategy 4: Fallback to official active invoice"]
+        RenderUnifiedInvoice["CustomerPortal renders InvoiceDesign with viewingInvoiceData:
+        • INV. NO.: INV-144984 (Exact Match with Admin)
+        • Floor: Floor 2 (Clean standardized format)
+        • Room / Bed: Room 206, Bed A
+        • Amount & Balance Due: Fully aligned"]
+
+        CustomerClick --> FetchServerInvoice --> RenderUnifiedInvoice
+    end
+
+    AdminAction -.->|Real-time Data Alignment| CustomerPortalSync
+```
+
+---
+
+### 📍 Version 9.34 — Invoice & Payment Pipeline End-to-End Synchronization Fix 🧾⚡💰
+
+```mermaid
+flowchart TD
+    subgraph InvoicePipeline ["1. Invoice → Booking Payment Sync (Backend)"]
+        AdminInvoice["Admin creates invoice via InvoiceDesign component"]
+        MatchBooking["invoiceController: Robust multi-field booking match:
+        • residentId / _id / customerId
+        • Phone (normalized digit comparison)
+        • Email (excluding placeholder NA@gmail)
+        • Name (case-insensitive)"]
+        SyncPayment["Creates paymentRecord in booking.paymentHistory:
+        • Deduplicates by invoiceNo
+        • Updates rentAmount, paidAmount, balanceDue"]
+        
+        AdminInvoice --> MatchBooking --> SyncPayment
+    end
+
+    subgraph CustomerUpload ["2. Customer Payment Upload Fix (Frontend)"]
+        CustSubmit["Customer submits payment proof on /my-rooms"]
+        BackendResp["Backend returns { booking, payment } with server IDs"]
+        UseRealData["Frontend now uses data.booking from server response
+        (Previously discarded response and used local-only IDs)"]
+        
+        CustSubmit --> BackendResp --> UseRealData
+    end
+
+    subgraph CrossSessionSync ["3. Admin → Customer Real-Time Session Sync"]
+        AdminActions["Admin: Record Payment / Verify / Reject / Raise Invoice"]
+        SyncCustomerLS["Sync updated booking to shripad_customer_session localStorage"]
+        CustomerPolling["Customer portal: 5-second polling + storage event listener"]
+        LiveUpdate["Customer sees updated payment history immediately"]
+        
+        AdminActions --> SyncCustomerLS --> CustomerPolling --> LiveUpdate
+    end
+```
+
+---
+
+### 📍 Version 9.33 — Persistent Native-App Session Architecture (WhatsApp / Instagram Model) 📱🔒✨
+
+```mermaid
+flowchart TD
+    subgraph PersistentStorage ["1. Permanent Device Storage (LocalStorage)"]
+        AdminSess["shripad_admin_session & shripad_auth_token:
+        • Persists across browser/app restarts, tab closes, system reboots"]
+        StaffSess["shripad_staff_session & shripad_staff_id:
+        • Permanent staff token & building assignment state"]
+        CustSess["shripad_customer_session:
+        • Permanent resident booking & credential state"]
+    end
+
+    subgraph AutoRedirectGuard ["2. Intelligent Auto-Navigation Engine"]
+        VisitLogin["User visits /login, /admin/login, /staff/login, or root /"]
+        DetectSession{"Active session detected?"}
+        
+        VisitLogin --> DetectSession
+        DetectSession -- "Admin session valid" --> RouteAdmin["Direct auto-redirect -> /admin/dashboard (0ms delay)"]
+        DetectSession -- "Staff session valid" --> RouteStaff["Direct auto-redirect -> /staff"]
+        DetectSession -- "Resident session valid" --> RouteCust["Direct auto-redirect -> /my-rooms"]
+        DetectSession -- "No session" --> ShowForm["Display Unified Login / Landing Page"]
+    end
+
+    subgraph ManualLogoutEnforcement ["3. Manual-Only Logout Action"]
+        ManualClick["User explicitly taps 'Logout Account' / 'Sign Out'"]
+        ClearKeys["Clear specific role token & session storage keys"]
+        RedirectClean["Navigate cleanly to /login with empty credentials"]
+
+        ManualClick --> ClearKeys --> RedirectClean
+    end
+```
+
+---
+
+### 📍 Version 9.32 — Real-Time Complaint Lifecycle & Multi-Channel Status Synchronization 🛠️⚡📢
+
+```mermaid
+flowchart TD
+    subgraph ResidentSubmit ["1. Resident Ticket Submission (Customer Portal)"]
+        SubmitTicket["Resident registers ticket on /my-rooms:
+        • Category, Title, Description, Priority
+        • Dispatches POST /api/bookings/:id/complaints"]
+
+        BackendStore["Backend Persistence (BookingModel):
+        • Generates unique complaint ID (cmp_...)
+        • Saves to complaintHistory & complaints arrays in JSON + MongoDB Atlas
+        • Returns updated booking + complaint record"]
+
+        ClientSync["Client State Updated:
+        • Session updated with real backend ticket ID
+        • LocalStorage synchronized for cross-tab continuity"]
+
+        SubmitTicket --> BackendStore --> ClientSync
+    end
+
+    subgraph AdminResolution ["2. Admin / Warden Status Update (Admin Dashboard)"]
+        AdminAction["Admin changes status in Complaints Hub / Profile:
+        • Sets 'pending' | 'in_progress' ('⚡ In Process') | 'resolved' ('✅ Resolved')
+        • Enters optional Warden Resolution Note
+        • Dispatches PUT /api/bookings/:id/complaints/:complaintId"]
+
+        DbUpdate["Backend Model Resolution:
+        • Matches complaint by ID, title, or alias
+        • Updates status, adminComment, and resolvedAt timestamp
+        • Triggers automated WhatsApp notification to resident"]
+
+        StorageEvent["Storage Event & Realtime Broadcast:
+        • Updates in-memory bookings & local storage keys"]
+
+        AdminAction --> DbUpdate --> StorageEvent
+    end
+
+    subgraph LiveResidentReflection ["3. Live Resident Status Reflection (/my-rooms)"]
+        SyncTriggers["Multi-Tier Refresh Pipeline:
+        • 5-second live background polling
+        • Instant sync on tab click (switching to Complaints tab)
+        • Window Storage event listener for cross-tab sync
+        • Manual '🔄 Refresh Status' action button"]
+
+        UIBadges["Visual Status Chips & Warden Notes:
+        • '⚡ In Process' (Glowing Blue Pill)
+        • '✅ Resolved' (Emerald Green Pill with Resolution Note)
+        • '⏳ Pending Review' (Warm Amber Pill)"]
+
+        StorageEvent --> SyncTriggers --> UIBadges
+    end
+```
+
+---
+
+### 📍 Version 9.31 — UI De-duplication & Button Typography Polish 🧹✨🎨
+
+```mermaid
+flowchart TD
+    subgraph HeaderActionStreamlining ["1. Single Definitive Action Button"]
+        OldDuplicate["Redundant UI:
+        • Top header: '+ + Add New Building' (Double Plus)
+        • Property grid: Duplicate dashed 'Add New Building' card alongside active properties"]
+        
+        NewCleanCTA["Clean Streamlined UI:
+        • Header CTA: Single clean '+ Add New Building' button
+        • Grid Card: Removed when properties exist (reserved strictly for zero-property empty states)"]
+
+        OldDuplicate --> NewCleanCTA
+    end
+
+    subgraph TypographyIconPolish ["2. System-Wide Double Plus Removal"]
+        CleanedButtons["Standardized Action Labels:
+        • 'New Admission' (clean icon + label)
+        • 'Log Expense' (clean icon + label)
+        • 'Admit Customer' (clean icon + label)
+        • 'Record Rent Payment' (clean icon + label)"]
+
+        NewCleanCTA --> CleanedButtons
+    end
+```
+
+---
+
+### 📍 Version 9.30 — Elimination of False 5-Bed Substring Expansion Bug 🛏️🎯⚡
+
+```mermaid
+flowchart TD
+    subgraph BugDiagnosis ["1. Substring Collision Bug Diagnosis"]
+        OldMatch["Flawed String Match:
+        'bkBed.includes(\'e\')' was checking the entire string 'bed a'
+        Because 'bed' contains 'e', every 'Bed A' booking evaluated TRUE!"]
+        ForcedCapacity["Unintended Expansion:
+        Rooms with standard residents (G02 with Ajay, 206 with Malhar)
+        were permanently forced to 5 Beds in getRoomBedState"]
+
+        OldMatch --> ForcedCapacity
+    end
+
+    subgraph PreciseParsing ["2. Strict Bed Suffix & Letter Matching"]
+        CleanString["Sanitize Bed String:
+        'bedLetter = rawBed.replace(/^bed\s*/i, \'\').trim()'"]
+        
+        StrictCheck["Exact Letter Evaluation:
+        • 'bed c' or 'c' or '3' -> Capacity 3
+        • 'bed d' or 'd' or '4' -> Capacity 4
+        • 'bed e' or 'e' or '5' -> Capacity 5
+        • 'Bed A' & 'Bed B' -> Remain standard 2 Beds!"]
+
+        CleanString --> StrictCheck
+    end
+
+    subgraph AccurateState ["3. Full User Control & Flawless Property Editing"]
+        DefaultTwo["All standard rooms correctly default to 2 Beds (35 Rooms x 2 = 70 Total Beds)"]
+        UserCustom["User can freely change any room to 1..8 beds without forced overrides"]
+        SyncDb["Clean roomBeds synchronization across MongoDB Atlas & LocalStorage"]
+
+        StrictCheck --> DefaultTwo
+        DefaultTwo --> UserCustom
+        UserCustom --> SyncDb
+    end
+```
+
+---
+
+### 📍 Version 9.29 — Edit Building Bed Selector State & Single Source of Truth Alignment 🛏️⚡✨
+
+```mermaid
+flowchart TD
+    subgraph EditModalPipeline ["1. Edit Building Modal State Resolution"]
+        OpenAction["User Clicks Pencil (Edit Building)"]
+        FetchLatest["Fetch Latest Building & Pipeline State:
+        • b.roomBeds[rNo] (Direct DB Record)
+        • getRoomBedState(b.name, rNo).capacity (Pipeline State)
+        • customRoomSharing (Local / Active Overrides)"]
+        
+        StateInit["editingBuildingRoomBeds Initialized:
+        • Room G02 = 5 Beds
+        • Room 206 = 5 Beds
+        • Other Rooms = 2 Beds"]
+
+        OpenAction --> FetchLatest
+        FetchLatest --> StateInit
+    end
+
+    subgraph UIActivePills ["2. Live Selector Highlight & Real-Time Header Calculation"]
+        ActivePillHighlight["Bed Number Button Matrix [1..8]:
+        • Active: Midnight Navy (#00022E) + White text + Scale
+        • G02 highlights [5] & 206 highlights [5]
+        • Seamless user switching on click"]
+
+        LiveHeaderBadge["Modal Header Total Summary:
+        • Dynamically evaluates: 19 (GF) + 18 (1F) + 21 (2F) + 18 (3F) = 76 Total Beds
+        • Synchronized with Overview Card Bed Occupancy (3% - 2/76 Beds)"]
+
+        StateInit --> ActivePillHighlight
+        StateInit --> LiveHeaderBadge
+    end
+
+    subgraph RealTimeBackendPersist ["3. Instant Cross-Platform Cloud Sync"]
+        CapModifier["setRoomBedCapacity / setFloorBedCapacity / handleUpdateBuilding:
+        • Updates customRoomSharing (localStorage)
+        • Updates buildingsList in-memory state
+        • Dispatches PUT /api/buildings/:name to MongoDB Atlas"]
+
+        ActivePillHighlight --> CapModifier
+    end
+```
+
+---
+
+### 📍 Version 9.28 — Building, Floor, Room & Bed Capacity Pipeline Synchronization 🏢🛏️⚡
+
+```mermaid
+flowchart TD
+    subgraph BackendSync ["1. Full-Stack Data Model & Database Persistence"]
+        MongoModel["MongoDB Building Schema + JSON Store:
+        • id, name, floors, roomsPerFloor
+        • floorRoomCounts (e.g. GF excluded or custom count)
+        • roomBeds map: {'G02': 5, '206': 5, ...}
+        • blockedRooms list"]
+
+        Endpoints["Express REST Endpoints:
+        • POST /api/buildings (accepts & saves roomBeds)
+        • PUT /api/buildings/:name (persists roomBeds)
+        • GET /api/buildings (serves roomBeds to all clients)"]
+
+        MongoModel <--> Endpoints
+    end
+
+    subgraph ClientPipelineSync ["2. Centralized Capacity & Bed Aggregation Pipeline"]
+        FetchSync["fetchBuildings & LocalStorage:
+        • Auto-merges bld.roomBeds into customRoomSharing
+        • Guarantees cross-device & cross-tab consistency"]
+
+        BedCalculator["Dynamic Room Capacity Resolver:
+        • Checks targetBld.roomBeds[roomNo]
+        • Checks customRoomSharing[bld_roomNo]
+        • Auto-expands for allocated bookings (Bed C, Bed D...)
+        • Prevents fallback resets"]
+
+        ModalHeader["Accurate Dynamic Total Bed Calculators:
+        • getTotalBedsForEditingBuilding() = 76 Beds
+        • getTotalBedsForNewBuilding()
+        • getBuildingOccupancyDetails()"]
+
+        FetchSync --> BedCalculator
+        BedCalculator --> ModalHeader
+    end
+
+    subgraph UIRefinement ["3. Modal & Card Visual Alignment"]
+        NoTruncation["Anti-Truncation Room Cards:
+        • 'shrink-0 min-w-[62px] whitespace-nowrap'
+        • Full 'Room 101' / 'Room G02' label displayed
+        • Zero 'Ro...' truncation on narrow mobile screens"]
+
+        ActiveBedPills["Interactive 1-8 Bed Selector Buttons:
+        • Correctly highlights active capacity [5] on G02 and 206
+        • Real-time live total badge recalculation"]
+
+        NoTruncation --> ActiveBedPills
+    end
+
+    BackendSync <--> ClientPipelineSync
+    ClientPipelineSync --> UIRefinement
+```
+
+---
+
+### 📍 Version 9.27 — Symmetrical Production-Grade Occupancy Matrix & Bento KPI Refactor 🏢🎨✨
+
+```mermaid
+flowchart TD
+    subgraph OccupancyMatrixSymmetry ["Unified Symmetrical Design Language for Matrix Views"]
+        HeaderUnit["1. Harmonious Header Component:
+        • Identical Bed Icon in soft tinted rounded badge
+        • Emerald (#10B981) for Vacant Mode | Rose (#F43F5E) for Occupied Mode
+        • Symmetrical close action & subtitle typography"]
+
+        PillToggle["2. Midnight Navy Switcher Bar:
+        • Active Tab: Deep #00022E with subtle white ring & glowing status dot
+        • Vacant: Emerald pulse dot 🟢 | Occupied: Ruby status dot 🔴
+        • Zero neon or jarring color fills"]
+
+        BuildingSelect["3. Symmetrical Building Cards:
+        • Clean white base card with subtle border & hover lift
+        • Selected Vacant: Emerald border & ring (2/2 Vacant badge)
+        • Selected Occupied: Rose border & ring (1/2 Occupied badge)"]
+
+        RoomGridDeck["4. Uniform Room & Bed Deck:
+        • Identical button dimensions (h-13 min-w-[70px])
+        • Matching typography: Room No (bold) + Sublabel badge (colored)
+        • Matching Bed Breakdown Drawers with allocation & profile viewing"]
+
+        HeaderUnit --> PillToggle
+        PillToggle --> BuildingSelect
+        BuildingSelect --> RoomGridDeck
+    end
+
+---
+
+### 📍 Version 9.26 — Resilient Multi-Tier Auth Fallback & Local LAN Mobile Routing 🌐🔄🛡️
+
+```mermaid
+flowchart TD
+    subgraph ClientNetworkRouter ["Intelligent Client Network Resolution (apiConfig.ts)"]
+        ClientReq["📱 Client Device Accesses Web Application"]
+        HostCheck{"Hostname Type?"}
+
+        HostCheck -->|localhost / 127.0.0.1| DevLocal["http://localhost:5000"]
+        HostCheck -->|LAN Mobile Wi-Fi (192.168.* / 10.* / .local)| LanLocal["http://[LAN_IP]:5000\n(Direct dev computer backend link)"]
+        HostCheck -->|Production (pages.dev / shripadpg.com)| CloudProd["https://shripadpg.onrender.com"]
+    end
+
+    subgraph ResilientAuthCascade ["Resilient Multi-Endpoint Auth Cascade (UnifiedPortalLogin.tsx)"]
+        Step1["1. POST /api/auth/unified-login (Fast Auto-Detect)"]
+        Step2["2. Fallback: POST /api/auth/admin-login"]
+        Step3["3. Fallback: POST /api/auth/staff-login"]
+        Step4["4. Fallback: POST /api/bookings/login"]
+        Step5["5. Offline Fallback: Local Cached Resident Directory"]
+
+        Step1 -->|Success| LoginSuccess["✅ Session Created & Routed"]
+        Step1 -->|404 / Network / Server Error| Step2
+        Step2 -->|Success| LoginSuccess
+        Step2 -->|Failed| Step3
+        Step3 -->|Success| LoginSuccess
+        Step3 -->|Failed| Step4
+        Step4 -->|Success| LoginSuccess
+        Step4 -->|Failed| Step5
+        Step5 -->|Match| LoginSuccess
+        Step5 -->|No Match| StrictRejection["❌ Invalid Credentials Feedback"]
+    end
+
+---
+
+### 📍 Version 9.25 — Senior Designer Mobile Viewport Balance & Optical Alignment 📱🎨✨
+
+```mermaid
+flowchart TD
+    subgraph MobileLayoutRefactor ["Mobile-First Optical Alignment & Card Architecture"]
+        TopNav["1. Balanced Top Navigation Header:
+        • Left: [← Back to Home] with hover arrow transition
+        • Right: [🛡️ SSL Secured] unified height & matching pill padding"]
+
+        BrandHero["2. Proportional Hero Section:
+        • Refined logo container (h-16 on mobile, h-20 on desktop)
+        • Compact 'Shripad PG Portal' badge
+        • Scaled typography without overflowing headers"]
+
+        FormDeck["3. Balanced Form & Input Deck:
+        • Card padding: p-5 on mobile, p-8 on desktop (Zero horizontal pinch)
+        • Inputs: 14px text size with pl-10 icons (No placeholder truncation)
+        • Button: py-3.5 px-5 with smooth active scale (0.98)"]
+
+        FooterStack["4. Anti-Wrap Support Footer:
+        • Row 1 / Left: 🛡️ Strict Credential Validation (with shrink-0 icon)
+        • Row 2 / Right: 📞 Help: +91 98765 43210 (whitespace-nowrap tel link)
+        • 100% immune to awkward phone number line breaks"]
+
+        TopNav --> BrandHero
+        BrandHero --> FormDeck
+        FormDeck --> FooterStack
+    end
+
+---
+
+### 📍 Version 9.24 — Smart Auth Rate Limiter & Zero-Lockout Safeguards 🛡️⚡
+
+```mermaid
+flowchart TD
+    subgraph RateLimitingArchitecture ["Smart Login Rate Limiter (index.ts)"]
+        IncomingAuth["🌐 Inbound Login Request (/api/auth/unified-login)"]
+        DevFilter{"Localhost / Development Environment?"}
+        SuccessSkip{"Successful Login Request?"}
+        AttemptCounter["⏱️ Window: 15 mins | Max Failed Attempts: 60"]
+        BlockResponse["❌ HTTP 429: Too many failed login attempts"]
+        AllowLogin["✅ Forward to AuthController.unifiedLogin"]
+
+        IncomingAuth --> DevFilter
+        DevFilter -->|Yes (127.0.0.1 / ::1 / dev)| AllowLogin
+        DevFilter -->|No (Production Remote)| SuccessSkip
+        SuccessSkip -->|skipSuccessfulRequests: true| AllowLogin
+        SuccessSkip -->|Failed Attempt| AttemptCounter
+        AttemptCounter -->|Attempts <= 60| AllowLogin
+        AttemptCounter -->|Attempts > 60| BlockResponse
+    end
+
+---
+
+### 📍 Version 9.23 — Single-Interface Universal Portal Login (Zero-Tab Simplicity) 🚪✨⚡
+
+```mermaid
+flowchart TD
+    subgraph SinglePortalUI ["Ultra-Clean Single Portal Login (/login)"]
+        UserVisit["👤 User Arrives from 'Portal Login' or Direct Link"]
+        PortalForm["🏢 Single Elegant Login Form (UnifiedPortalLogin.tsx)
+        • NO Role Pills / Tabs (Pure Zero-Friction UX)
+        • Field 1: Email, Mobile, or Customer ID
+        • Field 2: Password with Eye toggle
+        • Action: 'Login to Portal ➔'"]
+        UserVisit --> PortalForm
+    end
+
+    subgraph AutoRouterEngine ["Intelligent Backend Auto-Detection & Strict Credential Engine"]
+        API["POST /api/auth/unified-login"]
+        PortalForm -->|Submit Credentials| API
+
+        AdminCheck{"1. Super Admin Match?
+        • Hardcoded or DB super_admin
+        • Strict Bcrypt Hash Match"}
+
+        StaffCheck{"2. Staff / Caretaker Match?
+        • Staff Email OR Registered Phone
+        • Strict Bcrypt Hash Match"}
+
+        ResidentCheck{"3. Resident Tenant Match?
+        • Customer ID OR 10-Digit Mobile
+        • Exact Password Match"}
+
+        API --> AdminCheck
+        AdminCheck -->|Yes| AdminDest["👑 Super Admin Session
+        ➔ Redirects to /admin/dashboard"]
+        AdminCheck -->|No| StaffCheck
+        StaffCheck -->|Yes| StaffDest["👔 Staff Member Session
+        ➔ Redirects to /staff"]
+        StaffCheck -->|No| ResidentCheck
+        ResidentCheck -->|Yes| ResidentDest["🏠 Resident Portal Session
+        ➔ Redirects to /my-rooms"]
+        ResidentCheck -->|No| Reject["❌ Strict Rejection (HTTP 401)
+        'Invalid credentials. Please verify your Email, Mobile, or Customer ID and Password.'"]
+    end
+
+---
+
+### 📍 Version 9.22 — Unified Multi-Role Portal Login & Strict Credential Engine 🔐⚡✨
+
+```mermaid
+flowchart TD
+    subgraph UniversalLoginGateway ["Unified Multi-Role Portal Gateway (/login)"]
+        LandingNav["🌐 Top Header 'Portal Login' Button (LandingPage.tsx)"]
+        UnifiedUI["✨ UnifiedPortalLogin.tsx UI:
+        • Role Selector Pills (🌟 Auto-Detect | 👑 Super Admin | 👔 Staff | 🏠 Resident)
+        • Dynamic Input Placeholders & Real-Time Role Hints
+        • Password Visibility Toggle (Eye/EyeOff) & Keyboard Enter Submission
+        • 256-Bit SSL Encrypted Access Badge"]
+
+        LandingNav -->|Direct Navigation| UnifiedUI
+    end
+
+    subgraph StrictAuthEngine ["Strict Multi-Tier Auth & Credential Engine (/api/auth/unified-login)"]
+        UnifiedEndpoint["POST /api/auth/unified-login
+        (identifier, password, roleHint)"]
+
+        AdminCheck{"1. Super Admin Check:
+        • ADMIN_EMAIL / 'admin'
+        • bcrypt.compareSync(ADMIN_PASSWORD_HASH)
+        • StaffModel super_admin check"}
+
+        StaffCheck{"2. Staff Member Check:
+        • StaffModel.authenticateSecure()
+        • Strict Email OR Registered Mobile Match
+        • Bcrypt hash verification & active status"}
+
+        ResidentCheck{"3. Resident Booking Check:
+        • BookingModel.getAll()
+        • Match Customer ID OR 10-Digit Mobile
+        • Compare customerPassword / generated"}
+
+        UnifiedUI -->|Form Submission| UnifiedEndpoint
+        UnifiedEndpoint --> AdminCheck
+        AdminCheck -->|Match| AdminSession["👑 Admin Session:
+        • signToken(super_admin JWT)
+        • Store shripad_admin_session
+        • Instant Redirect ➔ /admin/dashboard"]
+        AdminCheck -->|No Match| StaffCheck
+        StaffCheck -->|Match| StaffSession["👔 Staff Session:
+        • signToken(staff JWT)
+        • Store shripad_staff_session & id
+        • Instant Redirect ➔ /staff"]
+        StaffCheck -->|No Match| ResidentCheck
+        ResidentCheck -->|Match| ResidentSession["🏠 Resident Session:
+        • Store shripad_customer_session
+        • Instant Redirect ➔ /my-rooms"]
+        ResidentCheck -->|No Match| StrictRejection["❌ Strict Rejection (HTTP 401):
+        • Contextual failure reason
+        • Shake animation & guidance banner"]
+    end
+
+---
+
 ### 📍 Version 9.21 — Deep QA Mathematical Harmonization & Cross-System Data Verification 🧪📊🔍
 
 ```mermaid

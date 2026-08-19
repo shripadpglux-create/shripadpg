@@ -14,6 +14,7 @@ export interface PaymentRecord {
   year: number;
   amount: number;
   transactionId: string;
+  invoiceNo?: string;
   payerName: string;
   paymentDate: string; // ISO date string
   paymentMethod: "upi" | "bank_transfer" | "cash" | "other";
@@ -69,7 +70,9 @@ export interface Booking {
   customerPassword?: string;
   documents?: string;
   paymentHistory?: PaymentRecord[];
+  payments?: PaymentRecord[];
   complaintHistory?: ComplaintRecord[];
+  complaints?: ComplaintRecord[];
   rentAmount?: number;
   depositAmount?: number;
   paidDepositAmount?: number;
@@ -561,12 +564,13 @@ export class BookingModel {
       createdAt: new Date().toISOString(),
     };
 
-    const existingHistory = this.cache[index].complaintHistory || [];
+    const existingHistory = this.cache[index].complaintHistory || this.cache[index].complaints || [];
     const updatedHistory = [newComplaint, ...existingHistory];
 
     this.cache[index] = {
       ...this.cache[index],
       complaintHistory: updatedHistory,
+      complaints: updatedHistory,
     };
 
     await this.saveToFile();
@@ -580,18 +584,24 @@ export class BookingModel {
     adminComment?: string
   ): Promise<Booking | null> {
     await this.init();
-    const bookingIndex = this.cache.findIndex((b) => b.id === bookingId);
+    const bookingIndex = this.cache.findIndex((b) => b.id === bookingId || (b as any)._id === bookingId);
     if (bookingIndex === -1) return null;
 
     const booking = this.cache[bookingIndex];
-    const history = booking.complaintHistory || [];
-    const cIndex = history.findIndex((c) => c.id === complaintId);
+    const history = booking.complaintHistory || booking.complaints || [];
+    const cleanCmpId = (complaintId || "").toString().trim();
+    const cIndex = history.findIndex((c: any) =>
+      c.id === cleanCmpId ||
+      (c.id && c.id.toString() === cleanCmpId) ||
+      (c as any)._id === cleanCmpId ||
+      c.title === cleanCmpId
+    );
     if (cIndex === -1) return null;
 
     const updatedComplaint: ComplaintRecord = {
       ...history[cIndex],
       status,
-      adminComment: adminComment || history[cIndex].adminComment,
+      adminComment: adminComment !== undefined ? adminComment : history[cIndex].adminComment,
       resolvedAt: status === "resolved" || status === "closed" ? new Date().toISOString() : history[cIndex].resolvedAt,
     };
 
@@ -601,6 +611,7 @@ export class BookingModel {
     this.cache[bookingIndex] = {
       ...booking,
       complaintHistory: updatedHistory,
+      complaints: updatedHistory,
     };
 
     await this.saveToFile();

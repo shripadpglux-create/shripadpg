@@ -12,6 +12,19 @@ export function StaffLogin() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // Persistent Session Guard
+  React.useEffect(() => {
+    try {
+      const staffSessionStr = localStorage.getItem("shripad_staff_session");
+      if (staffSessionStr) {
+        const parsed = JSON.parse(staffSessionStr);
+        if (parsed && parsed.authenticated) {
+          navigate({ to: "/staff" as any });
+        }
+      }
+    } catch {}
+  }, [navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {

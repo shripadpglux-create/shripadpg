@@ -1,14 +1,25 @@
 [
   {
-    "id": "bld_1786813662376_330",
-    "name": "PG ShripadPG-A",
-    "floors": 5,
-    "roomsPerFloor": 8,
+    "id": "bld_1787131183887_941",
+    "name": "PG shripadPgLux-A",
+    "floors": 4,
+    "roomsPerFloor": 9,
     "floorRoomCounts": {
-      "0": 0
+      "0": 8
+    },
+    "roomBeds": {
+      "104": 2,
+      "G01": 2,
+      "G02": 2,
+      "G03": 2,
+      "G04": 2,
+      "G05": 2,
+      "G06": 2,
+      "G07": 2,
+      "G08": 2
     },
     "blockedRooms": [],
-    "createdAt": "2026-08-15T17:07:42.376Z",
-    "updatedAt": "2026-08-15T17:07:42.376Z"
+    "createdAt": "2026-08-19T09:19:43.887Z",
+    "updatedAt": "2026-08-19T19:35:55.200Z"
   }
 ]
