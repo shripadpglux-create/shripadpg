@@ -113,16 +113,22 @@ function normalizeTabName(t?: string): string {
   return map[lower] || t;
 }
 
-export function formatPhoneWithCountryCode(val: string): string {
+export function cleanIndianPhoneDigits(val: string): string {
   if (!val) return "";
   let digits = val.replace(/\D/g, "");
-  if (digits.startsWith("91") && digits.length > 10) {
+  // If user pasted a 12-digit number starting with 91 (e.g. 919876543210)
+  if (digits.length === 12 && digits.startsWith("91")) {
     digits = digits.slice(2);
   }
-  if (digits.startsWith("0")) {
+  // If user pasted an 11-digit number starting with 0 (e.g. 09876543210)
+  else if (digits.length === 11 && digits.startsWith("0")) {
     digits = digits.slice(1);
   }
-  digits = digits.slice(0, 10);
+  return digits.slice(0, 10);
+}
+
+export function formatPhoneWithCountryCode(val: string): string {
+  const digits = cleanIndianPhoneDigits(val);
   if (!digits) return "";
   return `+91 ${digits}`;
 }
@@ -165,11 +171,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const [rentSetupStayType, setRentSetupStayType] = useState<"monthly" | "short_stay">("monthly");
   const [isRentSetupSubmitting, setIsRentSetupSubmitting] = useState(false);
   const [isEditingRent, setIsEditingRent] = useState(false);
-  const [isAuthChecked, setIsAuthChecked] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
     if (isStaffMode) {
       const staffSessionStr = localStorage.getItem("shripad_staff_session");
       if (!staffSessionStr) {
@@ -194,7 +197,6 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       if (tab) {
         setActiveTab(tab);
       }
-      setIsAuthChecked(true);
       return;
     }
 
@@ -218,7 +220,6 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     if (tab) {
       setActiveTab(tab);
     }
-    setIsAuthChecked(true);
   }, [tab, navigate, isStaffMode]);
 
   const handleAdminLogout = () => {
@@ -483,128 +484,6 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   useEffect(() => {
     fetchPaymentSettings();
   }, []);
-
-  // Global Escape Key & Modal Deadlock Prevention Hook
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        if (previewDocModal.isOpen) {
-          setPreviewDocModal({ isOpen: false, url: "", title: "", filename: "" });
-          return;
-        }
-        if (confirmModalState.isOpen) {
-          setConfirmModalState((prev) => ({ ...prev, isOpen: false }));
-          return;
-        }
-        if (selectedAllocateCustomer) {
-          setSelectedAllocateCustomer(null);
-          return;
-        }
-        if (selectedHistoryResident) {
-          setSelectedHistoryResident(null);
-          return;
-        }
-        if (checkoutCustomer) {
-          setCheckoutCustomer(null);
-          return;
-        }
-        if (checkoutSuccessVoucher) {
-          setCheckoutSuccessVoucher(null);
-          return;
-        }
-        if (isCreateModalOpen) {
-          setIsCreateModalOpen(false);
-          return;
-        }
-        if (isRecordPaymentOpen) {
-          setIsRecordPaymentOpen(false);
-          return;
-        }
-        if (isExpenseModalOpen) {
-          setIsExpenseModalOpen(false);
-          return;
-        }
-        if (isStaffModalOpen) {
-          setIsStaffModalOpen(false);
-          return;
-        }
-        if (isAddBuildingModalOpen) {
-          setIsAddBuildingModalOpen(false);
-          return;
-        }
-        if (isBranchModalOpen) {
-          setIsBranchModalOpen(false);
-          return;
-        }
-        if (isComplaintsHubModalOpen) {
-          setIsComplaintsHubModalOpen(false);
-          return;
-        }
-        if (isWhatsAppModalOpen) {
-          setIsWhatsAppModalOpen(false);
-          return;
-        }
-        if (isPaymentSettingsModalOpen) {
-          setIsPaymentSettingsModalOpen(false);
-          return;
-        }
-        if (occupancyExplorerModal) {
-          setOccupancyExplorerModal(null);
-          return;
-        }
-        if (selectedRoomDetails) {
-          setSelectedRoomDetails(null);
-          return;
-        }
-        if (bedConfigModal) {
-          setBedConfigModal(null);
-          return;
-        }
-        if (isMoreDrawerOpen) {
-          setIsMoreDrawerOpen(false);
-          return;
-        }
-        if (isMobileMenuOpen) {
-          setIsMobileMenuOpen(false);
-          return;
-        }
-        if (isFabMenuOpen) {
-          setIsFabMenuOpen(false);
-          return;
-        }
-        if (isProfileMenuOpen) {
-          setIsProfileMenuOpen(false);
-          return;
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [
-    previewDocModal.isOpen,
-    confirmModalState.isOpen,
-    selectedAllocateCustomer,
-    selectedHistoryResident,
-    checkoutCustomer,
-    checkoutSuccessVoucher,
-    isCreateModalOpen,
-    isRecordPaymentOpen,
-    isExpenseModalOpen,
-    isStaffModalOpen,
-    isAddBuildingModalOpen,
-    isBranchModalOpen,
-    isComplaintsHubModalOpen,
-    isWhatsAppModalOpen,
-    isPaymentSettingsModalOpen,
-    occupancyExplorerModal,
-    selectedRoomDetails,
-    bedConfigModal,
-    isMoreDrawerOpen,
-    isMobileMenuOpen,
-    isFabMenuOpen,
-    isProfileMenuOpen,
-  ]);
 
   // Custom Toast Popup State
   const [customToast, setCustomToast] = useState<{
@@ -1249,7 +1128,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
     const payload: any = {
       name: newStaffName.trim(),
-      phone: newStaffPhone.trim(),
+      phone: formatPhoneWithCountryCode(newStaffPhone),
       email: newStaffEmail.trim(),
       role: newStaffRole,
       assignedBuildings: newStaffAssignedBuildings.length > 0 ? newStaffAssignedBuildings : ["PG A"],
@@ -1877,10 +1756,15 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     e.preventDefault();
     if (!editingCustomer) return;
     try {
+      const payload = {
+        ...editingCustomer,
+        phone: formatPhoneWithCountryCode(editingCustomer.phone || ""),
+        guardianPhone: editingCustomer.guardianPhone ? formatPhoneWithCountryCode(editingCustomer.guardianPhone) : "",
+      };
       const res = await fetch(`${API_BASE_URL}/api/bookings/${editingCustomer.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editingCustomer),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (data.success && data.booking) {
@@ -2820,17 +2704,6 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     }
     return base;
   };
-
-  if (!isAuthChecked) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#00022E] text-white p-4">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-700 border-t-amber-400" />
-          <p className="text-sm font-bold text-slate-200">Verifying session...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex min-h-screen bg-slate-100/60 font-sans text-slate-800 selection:bg-brand-green selection:text-white relative overflow-x-hidden">
@@ -5945,8 +5818,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   setFormSuccessMessage("");
 
                   const formattedCustomerName = newCustomerName.trim().toUpperCase();
-                  const formattedPhone = newCustomerPhone.trim();
-                  const formattedGuardianPhone = newCustomerGuardianPhone.trim();
+                  const formattedPhone = formatPhoneWithCountryCode(newCustomerPhone);
+                  const formattedGuardianPhone = newCustomerGuardianPhone.trim() ? formatPhoneWithCountryCode(newCustomerGuardianPhone) : "";
                   const formattedEmail = newCustomerEmail.trim().toLowerCase();
                   const targetBuilding = isStaffMode && activeStaffMember?.assignedBuildings?.[0]
                     ? activeStaffMember.assignedBuildings[0]
@@ -6037,21 +5910,27 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                     />
                   </div>
                   <div>
-                    <label className="block text-slate-600 mb-1.5">Phone Number *</label>
-                    <input
-                      type="tel"
-                      required
-                      placeholder="+91 98765 00000"
-                      value={newCustomerPhone}
-                      onChange={(e) => setNewCustomerPhone(formatPhoneWithCountryCode(e.target.value))}
-                      className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-slate-800 outline-none focus:border-brand-green focus:bg-white transition font-mono"
-                    />
+                    <label className="block text-slate-600 mb-1.5 font-bold">Phone Number *</label>
+                    <div className="relative flex items-center rounded-2xl border border-slate-200 bg-slate-50/70 overflow-hidden focus-within:border-brand-green focus-within:bg-white transition">
+                      <span className="flex items-center gap-1 px-3.5 py-3 bg-slate-100/80 border-r border-slate-200 text-slate-700 font-black text-xs select-none flex-shrink-0">
+                        <span>🇮🇳</span> +91
+                      </span>
+                      <input
+                        type="tel"
+                        required
+                        maxLength={10}
+                        placeholder="98765 43210"
+                        value={cleanIndianPhoneDigits(newCustomerPhone)}
+                        onChange={(e) => setNewCustomerPhone(cleanIndianPhoneDigits(e.target.value))}
+                        className="w-full p-3 text-slate-800 outline-none font-mono bg-transparent text-xs font-bold"
+                      />
+                    </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-slate-600 mb-1.5">Email Address (Optional)</label>
+                    <label className="block text-slate-600 mb-1.5 font-bold">Email Address (Optional)</label>
                     <input
                       type="email"
                       placeholder="Optional (e.g. resident@example.com)"
@@ -6061,14 +5940,20 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                     />
                   </div>
                   <div>
-                    <label className="block text-slate-600 mb-1.5">Guardian Phone Number (Optional)</label>
-                    <input
-                      type="tel"
-                      placeholder="+91 98765 11111 (Parent/Guardian)"
-                      value={newCustomerGuardianPhone}
-                      onChange={(e) => setNewCustomerGuardianPhone(formatPhoneWithCountryCode(e.target.value))}
-                      className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-slate-800 outline-none focus:border-brand-green focus:bg-white transition font-mono"
-                    />
+                    <label className="block text-slate-600 mb-1.5 font-bold">Guardian Phone Number (Optional)</label>
+                    <div className="relative flex items-center rounded-2xl border border-slate-200 bg-slate-50/70 overflow-hidden focus-within:border-brand-green focus-within:bg-white transition">
+                      <span className="flex items-center gap-1 px-3.5 py-3 bg-slate-100/80 border-r border-slate-200 text-slate-700 font-black text-xs select-none flex-shrink-0">
+                        <span>🇮🇳</span> +91
+                      </span>
+                      <input
+                        type="tel"
+                        maxLength={10}
+                        placeholder="Parent/Guardian Mobile"
+                        value={cleanIndianPhoneDigits(newCustomerGuardianPhone)}
+                        onChange={(e) => setNewCustomerGuardianPhone(cleanIndianPhoneDigits(e.target.value))}
+                        className="w-full p-3 text-slate-800 outline-none font-mono bg-transparent text-xs font-bold"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -6473,14 +6358,15 @@ function doPost(e) {
       {/* ADD NEW PG BUILDING MODAL */}
       {isAddBuildingModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-[2px] animate-in fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in"
           onClick={() => setIsAddBuildingModalOpen(false)}
         >
           <div
-            className="relative w-full max-w-md rounded-[2.5rem] bg-white p-6 sm:p-8 shadow-2xl border border-slate-200/90 space-y-5 animate-in zoom-in-95"
+            className="relative w-full max-w-2xl max-h-[92vh] flex flex-col rounded-[2.5rem] bg-white shadow-2xl border border-slate-200/90 overflow-hidden animate-in zoom-in-95"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 sm:px-8 py-4 sm:py-5 border-b border-slate-100 bg-slate-50/70 flex-shrink-0">
               <div className="flex items-center gap-3">
                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-green/10 text-brand-green border border-brand-green/20">
                   <Building2 className="h-5 w-5" />
@@ -6491,14 +6377,16 @@ function doPost(e) {
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setIsAddBuildingModalOpen(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleAddBuilding} className="space-y-4 text-xs font-bold">
+            <form onSubmit={handleAddBuilding} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-4 text-xs font-bold">
               <div>
                 <label className="block text-slate-600 mb-1.5">Building Name / Code *</label>
                 <input
@@ -6760,13 +6648,15 @@ function doPost(e) {
                     );
                   })}
                 </div>
+                </div>
               </div>
 
-              <div className="pt-2 flex items-center justify-end gap-3">
+              {/* Fixed Modal Footer */}
+              <div className="p-4 sm:p-5 border-t border-slate-100 bg-slate-50/80 flex-shrink-0 flex items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setIsAddBuildingModalOpen(false)}
-                  className="rounded-full px-5 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+                  className="rounded-full px-5 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-200 transition cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -6775,7 +6665,7 @@ function doPost(e) {
                   className="rounded-full bg-brand-green hover:bg-brand-gold text-white px-6 py-2.5 text-xs font-black shadow-md transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
                 >
                   <Plus className="h-4 w-4" />
-                  Create Building
+                  <span>Create Building</span>
                 </button>
               </div>
             </form>
@@ -7112,20 +7002,27 @@ function doPost(e) {
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-600 mb-1.5">Phone Number *</label>
-                  <input
-                    type="tel"
-                    required
-                    value={editingCustomer.phone || ""}
-                    onChange={(e) => setEditingCustomer({ ...editingCustomer, phone: formatPhoneWithCountryCode(e.target.value) })}
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-slate-800 outline-none focus:border-brand-green focus:bg-white transition font-mono"
-                  />
+                  <label className="block text-slate-600 mb-1.5 font-bold">Phone Number *</label>
+                  <div className="relative flex items-center rounded-2xl border border-slate-200 bg-slate-50/70 overflow-hidden focus-within:border-brand-green focus-within:bg-white transition">
+                    <span className="flex items-center gap-1 px-3.5 py-3 bg-slate-100/80 border-r border-slate-200 text-slate-700 font-black text-xs select-none flex-shrink-0">
+                      <span>🇮🇳</span> +91
+                    </span>
+                    <input
+                      type="tel"
+                      required
+                      maxLength={10}
+                      placeholder="98765 43210"
+                      value={cleanIndianPhoneDigits(editingCustomer.phone || "")}
+                      onChange={(e) => setEditingCustomer({ ...editingCustomer, phone: cleanIndianPhoneDigits(e.target.value) })}
+                      className="w-full p-3 text-slate-800 outline-none font-mono bg-transparent text-xs font-bold"
+                    />
+                  </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-600 mb-1.5">Email Address (Optional)</label>
+                  <label className="block text-slate-600 mb-1.5 font-bold">Email Address (Optional)</label>
                   <input
                     type="email"
                     placeholder="Optional (e.g. resident@example.com)"
@@ -7135,14 +7032,20 @@ function doPost(e) {
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-600 mb-1.5">Guardian Phone (Optional)</label>
-                  <input
-                    type="tel"
-                    placeholder="+91 98765 11111 (Parent/Guardian)"
-                    value={editingCustomer.guardianPhone || ""}
-                    onChange={(e) => setEditingCustomer({ ...editingCustomer, guardianPhone: formatPhoneWithCountryCode(e.target.value) })}
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-slate-800 outline-none focus:border-brand-green focus:bg-white transition font-mono"
-                  />
+                  <label className="block text-slate-600 mb-1.5 font-bold">Guardian Phone (Optional)</label>
+                  <div className="relative flex items-center rounded-2xl border border-slate-200 bg-slate-50/70 overflow-hidden focus-within:border-brand-green focus-within:bg-white transition">
+                    <span className="flex items-center gap-1 px-3.5 py-3 bg-slate-100/80 border-r border-slate-200 text-slate-700 font-black text-xs select-none flex-shrink-0">
+                      <span>🇮🇳</span> +91
+                    </span>
+                    <input
+                      type="tel"
+                      maxLength={10}
+                      placeholder="Parent/Guardian Mobile"
+                      value={cleanIndianPhoneDigits(editingCustomer.guardianPhone || "")}
+                      onChange={(e) => setEditingCustomer({ ...editingCustomer, guardianPhone: cleanIndianPhoneDigits(e.target.value) })}
+                      className="w-full p-3 text-slate-800 outline-none font-mono bg-transparent text-xs font-bold"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -10625,14 +10528,20 @@ function doPost(e) {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">Phone Number *</label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="+91 98765 00000"
-                    value={newStaffPhone}
-                    onChange={(e) => setNewStaffPhone(formatPhoneWithCountryCode(e.target.value))}
-                    className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-bold text-slate-900 outline-none focus:border-brand-green font-mono"
-                  />
+                  <div className="relative flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden focus-within:border-brand-green focus-within:ring-2 focus-within:ring-brand-green/20 transition">
+                    <span className="flex items-center gap-1 px-3 py-2.5 bg-slate-50 border-r border-slate-200 text-slate-700 font-black text-xs select-none flex-shrink-0">
+                      <span>🇮🇳</span> +91
+                    </span>
+                    <input
+                      type="tel"
+                      required
+                      maxLength={10}
+                      placeholder="98765 43210"
+                      value={cleanIndianPhoneDigits(newStaffPhone)}
+                      onChange={(e) => setNewStaffPhone(cleanIndianPhoneDigits(e.target.value))}
+                      className="w-full p-2.5 text-xs font-bold text-slate-900 outline-none font-mono bg-transparent"
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">Assigned Login Email *</label>
