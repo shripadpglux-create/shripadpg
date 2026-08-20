@@ -5787,8 +5787,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
       {/* CREATE BOOKING / ADMISSION MODAL */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in">
-          <div className="relative w-full max-w-3xl max-h-[88vh] overflow-y-auto bg-white p-5 sm:p-8 rounded-[2.5rem] shadow-2xl border border-slate-200/90 space-y-6 animate-in zoom-in-95">
+        <div className="fixed inset-0 z-[85] flex items-center justify-center p-3 sm:p-4 pb-24 sm:pb-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in">
+          <div className="relative w-full max-w-3xl max-h-[78vh] sm:max-h-[88vh] overflow-y-auto bg-white p-5 sm:p-8 rounded-[2.5rem] shadow-2xl border border-slate-200/90 space-y-6 animate-in zoom-in-95">
             {/* Modal Top Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -6386,11 +6386,11 @@ function doPost(e) {
       {/* ADD NEW PG BUILDING MODAL */}
       {isAddBuildingModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in"
+          className="fixed inset-0 z-[85] flex items-center justify-center p-3 sm:p-4 pb-24 sm:pb-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in"
           onClick={() => setIsAddBuildingModalOpen(false)}
         >
           <div
-            className="relative w-full max-w-2xl max-h-[92vh] flex flex-col rounded-[2.5rem] bg-white shadow-2xl border border-slate-200/90 overflow-hidden animate-in zoom-in-95"
+            className="relative w-full max-w-2xl max-h-[78vh] sm:max-h-[88vh] flex flex-col rounded-[2.5rem] bg-white shadow-2xl border border-slate-200/90 overflow-hidden animate-in zoom-in-95"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -6680,11 +6680,11 @@ function doPost(e) {
               </div>
 
               {/* Fixed Modal Footer */}
-              <div className="p-3.5 sm:p-5 border-t border-slate-100 bg-slate-50/90 flex-shrink-0 flex items-center justify-between sm:justify-end gap-2.5 sm:gap-3">
+              <div className="p-3.5 sm:p-5 border-t border-slate-200 bg-white flex-shrink-0 flex items-center justify-between sm:justify-end gap-2.5 sm:gap-3 shadow-lg">
                 <button
                   type="button"
                   onClick={() => setIsAddBuildingModalOpen(false)}
-                  className="flex-1 sm:flex-none rounded-full px-5 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-200 bg-slate-100 sm:bg-transparent transition cursor-pointer text-center"
+                  className="flex-1 sm:flex-none rounded-full px-5 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-200 bg-slate-100 transition cursor-pointer text-center"
                 >
                   Cancel
                 </button>
@@ -6704,11 +6704,11 @@ function doPost(e) {
       {/* EDIT BUILDING MODAL WITH GRANULAR PER-ROOM BED DECIDER */}
       {editingBuilding && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in"
+          className="fixed inset-0 z-[85] flex items-center justify-center p-3 sm:p-4 pb-24 sm:pb-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in"
           onClick={() => setEditingBuilding(null)}
         >
           <div
-            className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] bg-white p-5 sm:p-7 shadow-2xl border border-slate-200/90 space-y-5 animate-in zoom-in-95"
+            className="relative w-full max-w-2xl max-h-[78vh] sm:max-h-[88vh] overflow-y-auto rounded-[2.5rem] bg-white p-5 sm:p-7 shadow-2xl border border-slate-200/90 space-y-5 animate-in zoom-in-95"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -9127,8 +9127,8 @@ function doPost(e) {
 
       {/* BOOKMYSHOW-STYLE OCCUPANCY EXPLORER MODAL (OCCUPIED vs UNOCCUPIED ROOMS) */}
       {occupancyExplorerModal && occupancyExplorerModal.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in">
-          <div className="w-full max-w-3xl rounded-[2.5rem] bg-white border border-slate-200 p-6 sm:p-7 shadow-2xl space-y-5 animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[85] flex items-center justify-center p-3 sm:p-4 pb-24 sm:pb-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-3xl rounded-[2.5rem] bg-white border border-slate-200 p-6 sm:p-7 shadow-2xl space-y-5 animate-in zoom-in-95 max-h-[78vh] sm:max-h-[88vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-3">
@@ -9411,11 +9411,11 @@ function doPost(e) {
       {/* ROOM & BED CAPACITY CONFIGURATION MANAGER MODAL */}
       {bedConfigModal && bedConfigModal.isOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in"
+          className="fixed inset-0 z-[85] flex items-center justify-center p-3 sm:p-4 pb-24 sm:pb-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in"
           onClick={() => setBedConfigModal(null)}
         >
           <div
-            className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] bg-white p-5 sm:p-7 shadow-2xl border border-slate-200/90 space-y-5 animate-in zoom-in-95"
+            className="relative w-full max-w-4xl max-h-[78vh] sm:max-h-[88vh] overflow-y-auto rounded-[2.5rem] bg-white p-5 sm:p-7 shadow-2xl border border-slate-200/90 space-y-5 animate-in zoom-in-95"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}

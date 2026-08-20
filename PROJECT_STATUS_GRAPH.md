@@ -2,6 +2,31 @@
 
 ---
 
+### 📍 Version 9.52 — Mobile Modal Stacking & Viewport-Safe Floating Action Decoupling 📱✨🚀
+
+```mermaid
+flowchart TD
+    subgraph MobileStacking ["1. Modal Overlay Stacking Context"]
+        OldIssue["Bottom Nav (z-50) & FAB (z-61) overlapping modals"]
+        ElevateZ["Elevate Modals to z-[85] Above Bottom Dock & FAB"]
+        OldIssue --> ElevateZ
+    end
+
+    subgraph SafeViewport ["2. Viewport-Safe Height & Padding"]
+        MaxH["max-h-[78vh] sm:max-h-[88vh] Responsive Height"]
+        SafePad["pb-24 sm:pb-4 Bottom Clearance Margin"]
+        SolidFooter["Crisp Solid White Sticky Footer with 1-Tap Touch Buttons"]
+        MaxH --> SafePad --> SolidFooter
+    end
+
+    subgraph MobileResult ["3. 100% Mobile Usability"]
+        SolidFooter --> CancelBtn["Cancel Button: 100% Visible & Clickable"]
+        SolidFooter --> CreateBtn["+ Create Building Button: 100% Visible & Clickable"]
+    end
+```
+
+---
+
 ### 📍 Version 9.51 — Dynamic Staff Session Scoping & Database Property Cleanse 🛡️✨🏢
 
 ```mermaid
