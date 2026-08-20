@@ -165,8 +165,11 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const [rentSetupStayType, setRentSetupStayType] = useState<"monthly" | "short_stay">("monthly");
   const [isRentSetupSubmitting, setIsRentSetupSubmitting] = useState(false);
   const [isEditingRent, setIsEditingRent] = useState(false);
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
     if (isStaffMode) {
       const staffSessionStr = localStorage.getItem("shripad_staff_session");
       if (!staffSessionStr) {
@@ -191,6 +194,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       if (tab) {
         setActiveTab(tab);
       }
+      setIsAuthChecked(true);
       return;
     }
 
@@ -214,6 +218,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     if (tab) {
       setActiveTab(tab);
     }
+    setIsAuthChecked(true);
   }, [tab, navigate, isStaffMode]);
 
   const handleAdminLogout = () => {
@@ -2815,6 +2820,17 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     }
     return base;
   };
+
+  if (!isAuthChecked) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#00022E] text-white p-4">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-700 border-t-amber-400" />
+          <p className="text-sm font-bold text-slate-200">Verifying session...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-slate-100/60 font-sans text-slate-800 selection:bg-brand-green selection:text-white relative overflow-x-hidden">

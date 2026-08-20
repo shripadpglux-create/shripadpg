@@ -2,6 +2,24 @@
 
 ---
 
+### 📍 Version 9.49 — SSR Safe Hydration Guard & Resilient Root Error Boundary Recovery 🛡️✨
+
+```mermaid
+flowchart TD
+    subgraph AuthGuard ["1. SSR & Hydration Protection"]
+        MountCheck["Client isAuthChecked Mount Check"]
+        MountCheck -->|Unresolved Session| CleanSpinner["Sleek Centered Loading Placeholder (0 Broken DOM Renders)"]
+        MountCheck -->|Session Valid| RenderDashboard["Safe Mount of Full Admin & Staff Features"]
+    end
+
+    subgraph ErrorBoundary ["2. Resilient Error Recovery"]
+        CrashDetect["Root Error Boundary Intercepts Unhandled Route Exceptions"]
+        CrashDetect --> RecoveryUI["Clean Dark Recovery Screen + 'Try Again', 'Go to Login', 'Home'"]
+    end
+```
+
+---
+
 ### 📍 Version 9.48 — System Deadlock Audit: Keyboard Trap Prevention, Modal Escape Hooks & Resilient Response Guarantees 🛡️⚡
 
 ```mermaid
