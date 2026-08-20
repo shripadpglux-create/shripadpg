@@ -20,10 +20,24 @@ export class StaffController {
         return res.status(400).json({ success: false, message: "Staff member name and email are required." });
       }
 
+      // Phone formatting helper ensuring +91 prefix
+      const formatPhone = (rawPhone?: string): string => {
+        if (!rawPhone) return "";
+        const digits = rawPhone.replace(/\D/g, "");
+        if (digits.length === 10) return `+91${digits}`;
+        if (digits.startsWith("91") && digits.length === 12) return `+${digits}`;
+        if (digits.startsWith("0") && digits.length === 11) return `+91${digits.slice(1)}`;
+        return rawPhone.startsWith("+") ? rawPhone : (digits ? `+91${digits}` : rawPhone);
+      };
+
+      const normalizedName = (name || "").trim().toUpperCase();
+      const normalizedPhone = formatPhone(phone);
+      const normalizedEmail = (email || "").trim().toLowerCase();
+
       const member = await StaffModel.create({
-        name,
-        phone,
-        email,
+        name: normalizedName,
+        phone: normalizedPhone,
+        email: normalizedEmail,
         password: password || "staff123",
         role,
         assignedBuildings,

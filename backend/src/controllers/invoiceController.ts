@@ -5,14 +5,49 @@ import { WhatsAppService } from "../services/whatsappService.js";
 
 export class InvoiceController {
   /**
-   * Get all invoices
+   * Get all invoices with optional search, building filter, status filter, and pagination.
    */
-  public static async getInvoices(_req: Request, res: Response) {
+  public static async getInvoices(req: Request, res: Response) {
     try {
-      const invoices = await InvoiceModel.getAll();
+      let invoices = await InvoiceModel.getAll();
+
+      const { building, status, search, page, limit } = req.query;
+
+      // Optional Building Filter
+      if (building && typeof building === "string" && building !== "ALL") {
+        invoices = invoices.filter((inv) => inv.building?.toLowerCase() === building.toLowerCase());
+      }
+
+      // Optional Status Filter
+      if (status && typeof status === "string") {
+        invoices = invoices.filter((inv) => inv.status?.toUpperCase() === status.toUpperCase());
+      }
+
+      // Optional Search Query
+      if (search && typeof search === "string" && search.trim() !== "") {
+        const q = search.toLowerCase().trim();
+        invoices = invoices.filter((inv) =>
+          inv.tenantName?.toLowerCase().includes(q) ||
+          inv.invoiceNo?.toLowerCase().includes(q) ||
+          inv.contact?.includes(q) ||
+          inv.room?.toLowerCase().includes(q)
+        );
+      }
+
+      const totalCount = invoices.length;
+
+      // Optional Pagination
+      if (limit) {
+        const pageNum = Math.max(1, parseInt(String(page || "1"), 10));
+        const limitNum = Math.max(1, parseInt(String(limit), 10));
+        const startIndex = (pageNum - 1) * limitNum;
+        invoices = invoices.slice(startIndex, startIndex + limitNum);
+      }
+
       res.json({
         success: true,
         count: invoices.length,
+        totalCount,
         invoices,
       });
     } catch (error: any) {

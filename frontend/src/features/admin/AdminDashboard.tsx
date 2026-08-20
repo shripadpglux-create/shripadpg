@@ -113,6 +113,20 @@ function normalizeTabName(t?: string): string {
   return map[lower] || t;
 }
 
+export function formatPhoneWithCountryCode(val: string): string {
+  if (!val) return "";
+  let digits = val.replace(/\D/g, "");
+  if (digits.startsWith("91") && digits.length > 10) {
+    digits = digits.slice(2);
+  }
+  if (digits.startsWith("0")) {
+    digits = digits.slice(1);
+  }
+  digits = digits.slice(0, 10);
+  if (!digits) return "";
+  return `+91 ${digits}`;
+}
+
 export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab?: string; isStaffMode?: boolean }) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(() => normalizeTabName(tab));
@@ -254,7 +268,9 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const [googleSheetWebhookUrl, setGoogleSheetWebhookUrl] = useState(() => (typeof window !== "undefined" ? localStorage.getItem("shripad_google_sheet_webhook") || "" : ""));
   const [isScriptCopied, setIsScriptCopied] = useState(false);
   const [newCustomerBuilding, setNewCustomerBuilding] = useState("Unallocated");
+  const [newCustomerRoomType, setNewCustomerRoomType] = useState("Double Sharing");
   const [formSuccessMessage, setFormSuccessMessage] = useState("");
+  const [formErrorMessage, setFormErrorMessage] = useState("");
   const [allocationFilter, setAllocationFilter] = useState<"all" | "pending" | "allocated">("all");
   const [allocationSourceFilter, setAllocationSourceFilter] = useState<"all" | "manual" | "online">("all");
   const [selectedAllocateCustomer, setSelectedAllocateCustomer] = useState<any>(null);
@@ -262,6 +278,9 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const [allocatedRoom, setAllocatedRoom] = useState("Room 102");
   const [selectedHistoryResident, setSelectedHistoryResident] = useState<any>(null);
   const [historyTab, setHistoryTab] = useState<"room" | "payment" | "complaint" | "documents">("room");
+  const [previewDocModal, setPreviewDocModal] = useState<{ isOpen: boolean; url: string; title: string; filename: string }>({ isOpen: false, url: "", title: "", filename: "" });
+  const [isAttachingDoc, setIsAttachingDoc] = useState(false);
+  const [docImageError, setDocImageError] = useState(false);
 
   // Dynamic Room Sharing Configuration per Room (e.g. 1-Sharing, 2-Sharing, 3-Sharing, 4-Sharing, 5-Sharing, 6-Sharing)
   const [customRoomSharing, setCustomRoomSharing] = useState<Record<string, number>>(() => {
@@ -1841,9 +1860,12 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
         const isCreatedByStaff =
           (b.createdById && b.createdById === activeStaffMember.id) ||
-          (b.createdBy && b.createdBy.toLowerCase() === activeStaffMember.name.toLowerCase());
+          (b.createdBy && b.createdBy.toLowerCase() === activeStaffMember.name.toLowerCase()) ||
+          b.createdByRole === "staff";
 
-        return isAssignedBuilding || isCreatedByStaff;
+        const isUnallocated = !bld || bld === "unallocated";
+
+        return isAssignedBuilding || isCreatedByStaff || isUnallocated;
       }
       return true;
     });
@@ -2629,25 +2651,36 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const getTimeFilteredBookings = () => {
     return scopedBookings.filter((b) => {
       if (customerTimeFilter === "24h") {
-        const now = new Date();
-        const bDate = new Date(b.timestamp.replace(/-/g, "/"));
-        if (isNaN(bDate.getTime())) return true;
-        const diffHours = (now.getTime() - bDate.getTime()) / (1000 * 60 * 60);
-        return diffHours <= 24 || b.timestamp.includes("Today") || b.timestamp.includes("mins") || b.timestamp.includes("hours");
+        if (!b.timestamp) return true;
+        const now = Date.now();
+        const cleanTs = b.timestamp.replace(/\//g, "-");
+        const parsedTs = Date.parse(cleanTs.includes("T") ? cleanTs : cleanTs.replace(" ", "T"));
+        if (isNaN(parsedTs)) return true;
+        const diffHours = (now - parsedTs) / (1000 * 60 * 60);
+        return diffHours <= 48 || diffHours < 0 || b.timestamp.includes("Today") || b.timestamp.includes("mins") || b.timestamp.includes("hours");
       }
       if (customerTimeFilter === "7d") {
-        const now = new Date();
-        const bDate = new Date(b.timestamp.replace(/-/g, "/"));
-        if (isNaN(bDate.getTime())) return true;
-        const diffDays = (now.getTime() - bDate.getTime()) / (1000 * 60 * 60 * 24);
-        return diffDays <= 7;
+        if (!b.timestamp) return true;
+        const now = Date.now();
+        const cleanTs = b.timestamp.replace(/\//g, "-");
+        const parsedTs = Date.parse(cleanTs.includes("T") ? cleanTs : cleanTs.replace(" ", "T"));
+        if (isNaN(parsedTs)) return true;
+        const diffDays = (now - parsedTs) / (1000 * 60 * 60 * 24);
+        return diffDays <= 7 || diffDays < 0;
       }
       if (customerTimeFilter === "1m") {
-        const now = new Date();
-        const bDate = new Date(b.timestamp.replace(/-/g, "/"));
-        if (isNaN(bDate.getTime())) return true;
-        const diffDays = (now.getTime() - bDate.getTime()) / (1000 * 60 * 60 * 24);
-        return diffDays <= 30;
+        if (!b.timestamp) return true;
+        const now = Date.now();
+        const cleanTs = b.timestamp.replace(/\//g, "-");
+        const parsedTs = Date.parse(cleanTs.includes("T") ? cleanTs : cleanTs.replace(" ", "T"));
+        if (isNaN(parsedTs)) return true;
+        const diffDays = (now - parsedTs) / (1000 * 60 * 60 * 24);
+        return diffDays <= 31 || diffDays < 0;
+      }
+      if (customerTimeFilter === "custom") {
+        if (!b.timestamp) return true;
+        const bDateStr = b.timestamp.substring(0, 10);
+        return bDateStr >= customStartDate && bDateStr <= customEndDate;
       }
       return true;
     });
@@ -3619,7 +3652,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                     </span>
                   </div>
                   <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2">
-                    Payments & Financial Hub 💳💰
+                    Payments & Financial Hub 💳
                   </h1>
                   <p className="text-xs sm:text-sm font-semibold text-slate-500 mt-0.5">
                     Track collected tenant rents, operational expenses, profit margins, and payment transaction audits.
@@ -5770,29 +5803,54 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   e.preventDefault();
                   if (!newCustomerName || !newCustomerPhone) return;
 
+                  setFormErrorMessage("");
+                  setFormSuccessMessage("");
+
+                  const formattedCustomerName = newCustomerName.trim().toUpperCase();
+                  const formattedPhone = newCustomerPhone.trim();
+                  const formattedGuardianPhone = newCustomerGuardianPhone.trim();
+                  const formattedEmail = newCustomerEmail.trim().toLowerCase();
+                  const targetBuilding = isStaffMode && activeStaffMember?.assignedBuildings?.[0]
+                    ? activeStaffMember.assignedBuildings[0]
+                    : "Unallocated";
+
                   try {
                     const res = await fetch(`${API_BASE_URL}/api/bookings`, {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
-                        name: newCustomerName,
-                        phone: newCustomerPhone,
-                        email: newCustomerEmail || `${newCustomerName.toLowerCase().replace(/\s+/g, '')}@gmail.com`,
-                        guardianPhone: newCustomerGuardianPhone,
+                        name: formattedCustomerName,
+                        phone: formattedPhone,
+                        email: formattedEmail,
+                        guardianPhone: formattedGuardianPhone,
                         documents: newCustomerDocumentName || "Aadhaar Card Uploaded",
                         documentData: newCustomerDocumentData,
                         documentName: newCustomerDocumentName,
-                        building: "Unallocated",
-                        roomType: "Double Sharing",
+                        building: targetBuilding,
+                        roomType: "Pending Allocation",
                         source: "manual",
                         createdBy: isStaffMode ? activeStaffMember?.name || "Staff Member" : "Master Admin",
                         createdByRole: isStaffMode ? "staff" : "admin",
                         createdById: isStaffMode ? activeStaffMember?.id || "staff" : "admin",
                       }),
                     });
+
                     const data = await res.json();
-                    if (data.success) {
-                      setFormSuccessMessage(`Customer ${newCustomerName} successfully admitted!`);
+                    if (res.ok && data.success && data.booking) {
+                      setFormSuccessMessage(`Customer ${formattedCustomerName} successfully admitted!`);
+                      setBookings((prev) => [data.booking, ...prev.filter((b) => b.id !== data.booking.id)]);
+                      
+                      if (typeof window !== "undefined") {
+                        try {
+                          const cached = localStorage.getItem("shripad_cached_bookings");
+                          const list = cached ? JSON.parse(cached) : [];
+                          localStorage.setItem("shripad_cached_bookings", JSON.stringify([data.booking, ...list.filter((b: any) => b.id !== data.booking.id)]));
+                          localStorage.setItem("shripad_admin_bookings", JSON.stringify([data.booking, ...list.filter((b: any) => b.id !== data.booking.id)]));
+                        } catch (storageErr) {
+                          console.warn("Storage warning:", storageErr);
+                        }
+                      }
+                      
                       fetchBookings();
                       setTimeout(() => {
                         setNewCustomerName("");
@@ -5803,40 +5861,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                         setNewCustomerDocumentData("");
                         setIsCreateModalOpen(false);
                         setFormSuccessMessage("");
-                      }, 1500);
+                      }, 1200);
+                    } else {
+                      setFormErrorMessage(data.message || "Failed to admit customer. Please check the details.");
                     }
-                  } catch (err) {
+                  } catch (err: any) {
                     console.error("Failed to submit manual admission:", err);
-                    const newBookingItem = {
-                      id: `manual_${Date.now()}`,
-                      timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
-                      name: newCustomerName,
-                      phone: newCustomerPhone,
-                      email: newCustomerEmail || `${newCustomerName.toLowerCase().replace(/\s+/g, '')}@gmail.com`,
-                      guardianPhone: newCustomerGuardianPhone,
-                      documents: newCustomerDocumentName || "Aadhaar Card Uploaded",
-                      building: "Unallocated",
-                      roomType: "Double Sharing",
-                      source: "manual",
-                      status: "pending",
-                      paymentHistory: [],
-                    };
-                    const localBookingsStr = localStorage.getItem("shripad_admin_bookings");
-                    const bookingsList = localBookingsStr ? JSON.parse(localBookingsStr) : [];
-                    bookingsList.unshift(newBookingItem);
-                    localStorage.setItem("shripad_admin_bookings", JSON.stringify(bookingsList));
-                    setFormSuccessMessage(`Customer ${newCustomerName} successfully admitted!`);
-                    fetchBookings();
-                    setTimeout(() => {
-                      setNewCustomerName("");
-                      setNewCustomerPhone("");
-                      setNewCustomerEmail("");
-                      setNewCustomerGuardianPhone("");
-                      setNewCustomerDocumentName("");
-                      setNewCustomerDocumentData("");
-                      setIsCreateModalOpen(false);
-                      setFormSuccessMessage("");
-                    }, 1500);
+                    setFormErrorMessage(`Failed to save admission: ${err.message || "Network error. Please try again."}`);
                   }
                 }}
                 className="space-y-4 text-xs font-bold"
@@ -5848,16 +5879,23 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   </div>
                 )}
 
+                {formErrorMessage && (
+                  <div className="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-700 flex items-center gap-2 font-bold animate-in fade-in">
+                    <AlertCircle className="h-5 w-5 text-red-600 shrink-0" />
+                    <span>{formErrorMessage}</span>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-slate-600 mb-1.5">Customer Full Name *</label>
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Shivam Khude"
+                      placeholder="e.g. SHIVAM KHUDE"
                       value={newCustomerName}
-                      onChange={(e) => setNewCustomerName(e.target.value)}
-                      className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-slate-800 outline-none focus:border-brand-green focus:bg-white transition"
+                      onChange={(e) => setNewCustomerName(e.target.value.toUpperCase())}
+                      className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-slate-800 outline-none focus:border-brand-green focus:bg-white transition uppercase font-black"
                     />
                   </div>
                   <div>
@@ -5867,33 +5905,31 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       required
                       placeholder="+91 98765 00000"
                       value={newCustomerPhone}
-                      onChange={(e) => setNewCustomerPhone(e.target.value)}
-                      className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-slate-800 outline-none focus:border-brand-green focus:bg-white transition"
+                      onChange={(e) => setNewCustomerPhone(formatPhoneWithCountryCode(e.target.value))}
+                      className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-slate-800 outline-none focus:border-brand-green focus:bg-white transition font-mono"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-slate-600 mb-1.5">Email Address *</label>
+                    <label className="block text-slate-600 mb-1.5">Email Address (Optional)</label>
                     <input
                       type="email"
-                      required
-                      placeholder="customer@example.com"
+                      placeholder="Optional (e.g. resident@example.com)"
                       value={newCustomerEmail}
                       onChange={(e) => setNewCustomerEmail(e.target.value)}
-                      className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-slate-800 outline-none focus:border-brand-green focus:bg-white transition"
+                      className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-slate-800 outline-none focus:border-brand-green focus:bg-white transition font-normal"
                     />
                   </div>
                   <div>
-                    <label className="block text-slate-600 mb-1.5">Guardian Phone Number *</label>
+                    <label className="block text-slate-600 mb-1.5">Guardian Phone Number (Optional)</label>
                     <input
                       type="tel"
-                      required
                       placeholder="+91 98765 11111 (Parent/Guardian)"
                       value={newCustomerGuardianPhone}
-                      onChange={(e) => setNewCustomerGuardianPhone(e.target.value)}
-                      className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-slate-800 outline-none focus:border-brand-green focus:bg-white transition"
+                      onChange={(e) => setNewCustomerGuardianPhone(formatPhoneWithCountryCode(e.target.value))}
+                      className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-slate-800 outline-none focus:border-brand-green focus:bg-white transition font-mono"
                     />
                   </div>
                 </div>
@@ -5908,11 +5944,38 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                         if (e.target.files && e.target.files[0]) {
                           const file = e.target.files[0];
                           setNewCustomerDocumentName(file.name);
-                          const reader = new FileReader();
-                          reader.onload = (uploadEvent) => {
-                            setNewCustomerDocumentData(uploadEvent.target?.result as string || "");
-                          };
-                          reader.readAsDataURL(file);
+                          if (file.type.startsWith("image/")) {
+                            const reader = new FileReader();
+                            reader.onload = (uploadEvent) => {
+                              const img = new Image();
+                              img.onload = () => {
+                                const canvas = document.createElement("canvas");
+                                const MAX_DIM = 1200;
+                                let w = img.width;
+                                let h = img.height;
+                                if (w > h && w > MAX_DIM) {
+                                  h = Math.round((h * MAX_DIM) / w);
+                                  w = MAX_DIM;
+                                } else if (h > MAX_DIM) {
+                                  w = Math.round((w * MAX_DIM) / h);
+                                  h = MAX_DIM;
+                                }
+                                canvas.width = w;
+                                canvas.height = h;
+                                const ctx = canvas.getContext("2d");
+                                ctx?.drawImage(img, 0, 0, w, h);
+                                setNewCustomerDocumentData(canvas.toDataURL("image/jpeg", 0.75));
+                              };
+                              img.src = uploadEvent.target?.result as string;
+                            };
+                            reader.readAsDataURL(file);
+                          } else {
+                            const reader = new FileReader();
+                            reader.onload = (uploadEvent) => {
+                              setNewCustomerDocumentData(uploadEvent.target?.result as string || "");
+                            };
+                            reader.readAsDataURL(file);
+                          }
                         }
                       }}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
@@ -5927,7 +5990,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       ) : (
                         <>
                           <span className="text-xs font-extrabold text-slate-700">Click or drag file to upload Aadhaar / Govt ID</span>
-                          <span className="text-[10px] text-slate-400 font-semibold">Supports JPG, PNG, PDF (Max 5MB)</span>
+                          <span className="text-[10px] text-slate-400 font-semibold">Supports JPG, PNG, PDF (Auto-compressed)</span>
                         </>
                       )}
                     </div>
@@ -6906,8 +6969,8 @@ function doPost(e) {
                     type="text"
                     required
                     value={editingCustomer.name || ""}
-                    onChange={(e) => setEditingCustomer({ ...editingCustomer, name: e.target.value })}
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-slate-800 outline-none focus:border-brand-green focus:bg-white transition"
+                    onChange={(e) => setEditingCustomer({ ...editingCustomer, name: e.target.value.toUpperCase() })}
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-slate-800 outline-none focus:border-brand-green focus:bg-white transition uppercase font-black"
                   />
                 </div>
                 <div>
@@ -6916,29 +6979,31 @@ function doPost(e) {
                     type="tel"
                     required
                     value={editingCustomer.phone || ""}
-                    onChange={(e) => setEditingCustomer({ ...editingCustomer, phone: e.target.value })}
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-slate-800 outline-none focus:border-brand-green focus:bg-white transition"
+                    onChange={(e) => setEditingCustomer({ ...editingCustomer, phone: formatPhoneWithCountryCode(e.target.value) })}
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-slate-800 outline-none focus:border-brand-green focus:bg-white transition font-mono"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-600 mb-1.5">Email Address</label>
+                  <label className="block text-slate-600 mb-1.5">Email Address (Optional)</label>
                   <input
                     type="email"
+                    placeholder="Optional (e.g. resident@example.com)"
                     value={editingCustomer.email || ""}
                     onChange={(e) => setEditingCustomer({ ...editingCustomer, email: e.target.value })}
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-slate-800 outline-none focus:border-brand-green focus:bg-white transition"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-slate-800 outline-none focus:border-brand-green focus:bg-white transition font-normal"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-600 mb-1.5">Guardian Phone</label>
+                  <label className="block text-slate-600 mb-1.5">Guardian Phone (Optional)</label>
                   <input
                     type="tel"
+                    placeholder="+91 98765 11111 (Parent/Guardian)"
                     value={editingCustomer.guardianPhone || ""}
-                    onChange={(e) => setEditingCustomer({ ...editingCustomer, guardianPhone: e.target.value })}
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-slate-800 outline-none focus:border-brand-green focus:bg-white transition"
+                    onChange={(e) => setEditingCustomer({ ...editingCustomer, guardianPhone: formatPhoneWithCountryCode(e.target.value) })}
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-slate-800 outline-none focus:border-brand-green focus:bg-white transition font-mono"
                   />
                 </div>
               </div>
@@ -8718,52 +8783,235 @@ function doPost(e) {
 
               {/* ===== DOCUMENTS TAB ===== */}
               {historyTab === "documents" && (
-                <div className="space-y-3">
-                  <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">Submitted Documents</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">Submitted Documents & Proofs</h3>
+                    <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-green/10 text-brand-green hover:bg-brand-green hover:text-white text-xs font-bold transition cursor-pointer active:scale-95">
+                      <UploadCloud className="h-3.5 w-3.5" />
+                      <span>{isAttachingDoc ? "Uploading..." : "Upload / Replace ID"}</span>
+                      <input
+                        type="file"
+                        accept="image/*,.pdf"
+                        disabled={isAttachingDoc}
+                        className="hidden"
+                        onChange={async (e) => {
+                          if (e.target.files && e.target.files[0] && selectedHistoryResident) {
+                            const file = e.target.files[0];
+                            setIsAttachingDoc(true);
+                            try {
+                              let fileData = "";
+                              if (file.type.startsWith("image/")) {
+                                fileData = await new Promise<string>((resolve) => {
+                                  const reader = new FileReader();
+                                  reader.onload = (uploadEvent) => {
+                                    const img = new Image();
+                                    img.onload = () => {
+                                      const canvas = document.createElement("canvas");
+                                      const MAX_DIM = 1200;
+                                      let w = img.width;
+                                      let h = img.height;
+                                      if (w > h && w > MAX_DIM) {
+                                        h = Math.round((h * MAX_DIM) / w);
+                                        w = MAX_DIM;
+                                      } else if (h > MAX_DIM) {
+                                        w = Math.round((w * MAX_DIM) / h);
+                                        h = MAX_DIM;
+                                      }
+                                      canvas.width = w;
+                                      canvas.height = h;
+                                      const ctx = canvas.getContext("2d");
+                                      ctx?.drawImage(img, 0, 0, w, h);
+                                      resolve(canvas.toDataURL("image/jpeg", 0.75));
+                                    };
+                                    img.src = uploadEvent.target?.result as string;
+                                  };
+                                  reader.readAsDataURL(file);
+                                });
+                              } else {
+                                fileData = await new Promise<string>((resolve) => {
+                                  const reader = new FileReader();
+                                  reader.onload = (uploadEvent) => resolve(uploadEvent.target?.result as string || "");
+                                  reader.readAsDataURL(file);
+                                });
+                              }
+
+                              const res = await fetch(`${API_BASE_URL}/api/bookings/${selectedHistoryResident.id}`, {
+                                method: "PUT",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  ...selectedHistoryResident,
+                                  documents: file.name,
+                                  documentData: fileData,
+                                  documentName: file.name,
+                                }),
+                              });
+                              const data = await res.json();
+                              if (data.success && data.booking) {
+                                setSelectedHistoryResident(data.booking);
+                                setBookings((prev) => prev.map((b) => (b.id === data.booking.id ? data.booking : b)));
+                                setCustomToast({ isOpen: true, message: "Document attached successfully!", type: "success" });
+                              }
+                            } catch (attachErr) {
+                              console.error("Failed to attach document:", attachErr);
+                              setCustomToast({ isOpen: true, message: "Failed to upload document.", type: "error" });
+                            } finally {
+                              setIsAttachingDoc(false);
+                            }
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+
                   {selectedHistoryResident.documents && selectedHistoryResident.documents.trim() !== "" ? (
-                    <div className="space-y-2">
+                    <div className="space-y-2.5">
                       {selectedHistoryResident.documents.split(",").map((doc: string, i: number) => {
                         const trimmed = doc.trim();
-                        const isUrl = trimmed.startsWith("http");
-                        // Derive a label: try to infer from common doc names
+                        let docUrl = "";
+                        if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("data:") || trimmed.startsWith("blob:")) {
+                          docUrl = trimmed;
+                        } else if (trimmed.startsWith("/uploads/")) {
+                          docUrl = `${API_BASE_URL}${trimmed}`;
+                        } else if (trimmed.includes(".png") || trimmed.includes(".jpg") || trimmed.includes(".jpeg") || trimmed.includes(".pdf") || trimmed.includes("doc_") || trimmed.includes("Image")) {
+                          docUrl = `${API_BASE_URL}/uploads/documents/${trimmed}`;
+                        }
+
                         const docLabels = ["Aadhaar Card", "PAN Card", "Photo", "Passport", "Voter ID", "Driving License"];
                         const label = docLabels[i] || `Document ${i + 1}`;
+
                         return (
-                          <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-slate-300 transition">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-50 border border-indigo-100 flex-shrink-0">
-                              <FileText className="h-4 w-4 text-indigo-500" />
+                          <div key={i} className="flex items-center gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 hover:border-slate-300 transition shadow-2xs">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F0F4FF] border border-blue-200/80 text-[#00022E] flex-shrink-0">
+                              <FileText className="h-5 w-5" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-xs font-black text-slate-900">{label}</p>
-                              <p className="text-[10px] text-slate-400 truncate">{trimmed}</p>
+                              <div className="flex items-center gap-2">
+                                <p className="text-xs font-black text-slate-900">{label}</p>
+                                {docUrl && (
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-[#F0F4FF] text-[#00022E]">
+                                    Verified File
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[11px] text-slate-400 truncate font-mono mt-0.5">{trimmed}</p>
                             </div>
-                            {isUrl ? (
-                              <a
-                                href={trimmed}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex-shrink-0 text-[10px] font-black text-indigo-600 bg-indigo-50 border border-indigo-200 px-2.5 py-1 rounded-lg hover:bg-indigo-100 transition"
-                              >
-                                View
-                              </a>
-                            ) : (
-                              <span className="flex-shrink-0 text-[10px] font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg">
-                                No Link
-                              </span>
-                            )}
+                            
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                              {docUrl ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (docUrl.includes("drive.google.com")) {
+                                        window.open(docUrl, "_blank", "noopener,noreferrer");
+                                      } else {
+                                        setPreviewDocModal({ isOpen: true, url: docUrl, title: `${selectedHistoryResident.name} — ${label}`, filename: trimmed });
+                                      }
+                                    }}
+                                    className="inline-flex items-center gap-1 text-[11px] font-black text-white bg-[#00022E] hover:bg-[#00044A] px-3 py-1.5 rounded-xl transition shadow-2xs cursor-pointer active:scale-95"
+                                  >
+                                    <Eye className="h-3.5 w-3.5" />
+                                    <span>View</span>
+                                  </button>
+                                  <a
+                                    href={docUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    download={trimmed}
+                                    className="inline-flex items-center gap-1 text-[11px] font-black text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 px-2.5 py-1.5 rounded-xl transition shadow-2xs cursor-pointer active:scale-95"
+                                  >
+                                    <Download className="h-3.5 w-3.5 text-slate-500" />
+                                  </a>
+                                </>
+                              ) : (
+                                <label className="inline-flex items-center gap-1 text-[11px] font-extrabold text-[#00022E] bg-[#F0F4FF] border border-blue-200 hover:bg-blue-100 px-3 py-1.5 rounded-xl transition cursor-pointer active:scale-95">
+                                  <UploadCloud className="h-3.5 w-3.5" />
+                                  <span>Attach File</span>
+                                  <input
+                                    type="file"
+                                    accept="image/*,.pdf"
+                                    disabled={isAttachingDoc}
+                                    className="hidden"
+                                    onChange={async (e) => {
+                                      if (e.target.files && e.target.files[0] && selectedHistoryResident) {
+                                        const file = e.target.files[0];
+                                        setIsAttachingDoc(true);
+                                        try {
+                                          let fileData = "";
+                                          if (file.type.startsWith("image/")) {
+                                            fileData = await new Promise<string>((resolve) => {
+                                              const reader = new FileReader();
+                                              reader.onload = (uploadEvent) => {
+                                                const img = new Image();
+                                                img.onload = () => {
+                                                  const canvas = document.createElement("canvas");
+                                                  const MAX_DIM = 1200;
+                                                  let w = img.width;
+                                                  let h = img.height;
+                                                  if (w > h && w > MAX_DIM) {
+                                                    h = Math.round((h * MAX_DIM) / w);
+                                                    w = MAX_DIM;
+                                                  } else if (h > MAX_DIM) {
+                                                    w = Math.round((w * MAX_DIM) / h);
+                                                    h = MAX_DIM;
+                                                  }
+                                                  canvas.width = w;
+                                                  canvas.height = h;
+                                                  const ctx = canvas.getContext("2d");
+                                                  ctx?.drawImage(img, 0, 0, w, h);
+                                                  resolve(canvas.toDataURL("image/jpeg", 0.75));
+                                                };
+                                                img.src = uploadEvent.target?.result as string;
+                                              };
+                                              reader.readAsDataURL(file);
+                                            });
+                                          } else {
+                                            fileData = await new Promise<string>((resolve) => {
+                                              const reader = new FileReader();
+                                              reader.onload = (uploadEvent) => resolve(uploadEvent.target?.result as string || "");
+                                              reader.readAsDataURL(file);
+                                            });
+                                          }
+
+                                          const res = await fetch(`${API_BASE_URL}/api/bookings/${selectedHistoryResident.id}`, {
+                                            method: "PUT",
+                                            headers: { "Content-Type": "application/json" },
+                                            body: JSON.stringify({
+                                              ...selectedHistoryResident,
+                                              documents: file.name,
+                                              documentData: fileData,
+                                              documentName: file.name,
+                                            }),
+                                          });
+                                          const data = await res.json();
+                                          if (data.success && data.booking) {
+                                            setSelectedHistoryResident(data.booking);
+                                            setBookings((prev) => prev.map((b) => (b.id === data.booking.id ? data.booking : b)));
+                                            setCustomToast({ isOpen: true, message: "Document attached successfully!", type: "success" });
+                                          }
+                                        } catch (attachErr) {
+                                          console.error("Failed to attach document:", attachErr);
+                                          setCustomToast({ isOpen: true, message: "Failed to upload document.", type: "error" });
+                                        } finally {
+                                          setIsAttachingDoc(false);
+                                        }
+                                      }
+                                    }}
+                                  />
+                                </label>
+                              )}
+                            </div>
                           </div>
                         );
                       })}
                     </div>
                   ) : (
-                    <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100 text-center">
-                      <FileText className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-                      <p className="text-xs font-black text-slate-500">No Documents Found</p>
-                      <p className="text-[11px] text-slate-400 mt-1">
-                        {selectedHistoryResident.source === 'online'
-                          ? "Documents submitted via the Google Form will appear here."
-                          : "No documents were submitted for this resident."}
-                      </p>
+                    <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200/80 text-center space-y-3">
+                      <FileText className="h-8 w-8 text-slate-300 mx-auto" />
+                      <div>
+                        <p className="text-xs font-black text-slate-700">No Documents Uploaded</p>
+                        <p className="text-[11px] text-slate-400 mt-0.5">Attach an Aadhaar Card, PAN Card, or Govt ID for verification.</p>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -10230,10 +10478,10 @@ function doPost(e) {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Ramesh Kumar"
+                    placeholder="e.g. RAMESH KUMAR"
                     value={newStaffName}
-                    onChange={(e) => setNewStaffName(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-bold text-slate-900 outline-none focus:border-brand-green"
+                    onChange={(e) => setNewStaffName(e.target.value.toUpperCase())}
+                    className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-black text-slate-900 outline-none focus:border-brand-green uppercase"
                   />
                 </div>
                 <div>
@@ -10241,10 +10489,10 @@ function doPost(e) {
                   <input
                     type="tel"
                     required
-                    placeholder="e.g. 9812345678"
+                    placeholder="+91 98765 00000"
                     value={newStaffPhone}
-                    onChange={(e) => setNewStaffPhone(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-bold text-slate-900 outline-none focus:border-brand-green"
+                    onChange={(e) => setNewStaffPhone(formatPhoneWithCountryCode(e.target.value))}
+                    className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs font-bold text-slate-900 outline-none focus:border-brand-green font-mono"
                   />
                 </div>
                 <div>
@@ -10917,15 +11165,6 @@ function doPost(e) {
                             ⚡ Start Session & Get QR
                           </button>
                         )}
-                        <a
-                          href={whatsappStatus?.openwaUrl || "https://shripad-openwa-gateway.onrender.com"}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black transition cursor-pointer shadow-sm active:scale-95"
-                        >
-                          <ExternalLink className="h-3.5 w-3.5 text-emerald-400" />
-                          <span>OpenWA Dashboard ↗</span>
-                        </a>
                       </div>
                     </div>
                   </div>
@@ -11704,6 +11943,152 @@ function doPost(e) {
                   </a>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* FULL-SCREEN DOCUMENT PREVIEW MODAL */}
+      {previewDocModal.isOpen && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-4xl max-h-[90vh] flex flex-col rounded-3xl bg-white shadow-2xl border border-slate-200/80 overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F0F4FF] text-[#00022E] border border-blue-200">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900">{previewDocModal.title}</h3>
+                  <p className="text-[11px] font-mono text-slate-400">{previewDocModal.filename}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <a
+                  href={previewDocModal.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  download={previewDocModal.filename}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>Download</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setPreviewDocModal({ isOpen: false, url: "", title: "", filename: "" })}
+                  className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Viewer Body */}
+            <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-slate-900/5 min-h-[320px]">
+              {docImageError ? (
+                <div className="p-8 text-center max-w-md space-y-3 bg-white rounded-3xl border border-slate-200 shadow-sm animate-in fade-in">
+                  <div className="h-12 w-12 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center mx-auto">
+                    <AlertCircle className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-black text-slate-800">Document Image File Not Found</h4>
+                    <p className="text-xs text-slate-500 font-semibold mt-1">
+                      The document name <span className="font-mono font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">{previewDocModal.filename}</span> was saved, but the image file wasn't stored on the server yet.
+                    </p>
+                  </div>
+                  <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#00022E] hover:bg-[#00044A] text-white text-xs font-bold transition shadow-md cursor-pointer active:scale-95">
+                    <UploadCloud className="h-4 w-4" />
+                    <span>Upload & Attach Document Now</span>
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      className="hidden"
+                      onChange={async (e) => {
+                        if (e.target.files && e.target.files[0] && selectedHistoryResident) {
+                          const file = e.target.files[0];
+                          try {
+                            let fileData = "";
+                            if (file.type.startsWith("image/")) {
+                              fileData = await new Promise<string>((resolve) => {
+                                const reader = new FileReader();
+                                reader.onload = (uploadEvent) => {
+                                  const img = new Image();
+                                  img.onload = () => {
+                                    const canvas = document.createElement("canvas");
+                                    const MAX_DIM = 1200;
+                                    let w = img.width;
+                                    let h = img.height;
+                                    if (w > h && w > MAX_DIM) {
+                                      h = Math.round((h * MAX_DIM) / w);
+                                      w = MAX_DIM;
+                                    } else if (h > MAX_DIM) {
+                                      w = Math.round((w * MAX_DIM) / h);
+                                      h = MAX_DIM;
+                                    }
+                                    canvas.width = w;
+                                    canvas.height = h;
+                                    const ctx = canvas.getContext("2d");
+                                    ctx?.drawImage(img, 0, 0, w, h);
+                                    resolve(canvas.toDataURL("image/jpeg", 0.75));
+                                  };
+                                  img.src = uploadEvent.target?.result as string;
+                                };
+                                reader.readAsDataURL(file);
+                              });
+                            } else {
+                              fileData = await new Promise<string>((resolve) => {
+                                const reader = new FileReader();
+                                reader.onload = (uploadEvent) => resolve(uploadEvent.target?.result as string || "");
+                                reader.readAsDataURL(file);
+                              });
+                            }
+
+                            const res = await fetch(`${API_BASE_URL}/api/bookings/${selectedHistoryResident.id}`, {
+                              method: "PUT",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                ...selectedHistoryResident,
+                                documents: file.name,
+                                documentData: fileData,
+                                documentName: file.name,
+                              }),
+                            });
+                            const data = await res.json();
+                            if (data.success && data.booking) {
+                              setSelectedHistoryResident(data.booking);
+                              setBookings((prev) => prev.map((b) => (b.id === data.booking.id ? data.booking : b)));
+                              setPreviewDocModal({
+                                isOpen: true,
+                                url: data.booking.documents,
+                                title: `${data.booking.name} — Document`,
+                                filename: file.name,
+                              });
+                              setDocImageError(false);
+                              setCustomToast({ isOpen: true, message: "Document uploaded and attached successfully!", type: "success" });
+                            }
+                          } catch (uploadErr) {
+                            console.error("Upload error:", uploadErr);
+                          }
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+              ) : previewDocModal.url.toLowerCase().includes(".pdf") ? (
+                <iframe
+                  src={previewDocModal.url}
+                  title="Document PDF Preview"
+                  className="w-full h-[70vh] rounded-2xl border border-slate-200 bg-white"
+                />
+              ) : (
+                <img
+                  src={previewDocModal.url}
+                  alt="Document Preview"
+                  onError={() => setDocImageError(true)}
+                  className="max-h-[75vh] max-w-full object-contain rounded-2xl shadow-md border border-slate-200 bg-white"
+                />
+              )}
             </div>
           </div>
         </div>

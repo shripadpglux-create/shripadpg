@@ -3,6 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import mongoose from "mongoose";
 import { BuildingMongoModel } from "../schemas/mongoSchemas.js";
+import { DBOptimizationService } from "../services/dbOptimizationService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,7 +32,7 @@ export class BuildingModel {
       try {
         await fs.access(DATA_FILE);
       } catch {
-        await fs.writeFile(DATA_FILE, JSON.stringify([], null, 2), "utf-8");
+        await fs.writeFile(DATA_FILE, JSON.stringify([]), "utf-8");
       }
     } catch (err) {
       console.error("Error ensuring buildings data file:", err);
@@ -56,7 +57,6 @@ export class BuildingModel {
             createdAt: doc.createdAt,
             updatedAt: doc.updatedAt,
           }));
-          await fs.writeFile(DATA_FILE, JSON.stringify(this.cache, null, 2), "utf-8");
           return this.cache;
         }
       } catch (err) {
@@ -71,9 +71,15 @@ export class BuildingModel {
         this.cache = parsed;
         if (mongoose.connection.readyState === 1 && this.cache.length > 0) {
           try {
-            await BuildingMongoModel.deleteMany({});
-            await BuildingMongoModel.insertMany(this.cache);
-            console.log(`🍃 Auto-seeded ${this.cache.length} buildings to MongoDB Atlas.`);
+            const ops = this.cache.map((b) => ({
+              updateOne: {
+                filter: { id: b.id },
+                update: { $set: DBOptimizationService.compactDocument(b) },
+                upsert: true,
+              },
+            }));
+            await BuildingMongoModel.bulkWrite(ops);
+            console.log(`🍃 Auto-seeded ${this.cache.length} buildings to MongoDB Atlas via bulkWrite.`);
           } catch (e) {
             console.warn("Auto-seed error for buildings:", e);
           }
@@ -92,18 +98,22 @@ export class BuildingModel {
     await this.ensureDataFile();
     this.cache = buildings;
     try {
-      await fs.writeFile(DATA_FILE, JSON.stringify(buildings, null, 2), "utf-8");
+      await fs.writeFile(DATA_FILE, JSON.stringify(buildings), "utf-8");
     } catch (err) {
       console.error("Error saving buildings data to file:", err);
     }
 
-    if (mongoose.connection.readyState === 1) {
+    if (mongoose.connection.readyState === 1 && buildings.length > 0) {
       try {
-        await BuildingMongoModel.deleteMany({});
-        if (buildings.length > 0) {
-          await BuildingMongoModel.insertMany(buildings);
-        }
-        console.log(`🍃 Synced ${buildings.length} buildings to MongoDB Atlas.`);
+        const ops = buildings.map((b) => ({
+          updateOne: {
+            filter: { id: b.id },
+            update: { $set: DBOptimizationService.compactDocument(b) },
+            upsert: true,
+          },
+        }));
+        await BuildingMongoModel.bulkWrite(ops);
+        console.log(`🍃 Synced ${buildings.length} compacted buildings to MongoDB Atlas via atomic bulkWrite.`);
       } catch (err) {
         console.error("Failed to sync buildings to MongoDB Atlas:", err);
       }
@@ -122,16 +132,6 @@ export class BuildingModel {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-
-    // DIRECT WRITE TO MONGODB ATLAS FIRST
-    if (mongoose.connection.readyState === 1) {
-      try {
-        await BuildingMongoModel.create(newBuilding);
-        console.log(`🍃 Direct Mongo Atlas Building Created: ${newBuilding.name}`);
-      } catch (err) {
-        console.error("Direct Mongo Atlas building creation failed:", err);
-      }
-    }
 
     const buildings = await this.getAll();
     if (!buildings.some((b) => b.id === newBuilding.id)) {
@@ -163,19 +163,6 @@ export class BuildingModel {
       blockedRooms: data.blockedRooms !== undefined ? data.blockedRooms : existing.blockedRooms,
       updatedAt: new Date().toISOString(),
     };
-
-    if (mongoose.connection.readyState === 1) {
-      try {
-        await BuildingMongoModel.findOneAndUpdate(
-          { $or: [{ id: existing.id }, { name: existing.name }] },
-          updated,
-          { upsert: true }
-        );
-        console.log(`🍃 Direct Mongo Atlas Building Updated: ${updated.name}`);
-      } catch (err) {
-        console.error("Direct Mongo Atlas building update failed:", err);
-      }
-    }
 
     buildings[index] = updated;
     await this.save(buildings);

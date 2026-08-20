@@ -3,6 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import mongoose from "mongoose";
 import { InvoiceMongoModel } from "../schemas/mongoSchemas.js";
+import { DBOptimizationService } from "../services/dbOptimizationService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -36,6 +37,10 @@ const DATA_FILE = path.join(DATA_DIR, "invoices.json");
 const SEED_INVOICES: Invoice[] = [];
 
 export class InvoiceModel {
+  private static cache: Invoice[] = [];
+  private static isInitialized = false;
+  private static dirtyIds: Set<string> = new Set();
+
   private static async ensureDataDir(): Promise<void> {
     try {
       await fs.mkdir(DATA_DIR, { recursive: true });
@@ -44,7 +49,9 @@ export class InvoiceModel {
     }
   }
 
-  public static async getAll(): Promise<Invoice[]> {
+  private static async init(): Promise<void> {
+    if (this.isInitialized) return;
+
     await this.ensureDataDir();
 
     let rawInvoices: Invoice[] = [];
@@ -78,29 +85,53 @@ export class InvoiceModel {
         ((Number(inv.rentAmount) || 0) > 0 || (Number(inv.paidAmount) || 0) > 0)
     );
 
-    // If cleaned list is different from raw list, sync back
-    if (validInvoices.length !== rawInvoices.length) {
-      void this.saveAll(validInvoices).catch(() => {});
-    }
+    this.cache = validInvoices;
+    this.isInitialized = true;
 
-    return validInvoices;
+    // Save compacted clean state to disk
+    try {
+      await fs.writeFile(DATA_FILE, JSON.stringify(this.cache), "utf-8");
+    } catch {}
+  }
+
+  public static async getAll(): Promise<Invoice[]> {
+    await this.init();
+    return [...this.cache];
   }
 
   public static async saveAll(invoices: Invoice[]): Promise<void> {
+    await this.init();
+    this.cache = invoices;
+    for (const inv of invoices) {
+      this.dirtyIds.add(inv.id);
+    }
+    await this.saveToFile();
+  }
+
+  private static async saveToFile(): Promise<void> {
     await this.ensureDataDir();
     try {
-      await fs.writeFile(DATA_FILE, JSON.stringify(invoices, null, 2), "utf-8");
+      await fs.writeFile(DATA_FILE, JSON.stringify(this.cache), "utf-8");
     } catch (err) {
       console.error("Error saving invoices to file:", err);
     }
 
-    if (mongoose.connection.readyState === 1) {
+    // Dirty-document tracking: only sync changed documents to Atlas
+    if (mongoose.connection.readyState === 1 && this.dirtyIds.size > 0) {
       try {
-        await InvoiceMongoModel.deleteMany({});
-        if (invoices.length > 0) {
-          await InvoiceMongoModel.insertMany(invoices);
+        const dirtyDocs = this.cache.filter((inv) => this.dirtyIds.has(inv.id));
+        if (dirtyDocs.length > 0) {
+          const ops = dirtyDocs.map((inv) => ({
+            updateOne: {
+              filter: { id: inv.id },
+              update: { $set: DBOptimizationService.compactDocument(inv) },
+              upsert: true,
+            },
+          }));
+          await InvoiceMongoModel.bulkWrite(ops);
+          console.log(`🍃 Synced ${dirtyDocs.length} changed invoices to MongoDB Atlas (dirty-tracking).`);
         }
-        console.log(`🍃 Synced ${invoices.length} invoices to MongoDB Atlas.`);
+        this.dirtyIds.clear();
       } catch (err) {
         console.error("Failed to sync invoices to MongoDB Atlas:", err);
       }
@@ -139,7 +170,7 @@ export class InvoiceModel {
   }
 
   public static async createOrUpdate(invoiceData: Partial<Invoice>): Promise<Invoice> {
-    const invoices = await this.getAll();
+    await this.init();
     const now = new Date().toISOString();
 
     const rentAmount = Number(invoiceData.rentAmount) || 0;
@@ -153,7 +184,7 @@ export class InvoiceModel {
       status = "PARTIAL";
     }
 
-    const existingIndex = invoices.findIndex(
+    const existingIndex = this.cache.findIndex(
       (inv) =>
         (invoiceData.id && inv.id === invoiceData.id) ||
         (invoiceData.invoiceNo && inv.invoiceNo === invoiceData.invoiceNo)
@@ -161,7 +192,7 @@ export class InvoiceModel {
 
     if (existingIndex !== -1) {
       const updated: Invoice = {
-        ...invoices[existingIndex],
+        ...this.cache[existingIndex],
         ...invoiceData,
         rentAmount,
         paidAmount,
@@ -169,8 +200,9 @@ export class InvoiceModel {
         status,
         updatedAt: now,
       };
-      invoices[existingIndex] = updated;
-      await this.saveAll(invoices);
+      this.cache[existingIndex] = updated;
+      this.dirtyIds.add(updated.id);
+      await this.saveToFile();
       return updated;
     } else {
       const newInvoice: Invoice = {
@@ -196,20 +228,30 @@ export class InvoiceModel {
         updatedAt: now,
       };
 
-      invoices.unshift(newInvoice);
-      await this.saveAll(invoices);
+      this.cache.unshift(newInvoice);
+      this.dirtyIds.add(newInvoice.id);
+      await this.saveToFile();
       return newInvoice;
     }
   }
 
   public static async delete(id: string): Promise<boolean> {
-    let invoices = await this.getAll();
-    const initialLength = invoices.length;
-    invoices = invoices.filter((inv) => inv.id !== id && inv.invoiceNo !== id);
-    if (invoices.length < initialLength) {
-      await this.saveAll(invoices);
+    await this.init();
+    const initialLength = this.cache.length;
+    this.cache = this.cache.filter((inv) => inv.id !== id && inv.invoiceNo !== id);
+    if (this.cache.length !== initialLength) {
+      await this.saveToFile();
+      // Remove orphan from MongoDB Atlas
+      if (mongoose.connection.readyState === 1) {
+        try {
+          await InvoiceMongoModel.deleteOne({ $or: [{ id }, { invoiceNo: id }] });
+        } catch (err) {
+          console.warn("Failed to delete invoice orphan from Atlas:", err);
+        }
+      }
       return true;
     }
     return false;
   }
 }
+

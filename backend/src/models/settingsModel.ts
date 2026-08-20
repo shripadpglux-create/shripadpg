@@ -50,7 +50,7 @@ export class SettingsModel {
           const doc = await SettingMongoModel.findOne({ id: "global_settings" }).lean();
           if (doc) {
             this.cache = { ...DEFAULT_PAYMENT_SETTINGS, ...doc as any };
-            await fs.writeFile(SETTINGS_FILE, JSON.stringify({ payment: this.cache }, null, 2), "utf-8");
+            await fs.writeFile(SETTINGS_FILE, JSON.stringify({ payment: this.cache }), "utf-8");
             return;
           }
         } catch (err) {
@@ -76,7 +76,7 @@ export class SettingsModel {
     try {
       await fs.writeFile(
         SETTINGS_FILE,
-        JSON.stringify({ payment: this.cache }, null, 2),
+        JSON.stringify({ payment: this.cache }),
         "utf-8"
       );
     } catch (error) {

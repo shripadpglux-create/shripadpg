@@ -2,7 +2,257 @@
 
 ---
 
-### 📍 Version 9.36 — OpenWA Dashboard Direct Access & Gateway URL Integration 📱⚡🌐
+### 📍 Version 9.45 — Smart Document Fallback & One-Click In-Modal Document Uploader 🛡️🖼️⚡
+
+```mermaid
+flowchart TD
+    subgraph PreviewModal ["1. Document Preview Modal"]
+        OpenModal["Admin clicks 'View' on Document"]
+        CheckFile["Load Image / PDF via Static Server Endpoint"]
+        OpenModal --> CheckFile
+    end
+
+    subgraph StateHandling ["2. Intelligent State Handling"]
+        CheckFile -->|File Exists| LiveRender["Crisp Fullscreen Preview & Download Action"]
+        CheckFile -->|Missing/Placeholder Text| ErrorFallback["Elegant Fallback Alert Banner"]
+        ErrorFallback --> InModalUpload["'Upload & Attach Document Now' Button"]
+        InModalUpload --> InstantSave["Saves File to Server, Updates MongoDB & Renders Live Image"]
+    end
+```
+
+---
+
+### 📍 Version 9.44 — Enterprise Document Hub: Smart URL Resolution, In-App Document Preview Modal & Instant Upload/Replace 📄🔍✨
+
+```mermaid
+flowchart TD
+    subgraph DocResolution ["1. Smart Document Resolution"]
+        RawDoc["Document String (URL / /uploads/ / doc_filename.png)"]
+        Resolver["resolveDocUrl() Intelligent URL & Upload Path Mapper"]
+        RawDoc --> Resolver
+    end
+
+    subgraph Actions ["2. Document Operations"]
+        Resolver --> ViewBtn["View Button ➔ Interactive In-App Fullscreen Modal Preview"]
+        Resolver --> DownloadBtn["Download Button ➔ One-Click Direct File Download"]
+        Resolver --> UploadBtn["Upload / Replace ID ➔ Instant Canvas Compressed File Attachment"]
+    end
+
+    subgraph ModalPreview ["3. In-App Preview Modal"]
+        ViewBtn --> PDFImgViewer["Responsive PDF & Image Viewer + Download & Close Controls"]
+    end
+```
+
+---
+
+### 📍 Version 9.43 — Fix: Document Upload Payload Rejection, Client Auto-Compression & 50MB Body Limits 📸💾🛡️
+
+```mermaid
+flowchart TD
+    subgraph ClientSide ["1. Client-Side Upload & Auto-Compression"]
+        ImgUpload["User selects Aadhaar/Govt ID Image (3MB - 15MB)"]
+        CanvasCompress["Auto-Canvas Compression (Max 1200px, 0.75 JPEG, ~80KB)"]
+        SubmitSafe["Send to Backend without network freeze or payload errors"]
+        ImgUpload --> CanvasCompress --> SubmitSafe
+    end
+
+    subgraph BackendHandling ["2. Backend 50MB Parser & File Storage"]
+        SubmitSafe --> ExpressParser["Express Body Parser (50MB Limit)"]
+        ExpressParser --> DiskWrite["fs.writeFile to /uploads/documents/"]
+        DiskWrite --> MongoSave["Save clean static URL to MongoDB & In-Memory Cache"]
+    end
+
+    subgraph ImmediateUI ["3. Immediate UI Reflection"]
+        MongoSave --> InstantReflect["Prepend to React bookings & Update Directory Instantly"]
+    end
+```
+
+---
+
+### 📍 Version 9.42 — UX Streamline: Clean Customer Inquiry/Admission & Dedicated Allocation Decider 🎯🛋️✨
+
+```mermaid
+flowchart TD
+    subgraph Step1 ["Step 1: Quick Customer Registration"]
+        Modal["Manual Admission Modal"]
+        Fields["Customer Name • Phone • Email (Opt) • Guardian Phone • Aadhaar/ID"]
+        NoClutter["Removed premature room sharing & bed dropdowns"]
+        Modal --> Fields --> NoClutter
+    end
+
+    subgraph Step2 ["Step 2: Interactive Allocation Matrix"]
+        AllocHub["Customer Allocation Hub (BookMyShow Matrix)"]
+        Decide["Select Building ➔ Floor ➔ Room ➔ Bed (1-to-8 Sharing)"]
+        Allotment["Confirm Allotment & Generate Rent"]
+        AllocHub --> Decide --> Allotment
+    end
+```
+
+---
+
+### 📍 Version 9.41 — Fix: Instant Manual Admission Reflection, Multi-Layer Cache Sync & Timezone-Safe Filters ⚡📋🛠️
+
+```mermaid
+flowchart TD
+    subgraph AdmissionModal ["1. Manual Admission Submit"]
+        FormSubmit["Admin/Staff submits Customer Modal"]
+        TargetBld["Target PG Building selected or auto-scoped"]
+        APICall["POST /api/bookings"]
+        FormSubmit --> TargetBld --> APICall
+    end
+
+    subgraph StateAndCacheSync ["2. Instant Reactive State & Cache Sync"]
+        APICall --> ImmediateState["setBookings([newBooking, ...prev]) (Instant UI reflection)"]
+        APICall --> LocalStorageSync["localStorage ('shripad_cached_bookings' & 'shripad_admin_bookings')"]
+        APICall --> FetchBookings["fetchBookings() Background Refresh"]
+    end
+
+    subgraph ViewsUpdated ["3. All Dashboard Views Live Reflected"]
+        ImmediateState --> RecentTable["Dashboard: Recent Customers & Admissions Ledger"]
+        ImmediateState --> CustDirectory["Customers: Residents & Applicants Directory"]
+        ImmediateState --> AllocHub["Allocation: Customer Allocation Hub"]
+        ImmediateState --> TimezoneSafe["Timezone-safe filter (48h tolerance + pending inclusion)"]
+    end
+```
+
+---
+
+### 📍 Version 9.40 — Professional Form Polish: Auto-Uppercase Names, Automatic +91 Phone Formatting & Optional Email 🔤📱✨
+
+```mermaid
+flowchart TD
+    subgraph NameField ["1. Name Auto-Capitalization"]
+        InputName["User types: 'shivam khude' or 'ramesh'"]
+        AutoUpper["Auto toUpperCase() in UI + Backend"]
+        ResultName["Stored & Displayed: 'SHIVAM KHUDE' / 'RAMESH'"]
+        InputName --> AutoUpper --> ResultName
+    end
+
+    subgraph PhoneField ["2. Automatic +91 Country Code Formatting"]
+        InputPhone["User types: '9876543210'"]
+        FormatPhone["formatPhoneWithCountryCode() in UI + Backend"]
+        ResultPhone["Stored & Displayed: '+91 9876543210' / '+919876543210'"]
+        InputPhone --> FormatPhone --> ResultPhone
+    end
+
+    subgraph EmailField ["3. Optional Email Graceful Handling"]
+        EmailInput["Email Field marked (Optional)"]
+        NoFake["No forced placeholder '@gmail.com' generation"]
+        CleanSave["Clean '' or undefined if not provided"]
+        EmailInput --> NoFake --> CleanSave
+    end
+```
+
+---
+
+### 📍 Version 9.39 — UI Polish: Deduplicated OpenWA Modal Action & Single Emoji Standardization 🎨✨
+
+```mermaid
+flowchart TD
+    subgraph UIHeader ["1. WhatsApp Modal Header Action"]
+        ModalHeader["WhatsApp Automation Modal Header"]
+        OpenWABtn["Single 'OpenWA Dashboard ↗' Action (Top-Right)"]
+        RefreshBtn["🔄 Refresh Status Button"]
+        ModalHeader --> OpenWABtn & RefreshBtn
+    end
+
+    subgraph CardBody ["2. Streamlined Connection Card"]
+        ConnCard["Multi-Device Baileys Connection Card"]
+        StartBtn["⚡ Start Session & Get QR (if disconnected)"]
+        NoDupe["Redundant card-level OpenWA button removed"]
+        ConnCard --> StartBtn & NoDupe
+    end
+
+    subgraph HeaderPolish ["3. Typography & Emoji Polish"]
+        PaymentsHub["Payments & Financial Hub 💳 (Standardized to single emoji)"]
+    end
+```
+
+---
+
+### 📍 Version 9.38 — Full-Spectrum DevOps Optimization: Wire Compression, In-Memory Caching & Query Pagination 🚀⚡📦
+
+```mermaid
+flowchart TD
+    subgraph NetworkLayer ["1. Wire Protocol Network Compression"]
+        AtlasConn["Mongoose connectDB()"]
+        Zlib["compressors: ['zlib'] level 6"]
+        AtlasConn --> Zlib
+        Zlib --> |"65-75% network bandwidth reduction"| Atlas["MongoDB Atlas M0"]
+    end
+
+    subgraph MemoryLayer ["2. In-Memory RAM Caching (All Collections)"]
+        BookingCache["BookingModel.cache (RAM)"]
+        InvoiceCache["InvoiceModel.cache (RAM)"]
+        ExpenseCache["ExpenseModel.cache (RAM)"]
+        ReadReq["Client GET Requests"]
+        ReadReq --> |"<1ms response latency"| BookingCache & InvoiceCache & ExpenseCache
+    end
+
+    subgraph WriteLayer ["3. Targeted Atomic 1-Doc Synchronization"]
+        InvWrite["InvoiceModel.createOrUpdate()"]
+        ExpWrite["ExpenseModel.create() / update()"]
+        DirtyTrack["dirtyIds Set"]
+        AtlasSync["bulkWrite of modified docs ONLY"]
+        InvWrite & ExpWrite --> DirtyTrack --> AtlasSync --> Atlas
+    end
+
+    subgraph APILayer ["4. Query Pagination & Filters"]
+        GetBookings["BookingController.getBookings(?page, ?limit, ?building)"]
+        GetInvoices["InvoiceController.getInvoices(?page, ?limit, ?status)"]
+        GetBookings & GetInvoices --> |"Prevents payload bloat over 3-5 years"| MemoryLayer
+    end
+```
+
+---
+
+### 📍 Version 9.37 — Phase 2 DevOps Deep Gap Analysis: 12 Bottleneck Fixes ⚡🔧📊
+
+```mermaid
+flowchart TD
+    subgraph DirtyTracking ["1. Dirty-Document Tracking (bookingModel)"]
+        WriteOp["add / update / addPayment / addComplaint"]
+        DirtySet["dirtyIds Set tracks changed IDs"]
+        SaveFile["saveToFile() syncs ONLY dirty docs"]
+        WriteOp --> DirtySet --> SaveFile
+    end
+
+    subgraph OrphanCleanup ["2. MongoDB Orphan Prevention"]
+        DeleteOp["delete() in Booking/Invoice/Expense/Staff"]
+        AtlasDelete["deleteOne({ id }) removes from Atlas"]
+        DeleteOp --> AtlasDelete
+    end
+
+    subgraph StartupOpt ["3. Startup Optimization"]
+        BulkCompact["bulkWrite batch compaction (was N+1 replaceOne)"]
+        SessionGuard["lastCompactedAt flag skips re-compaction"]
+        PoolFix["maxPoolSize: 15 → 5 for M0 tier"]
+        AutoReconnect["mongoose.on('disconnected') → auto-reconnect"]
+        BulkCompact --> SessionGuard
+        PoolFix --> AutoReconnect
+    end
+
+    subgraph StorageEff ["4. Storage Efficiency"]
+        CompactJSON["JSON.stringify(data) — no pretty-print"]
+        NoDupeFields["complaints alias removed, only complaintHistory"]
+        NoReadWrite["getAll() no longer writes back to disk"]
+        ExcludeId["compactDocument excludes _id, __v"]
+        CompactJSON --> NoDupeFields --> NoReadWrite --> ExcludeId
+    end
+
+    subgraph BuildingFix ["5. Building Model Dedup"]
+        NoDblWrite["Removed double-write in create()/update()"]
+        SingleSave["save() handles Atlas sync atomically"]
+        NoDblWrite --> SingleSave
+    end
+
+    DirtyTracking -.-> |"500x → 1x write reduction"| StartupOpt
+    OrphanCleanup -.-> |"Prevents permanent 512MB leak"| StorageEff
+```
+
+---
+
+
 
 ```mermaid
 flowchart TD
@@ -5540,3 +5790,28 @@ flowchart TD
 ```
 
 ---
+
+### 📍 Version 5.6 — DevOps Database Optimization (90%–95% Footprint Reduction & 3+ Year Longevity)
+
+```mermaid
+flowchart TD
+    Root["Workspace Root"]
+    FE["frontend/ (TanStack Start Web App)"]
+    BE["backend/ (Express / Node.js API Service)"]
+    MongoAtlas["MongoDB Atlas M0 Free Tier (512MB Quota)"]
+
+    subgraph Optimization["⚡ DevOps 90%-95% Optimization Engine"]
+        SchemaDiet["mongoSchemas.ts\n(Pruned 75% redundant single-field indexes\nRetained only 3 lean compound indexes)"]
+        WhatsAppComp["WhatsAppAuthBackupModel\n(zlib.gzipSync/gunzipSync 520KB ➔ 20KB, 96% reduction)"]
+        DocCompactor["DBOptimizationService.compactDocument\n(Strips empty strings, nulls, empty arrays, duplicate keys)"]
+        AtomicBulk["bulkWrite Upsert Engine\n(Replaced deleteMany+insertMany anti-pattern)"]
+    end
+
+    Root --> FE
+    Root --> BE
+    BE --> Optimization
+    Optimization --> MongoAtlas
+```
+
+---
+

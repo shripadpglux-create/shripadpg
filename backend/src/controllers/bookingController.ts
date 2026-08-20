@@ -13,14 +13,52 @@ const UPLOADS_DOC_DIR = path.join(__dirname, "..", "..", "uploads", "documents")
 
 export class BookingController {
   /**
-   * Retrieve all bookings from the database.
+   * Retrieve all bookings from the database with optional search, building filter, and pagination.
    */
-  public static async getBookings(_req: Request, res: Response) {
+  public static async getBookings(req: Request, res: Response) {
     try {
-      const bookings = await BookingModel.getAll();
+      let bookings = await BookingModel.getAll();
+
+      const { building, status, search, page, limit } = req.query;
+
+      // Optional Building Filter
+      if (building && typeof building === "string" && building !== "ALL") {
+        bookings = bookings.filter((b) =>
+          b.allocatedBuilding?.toLowerCase() === building.toLowerCase() ||
+          b.building?.toLowerCase() === building.toLowerCase()
+        );
+      }
+
+      // Optional Status Filter
+      if (status && typeof status === "string") {
+        bookings = bookings.filter((b) => b.status === status);
+      }
+
+      // Optional Search Query
+      if (search && typeof search === "string" && search.trim() !== "") {
+        const q = search.toLowerCase().trim();
+        bookings = bookings.filter((b) =>
+          b.name?.toLowerCase().includes(q) ||
+          b.phone?.includes(q) ||
+          b.email?.toLowerCase().includes(q) ||
+          b.allocatedRoom?.toLowerCase().includes(q)
+        );
+      }
+
+      const totalCount = bookings.length;
+
+      // Optional Pagination
+      if (limit) {
+        const pageNum = Math.max(1, parseInt(String(page || "1"), 10));
+        const limitNum = Math.max(1, parseInt(String(limit), 10));
+        const startIndex = (pageNum - 1) * limitNum;
+        bookings = bookings.slice(startIndex, startIndex + limitNum);
+      }
+
       res.json({
         success: true,
         count: bookings.length,
+        totalCount,
         bookings,
       });
     } catch (error: any) {
@@ -75,6 +113,21 @@ export class BookingController {
         });
       }
 
+      // Phone formatting helper ensuring +91 prefix
+      const formatPhone = (rawPhone?: string): string => {
+        if (!rawPhone || rawPhone === "N/A") return rawPhone || "";
+        const digits = rawPhone.replace(/\D/g, "");
+        if (digits.length === 10) return `+91${digits}`;
+        if (digits.startsWith("91") && digits.length === 12) return `+${digits}`;
+        if (digits.startsWith("0") && digits.length === 11) return `+91${digits.slice(1)}`;
+        return rawPhone.startsWith("+") ? rawPhone : (digits ? `+91${digits}` : rawPhone);
+      };
+
+      const normalizedName = (name || "").trim().toUpperCase();
+      const normalizedPhone = formatPhone(phone);
+      const normalizedGuardianPhone = guardianPhone && guardianPhone !== "N/A" ? formatPhone(guardianPhone) : "";
+      const normalizedEmail = (email || "").trim().toLowerCase();
+
       let storedDoc = documents || "Aadhaar Card Uploaded";
 
       // If base64 file data provided, write it to uploads/documents
@@ -85,6 +138,8 @@ export class BookingController {
           const buffer = matches ? Buffer.from(matches[2], "base64") : Buffer.from(documentData, "base64");
           const sanitizeName = documentName.replace(/[^a-zA-Z0-9._-]/g, "_");
           const filename = `doc_${Date.now()}_${sanitizeName}`;
+          const filePath = path.join(UPLOADS_DOC_DIR, filename);
+          await fs.writeFile(filePath, buffer);
           const host = req.get("host") || "localhost:5000";
           const protocol = req.protocol === "https" || req.get("x-forwarded-proto") === "https" ? "https" : "http";
           storedDoc = `${protocol}://${host}/uploads/documents/${filename}`;
@@ -96,15 +151,15 @@ export class BookingController {
 
       const newBooking = await BookingModel.add({
         timestamp: new Date().toISOString().replace("T", " ").substring(0, 19),
-        name,
-        email: email || "N/A",
-        phone,
-        guardianPhone: guardianPhone || "N/A",
+        name: normalizedName,
+        email: normalizedEmail,
+        phone: normalizedPhone,
+        guardianPhone: normalizedGuardianPhone,
         documents: storedDoc,
         building: building || "Unallocated",
         roomType: roomType || "Double Sharing",
         source: "manual",
-        createdBy: createdBy || "Master Admin",
+        createdBy: createdBy || (createdByRole === "staff" ? "Staff Member" : "Master Admin"),
         createdByRole: createdByRole || "admin",
         createdById: createdById || "admin",
       });
@@ -303,7 +358,28 @@ export class BookingController {
   public static async updateBooking(req: Request, res: Response) {
     try {
       const id = req.params.id as string;
-      const updated = await BookingModel.update(id, req.body);
+      const updates = { ...req.body };
+
+      if (updates.documentData && updates.documentName) {
+        try {
+          await fs.mkdir(UPLOADS_DOC_DIR, { recursive: true });
+          const matches = updates.documentData.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+          const buffer = matches ? Buffer.from(matches[2], "base64") : Buffer.from(updates.documentData, "base64");
+          const sanitizeName = updates.documentName.replace(/[^a-zA-Z0-9._-]/g, "_");
+          const filename = `doc_${Date.now()}_${sanitizeName}`;
+          const filePath = path.join(UPLOADS_DOC_DIR, filename);
+          await fs.writeFile(filePath, buffer);
+          const host = req.get("host") || "localhost:5000";
+          const protocol = req.protocol === "https" || req.get("x-forwarded-proto") === "https" ? "https" : "http";
+          updates.documents = `${protocol}://${host}/uploads/documents/${filename}`;
+          delete updates.documentData;
+          delete updates.documentName;
+        } catch (fileErr) {
+          console.error("⚠️ Failed to write updated document file:", fileErr);
+        }
+      }
+
+      const updated = await BookingModel.update(id, updates);
       if (!updated) {
         return res.status(404).json({ success: false, message: "Booking not found." });
       }

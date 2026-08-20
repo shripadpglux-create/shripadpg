@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import { StaffMongoModel } from "../schemas/mongoSchemas.js";
+import { DBOptimizationService } from "../services/dbOptimizationService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -57,7 +58,7 @@ export class StaffModel {
       try {
         await fs.access(DATA_FILE);
       } catch {
-        await fs.writeFile(DATA_FILE, JSON.stringify(SEED_STAFF, null, 2), "utf-8");
+        await fs.writeFile(DATA_FILE, JSON.stringify(SEED_STAFF), "utf-8");
       }
     } catch (err) {
       console.error("Error ensuring staff data file:", err);
@@ -72,7 +73,6 @@ export class StaffModel {
         const mongoDocs = await StaffMongoModel.find({}).lean();
         if (mongoDocs && mongoDocs.length > 0) {
           this.cache = mongoDocs as any[];
-          await fs.writeFile(DATA_FILE, JSON.stringify(this.cache, null, 2), "utf-8");
           return this.cache;
         }
       } catch (err) {
@@ -108,18 +108,22 @@ export class StaffModel {
     await this.ensureDataFile();
     this.cache = staff;
     try {
-      await fs.writeFile(DATA_FILE, JSON.stringify(staff, null, 2), "utf-8");
+      await fs.writeFile(DATA_FILE, JSON.stringify(staff), "utf-8");
     } catch (err) {
       console.error("Error saving staff data:", err);
     }
 
-    if (mongoose.connection.readyState === 1) {
+    if (mongoose.connection.readyState === 1 && staff.length > 0) {
       try {
-        await StaffMongoModel.deleteMany({});
-        if (staff.length > 0) {
-          await StaffMongoModel.insertMany(staff);
-        }
-        console.log(`🍃 Synced ${staff.length} staff members to MongoDB Atlas.`);
+        const ops = staff.map((st) => ({
+          updateOne: {
+            filter: { id: st.id },
+            update: { $set: DBOptimizationService.compactDocument(st) },
+            upsert: true,
+          },
+        }));
+        await StaffMongoModel.bulkWrite(ops);
+        console.log(`🍃 Synced ${staff.length} compacted staff members to MongoDB Atlas via atomic bulkWrite.`);
       } catch (err) {
         console.error("Failed to sync staff to MongoDB Atlas:", err);
       }
@@ -239,6 +243,14 @@ export class StaffModel {
 
     if (staffList.length < initialLen) {
       await this.save(staffList);
+      // Remove orphan from MongoDB Atlas
+      if (mongoose.connection.readyState === 1) {
+        try {
+          await StaffMongoModel.deleteOne({ id });
+        } catch (err) {
+          console.warn("Failed to delete staff orphan from Atlas:", err);
+        }
+      }
       return true;
     }
     return false;

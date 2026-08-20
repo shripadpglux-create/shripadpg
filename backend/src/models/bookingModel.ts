@@ -3,6 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import mongoose from "mongoose";
 import { BookingMongoModel } from "../schemas/mongoSchemas.js";
+import { DBOptimizationService } from "../services/dbOptimizationService.js";
 
 // Get directory name in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -99,6 +100,7 @@ const SEED_BOOKINGS: Booking[] = [];
 export class BookingModel {
   private static cache: Booking[] = [];
   private static isInitialized = false;
+  private static dirtyIds: Set<string> = new Set();
 
   private static async init() {
     if (this.isInitialized) return;
@@ -118,13 +120,16 @@ export class BookingModel {
             this.cache = cleanDocs as any[];
             this.isInitialized = true;
             await fs.writeFile(DATA_FILE, JSON.stringify(this.cache, null, 2), "utf-8");
-            // Purge bad HTML records from MongoDB Atlas if present
+            // Purge only bad HTML records from MongoDB Atlas (targeted deletion, not full wipe)
             if (cleanDocs.length < mongoDocs.length) {
-              await BookingMongoModel.deleteMany({});
-              if (cleanDocs.length > 0) {
-                await BookingMongoModel.insertMany(cleanDocs);
-              }
-              console.log(`🧹 Purged ${mongoDocs.length - cleanDocs.length} HTML garbage records from MongoDB Atlas.`);
+              await BookingMongoModel.deleteMany({
+                $or: [
+                  { name: { $regex: /<script/i } },
+                  { name: { $regex: /waffle_api/i } },
+                  { timestamp: { $regex: /<script/i } },
+                ],
+              });
+              console.log(`🧹 Purged ${mongoDocs.length - cleanDocs.length} HTML garbage records from MongoDB Atlas (targeted).`);
             }
             return;
           }
@@ -157,18 +162,27 @@ export class BookingModel {
 
   private static async saveToFile() {
     try {
-      await fs.writeFile(DATA_FILE, JSON.stringify(this.cache, null, 2), "utf-8");
+      await fs.writeFile(DATA_FILE, JSON.stringify(this.cache), "utf-8");
     } catch (error) {
       console.error("Failed to save bookings to file:", error);
     }
 
-    if (mongoose.connection.readyState === 1) {
+    // Dirty-document tracking: only sync changed documents to Atlas, not the full collection
+    if (mongoose.connection.readyState === 1 && this.dirtyIds.size > 0) {
       try {
-        await BookingMongoModel.deleteMany({});
-        if (this.cache.length > 0) {
-          await BookingMongoModel.insertMany(this.cache);
+        const dirtyDocs = this.cache.filter((b) => this.dirtyIds.has(b.id));
+        if (dirtyDocs.length > 0) {
+          const ops = dirtyDocs.map((b) => ({
+            replaceOne: {
+              filter: { id: b.id },
+              replacement: { ...DBOptimizationService.compactDocument(b), id: b.id },
+              upsert: true,
+            },
+          }));
+          await BookingMongoModel.bulkWrite(ops);
+          console.log(`🍃 Synced ${dirtyDocs.length} changed bookings to MongoDB Atlas (purged empty keys).`);
         }
-        console.log(`🍃 Synced ${this.cache.length} bookings to MongoDB Atlas.`);
+        this.dirtyIds.clear();
       } catch (err) {
         console.error("Failed to sync bookings to MongoDB Atlas:", err);
       }
@@ -242,6 +256,7 @@ export class BookingModel {
     };
 
     this.cache.unshift(newBooking); // Add to the top of list
+    this.dirtyIds.add(newBooking.id);
     await this.saveToFile();
     await this.appendToSheetCSV(newBooking);
     return newBooking;
@@ -286,6 +301,7 @@ export class BookingModel {
           email: existing.email && existing.email !== "N/A" ? existing.email : item.email,
           documents: existing.documents && existing.documents !== "N/A" ? existing.documents : item.documents,
         };
+        this.dirtyIds.add(existing.id);
         hasChanges = true;
       } else {
         // Insert new online booking only if person does not exist
@@ -296,6 +312,7 @@ export class BookingModel {
         };
         this.cache.unshift(newBooking);
         addedBookings.push(newBooking);
+        this.dirtyIds.add(newBooking.id);
         hasChanges = true;
       }
     }
@@ -355,6 +372,7 @@ export class BookingModel {
     };
 
     this.cache[bookingIndex] = updatedBooking;
+    this.dirtyIds.add(updatedBooking.id);
     await this.saveToFile();
     return updatedBooking;
   }
@@ -403,6 +421,7 @@ export class BookingModel {
     };
 
     this.cache[index] = updated;
+    this.dirtyIds.add(updated.id);
     await this.saveToFile();
     return updated;
   }
@@ -438,6 +457,7 @@ export class BookingModel {
     };
 
     this.cache[index] = updated;
+    this.dirtyIds.add(updated.id);
     await this.saveToFile();
     return updated;
   }
@@ -448,6 +468,14 @@ export class BookingModel {
     this.cache = this.cache.filter((b) => b.id !== id);
     if (this.cache.length !== initialLength) {
       await this.saveToFile();
+      // Remove orphan from MongoDB Atlas to prevent permanent storage leak
+      if (mongoose.connection.readyState === 1) {
+        try {
+          await BookingMongoModel.deleteOne({ id });
+        } catch (err) {
+          console.warn("Failed to delete booking orphan from Atlas:", err);
+        }
+      }
       return true;
     }
     return false;
@@ -495,6 +523,7 @@ export class BookingModel {
       paymentHistory: updatedHistory,
     };
 
+    this.dirtyIds.add(this.cache[index].id);
     await this.saveToFile();
     return { booking: this.cache[index], payment: newPayment };
   }
@@ -537,6 +566,7 @@ export class BookingModel {
       paymentHistory: updatedHistory,
     };
 
+    this.dirtyIds.add(this.cache[bookingIndex].id);
     await this.saveToFile();
     return this.cache[bookingIndex];
   }
@@ -570,9 +600,9 @@ export class BookingModel {
     this.cache[index] = {
       ...this.cache[index],
       complaintHistory: updatedHistory,
-      complaints: updatedHistory,
     };
 
+    this.dirtyIds.add(this.cache[index].id);
     await this.saveToFile();
     return { booking: this.cache[index], complaint: newComplaint };
   }
@@ -611,9 +641,9 @@ export class BookingModel {
     this.cache[bookingIndex] = {
       ...booking,
       complaintHistory: updatedHistory,
-      complaints: updatedHistory,
     };
 
+    this.dirtyIds.add(this.cache[bookingIndex].id);
     await this.saveToFile();
     return this.cache[bookingIndex];
   }

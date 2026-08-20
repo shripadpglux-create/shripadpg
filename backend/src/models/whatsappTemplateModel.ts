@@ -192,7 +192,7 @@ export class WhatsAppTemplateModel {
                   ? doc.chatbotLocations
                   : DEFAULT_WHATSAPP_CONFIG.chatbotLocations,
             };
-            await fs.writeFile(TEMPLATES_FILE, JSON.stringify(this.cache, null, 2), "utf-8");
+            await fs.writeFile(TEMPLATES_FILE, JSON.stringify(this.cache), "utf-8");
             return this.cache as WhatsAppTemplatesConfig;
           }
         } catch (err) {
@@ -213,7 +213,7 @@ export class WhatsAppTemplateModel {
         return this.cache as WhatsAppTemplatesConfig;
       } catch {
         this.cache = { ...DEFAULT_WHATSAPP_CONFIG };
-        await fs.writeFile(TEMPLATES_FILE, JSON.stringify(this.cache, null, 2), "utf-8");
+        await fs.writeFile(TEMPLATES_FILE, JSON.stringify(this.cache), "utf-8");
         return this.cache as WhatsAppTemplatesConfig;
       }
     } catch {
@@ -241,7 +241,7 @@ export class WhatsAppTemplateModel {
 
     try {
       await fs.mkdir(DATA_DIR, { recursive: true });
-      await fs.writeFile(TEMPLATES_FILE, JSON.stringify(newConfig, null, 2), "utf-8");
+      await fs.writeFile(TEMPLATES_FILE, JSON.stringify(newConfig), "utf-8");
     } catch (fsErr) {
       console.warn("Failed to write templates to disk:", fsErr);
     }

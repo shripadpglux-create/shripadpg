@@ -109,8 +109,9 @@ app.use("/api/auth/", loginLimiter);
 app.use("/api/bookings/login", loginLimiter);
 app.use("/api/staff/login", loginLimiter);
 
-// ── Body Parser — Reduced limit ─────────────────────────────────────
-app.use(express.json({ limit: "2mb" }));
+// ── Body Parser — Increased for Document Uploads ────────────────────
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 // Static uploads serving
 app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
