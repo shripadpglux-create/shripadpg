@@ -479,6 +479,128 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     fetchPaymentSettings();
   }, []);
 
+  // Global Escape Key & Modal Deadlock Prevention Hook
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (previewDocModal.isOpen) {
+          setPreviewDocModal({ isOpen: false, url: "", title: "", filename: "" });
+          return;
+        }
+        if (confirmModalState.isOpen) {
+          setConfirmModalState((prev) => ({ ...prev, isOpen: false }));
+          return;
+        }
+        if (selectedAllocateCustomer) {
+          setSelectedAllocateCustomer(null);
+          return;
+        }
+        if (selectedHistoryResident) {
+          setSelectedHistoryResident(null);
+          return;
+        }
+        if (checkoutCustomer) {
+          setCheckoutCustomer(null);
+          return;
+        }
+        if (checkoutSuccessVoucher) {
+          setCheckoutSuccessVoucher(null);
+          return;
+        }
+        if (isCreateModalOpen) {
+          setIsCreateModalOpen(false);
+          return;
+        }
+        if (isRecordPaymentOpen) {
+          setIsRecordPaymentOpen(false);
+          return;
+        }
+        if (isExpenseModalOpen) {
+          setIsExpenseModalOpen(false);
+          return;
+        }
+        if (isStaffModalOpen) {
+          setIsStaffModalOpen(false);
+          return;
+        }
+        if (isAddBuildingModalOpen) {
+          setIsAddBuildingModalOpen(false);
+          return;
+        }
+        if (isBranchModalOpen) {
+          setIsBranchModalOpen(false);
+          return;
+        }
+        if (isComplaintsHubModalOpen) {
+          setIsComplaintsHubModalOpen(false);
+          return;
+        }
+        if (isWhatsAppModalOpen) {
+          setIsWhatsAppModalOpen(false);
+          return;
+        }
+        if (isPaymentSettingsModalOpen) {
+          setIsPaymentSettingsModalOpen(false);
+          return;
+        }
+        if (occupancyExplorerModal) {
+          setOccupancyExplorerModal(null);
+          return;
+        }
+        if (selectedRoomDetails) {
+          setSelectedRoomDetails(null);
+          return;
+        }
+        if (bedConfigModal) {
+          setBedConfigModal(null);
+          return;
+        }
+        if (isMoreDrawerOpen) {
+          setIsMoreDrawerOpen(false);
+          return;
+        }
+        if (isMobileMenuOpen) {
+          setIsMobileMenuOpen(false);
+          return;
+        }
+        if (isFabMenuOpen) {
+          setIsFabMenuOpen(false);
+          return;
+        }
+        if (isProfileMenuOpen) {
+          setIsProfileMenuOpen(false);
+          return;
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [
+    previewDocModal.isOpen,
+    confirmModalState.isOpen,
+    selectedAllocateCustomer,
+    selectedHistoryResident,
+    checkoutCustomer,
+    checkoutSuccessVoucher,
+    isCreateModalOpen,
+    isRecordPaymentOpen,
+    isExpenseModalOpen,
+    isStaffModalOpen,
+    isAddBuildingModalOpen,
+    isBranchModalOpen,
+    isComplaintsHubModalOpen,
+    isWhatsAppModalOpen,
+    isPaymentSettingsModalOpen,
+    occupancyExplorerModal,
+    selectedRoomDetails,
+    bedConfigModal,
+    isMoreDrawerOpen,
+    isMobileMenuOpen,
+    isFabMenuOpen,
+    isProfileMenuOpen,
+  ]);
+
   // Custom Toast Popup State
   const [customToast, setCustomToast] = useState<{
     isOpen: boolean;
