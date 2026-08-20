@@ -2,6 +2,25 @@
 
 ---
 
+### 📍 Version 9.47 — Mobile-Optimized Document Viewer: Responsive Header, Always-Visible Close Controls & Bottom Mobile Action Bar 📱✨
+
+```mermaid
+flowchart TD
+    subgraph MobileModal ["1. Mobile Document Preview"]
+        OpenPreview["User views document on Mobile Phone"]
+        HeaderLayout["Compact Responsive Header (min-w-0 + Truncation)"]
+        OpenPreview --> HeaderLayout
+    end
+
+    subgraph CloseActions ["2. Triple Close / Cut Accessibility"]
+        HeaderLayout --> HeaderX["Header 'X' Close Button (Always in view, no overflow)"]
+        HeaderLayout --> BackdropTap["Backdrop Tap / Click Outside to Dismiss"]
+        HeaderLayout --> BottomBar["Dedicated Bottom Mobile Action Bar (Download + Close)"]
+    end
+```
+
+---
+
 ### 📍 Version 9.46 — Production Cloudflare & Render Document URL Normalization 🌐📄⚡
 
 ```mermaid

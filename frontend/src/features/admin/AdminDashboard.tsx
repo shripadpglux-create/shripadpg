@@ -11961,51 +11961,60 @@ function doPost(e) {
           : previewDocModal.filename;
 
         return (
-          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
-            <div className="relative w-full max-w-4xl max-h-[90vh] flex flex-col rounded-3xl bg-white shadow-2xl border border-slate-200/80 overflow-hidden">
+          <div
+            onClick={() => setPreviewDocModal({ isOpen: false, url: "", title: "", filename: "" })}
+            className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-200"
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl bg-white shadow-2xl border border-slate-200/80 overflow-hidden"
+            >
               {/* Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F0F4FF] text-[#00022E] border border-blue-200">
-                    <FileText className="h-5 w-5" />
+              <div className="flex items-center justify-between px-3.5 sm:px-6 py-3 sm:py-4 border-b border-slate-100 bg-slate-50/80 gap-2">
+                <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
+                  <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-[#F0F4FF] text-[#00022E] border border-blue-200 flex-shrink-0">
+                    <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
                   </div>
-                  <div>
-                    <h3 className="text-sm font-black text-slate-900">{previewDocModal.title}</h3>
-                    <p className="text-[11px] font-mono text-slate-400">{displayFilename}</p>
+                  <div className="min-w-0 flex-1 pr-1">
+                    <h3 className="text-xs sm:text-sm font-black text-slate-900 truncate">{previewDocModal.title}</h3>
+                    <p className="text-[10px] sm:text-[11px] font-mono text-slate-400 truncate">{displayFilename}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                   <a
                     href={normalizedPreviewUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     download={displayFilename}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
+                    className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
+                    title="Download"
                   >
-                    <Download className="h-4 w-4" />
-                    <span>Download</span>
+                    <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Download</span>
                   </a>
                   <button
                     type="button"
                     onClick={() => setPreviewDocModal({ isOpen: false, url: "", title: "", filename: "" })}
-                    className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+                    className="p-1.5 sm:p-2 text-slate-700 hover:text-slate-950 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 rounded-xl transition cursor-pointer"
+                    title="Close"
+                    aria-label="Close"
                   >
-                    <X className="h-5 w-5" />
+                    <X className="h-4 w-4 sm:h-5 sm:w-5" />
                   </button>
                 </div>
               </div>
 
               {/* Viewer Body */}
-              <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-slate-900/5 min-h-[320px]">
+              <div className="flex-1 overflow-auto p-3 sm:p-4 flex items-center justify-center bg-slate-900/5 min-h-[300px]">
                 {docImageError ? (
-                  <div className="p-8 text-center max-w-md space-y-3 bg-white rounded-3xl border border-slate-200 shadow-sm animate-in fade-in">
+                  <div className="p-6 sm:p-8 text-center max-w-md space-y-3 bg-white rounded-3xl border border-slate-200 shadow-sm animate-in fade-in mx-2">
                     <div className="h-12 w-12 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center mx-auto">
                       <AlertCircle className="h-6 w-6" />
                     </div>
                     <div>
                       <h4 className="text-sm font-black text-slate-800">Document Image File Not Found</h4>
                       <p className="text-xs text-slate-500 font-semibold mt-1">
-                        The document <span className="font-mono font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">{displayFilename}</span> is not stored on the production server.
+                        The document <span className="font-mono font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">{displayFilename}</span> is not stored on the server.
                       </p>
                     </div>
                     <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#00022E] hover:bg-[#00044A] text-white text-xs font-bold transition shadow-md cursor-pointer active:scale-95">
@@ -12090,16 +12099,38 @@ function doPost(e) {
                   <iframe
                     src={normalizedPreviewUrl}
                     title="Document PDF Preview"
-                    className="w-full h-[70vh] rounded-2xl border border-slate-200 bg-white"
+                    className="w-full h-[65vh] sm:h-[70vh] rounded-2xl border border-slate-200 bg-white"
                   />
                 ) : (
                   <img
                     src={normalizedPreviewUrl}
                     alt="Document Preview"
                     onError={() => setDocImageError(true)}
-                    className="max-h-[75vh] max-w-full object-contain rounded-2xl shadow-md border border-slate-200 bg-white"
+                    className="max-h-[70vh] sm:max-h-[75vh] max-w-full object-contain rounded-2xl shadow-md border border-slate-200 bg-white"
                   />
                 )}
+              </div>
+
+              {/* Bottom Mobile Action Bar */}
+              <div className="p-3 border-t border-slate-100 bg-slate-50 flex sm:hidden items-center justify-between gap-2">
+                <a
+                  href={normalizedPreviewUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  download={displayFilename}
+                  className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>Download</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setPreviewDocModal({ isOpen: false, url: "", title: "", filename: "" })}
+                  className="flex-1 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95"
+                >
+                  <X className="h-4 w-4" />
+                  <span>Close (Cut)</span>
+                </button>
               </div>
             </div>
           </div>
