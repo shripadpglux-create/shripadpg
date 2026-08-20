@@ -74,6 +74,7 @@ const staffSchema = new Schema(
     phone: { type: String },
     email: { type: String },
     password: { type: String },
+    plainPassword: { type: String },
     role: { type: String, default: "building_manager" },
     assignedBuildings: { type: Array, default: ["PG A"] },
     status: { type: String, default: "active" },

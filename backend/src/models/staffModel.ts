@@ -15,6 +15,7 @@ export interface StaffMember {
   phone: string;
   email: string;
   password?: string;
+  plainPassword?: string;
   role: "super_admin" | "building_manager" | "caretaker";
   assignedBuildings: string[];
   status: "active" | "inactive";
@@ -34,6 +35,7 @@ const SEED_STAFF: StaffMember[] = [
     phone: "9876543210",
     email: "admin@shripadpg.com",
     password: bcrypt.hashSync("admin123", BCRYPT_ROUNDS),
+    plainPassword: "admin123",
     role: "super_admin",
     assignedBuildings: ["ALL"],
     status: "active",
@@ -42,11 +44,14 @@ const SEED_STAFF: StaffMember[] = [
 ];
 
 /**
- * Strip password field from a staff member for safe API responses.
+ * Strip password hash field from a staff member for safe API responses while keeping display plainPassword for admin.
  */
-export function sanitizeStaff(staff: StaffMember): Omit<StaffMember, "password"> {
+export function sanitizeStaff(staff: StaffMember): StaffMember {
   const { password, ...safe } = staff;
-  return safe;
+  return {
+    ...safe,
+    plainPassword: staff.plainPassword || (staff.password && !staff.password.startsWith("$2") ? staff.password : undefined),
+  };
 }
 
 export class StaffModel {
@@ -134,7 +139,7 @@ export class StaffModel {
     const staffList = await this.getAll();
 
     // Hash password before storing
-    const rawPassword = data.password || "staff123";
+    const rawPassword = data.plainPassword || data.password || "staff123";
     const hashedPassword = await bcrypt.hash(rawPassword, BCRYPT_ROUNDS);
 
     const newStaff: StaffMember = {
@@ -143,6 +148,7 @@ export class StaffModel {
       phone: data.phone || "",
       email: data.email || `staff${Date.now()}@shripadpg.com`,
       password: hashedPassword,
+      plainPassword: rawPassword,
       role: data.role || "building_manager",
       assignedBuildings: Array.isArray(data.assignedBuildings) && data.assignedBuildings.length > 0 ? data.assignedBuildings : ["PG A"],
       status: data.status || "active",
@@ -165,8 +171,13 @@ export class StaffModel {
 
     // Hash new password if provided, otherwise keep existing hash
     let passwordValue = existing.password;
+    let plainPasswordValue = existing.plainPassword;
     if (data.password !== undefined && data.password !== "") {
+      plainPasswordValue = data.password;
       passwordValue = await bcrypt.hash(data.password, BCRYPT_ROUNDS);
+    } else if (data.plainPassword !== undefined && data.plainPassword !== "") {
+      plainPasswordValue = data.plainPassword;
+      passwordValue = await bcrypt.hash(data.plainPassword, BCRYPT_ROUNDS);
     }
 
     const updated: StaffMember = {
@@ -175,6 +186,7 @@ export class StaffModel {
       phone: data.phone !== undefined ? data.phone : existing.phone,
       email: data.email !== undefined ? data.email : existing.email,
       password: passwordValue,
+      plainPassword: plainPasswordValue,
       role: data.role !== undefined ? data.role : existing.role,
       assignedBuildings: data.assignedBuildings !== undefined ? data.assignedBuildings : existing.assignedBuildings,
       status: data.status !== undefined ? data.status : existing.status,

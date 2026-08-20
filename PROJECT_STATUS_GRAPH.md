@@ -2,6 +2,36 @@
 
 ---
 
+### 📍 Version 9.50 — Staff Scope Isolation, Occupancy Metric Sync & Accurate Password Display 🔐🏢📊
+
+```mermaid
+flowchart TD
+    subgraph StaffPasswords ["1. Accurate Staff Passwords"]
+        StorePlain["Store & Retain Configured plainPassword in Staff Model"]
+        NoFallback["Removed Hardcoded 'ramesh123' Fallback"]
+        AdminEye["Eye Toggle & 'Copy Credentials' Reflect Real Password"]
+        StorePlain --> NoFallback --> AdminEye
+    end
+
+    subgraph ScopeIsolation ["2. Resident Scope Isolation by Building"]
+        CheckResident{"Resident Status"}
+        CheckResident -->|Allocated to PG A| HideFromB["⛔ Filter Out for Staff B (Omkar)"]
+        CheckResident -->|Allocated to PG LUXPG-B| ShowToB["✅ Visible to Staff B (Omkar)"]
+        CheckResident -->|Pending Allocation| ShowToAll["✅ Visible to All Staff (Awaiting Assignment)"]
+    end
+
+    subgraph OccupancySync ["3. 100% Synced Occupancy Metrics"]
+        StaffScope["Staff Assigned Property: PG LUXPG-B (32 Beds)"]
+        TopKPI["Top KPI Bento Cards:\n• 32 Available Beds\n• 0 Occupied Beds\n• 0 Active Tenants"]
+        MatrixCard["Building Matrix:\n• 0 Occupied, 32 Vacant, 32 Total (0% Filled)"]
+        StaffScope --> TopKPI
+        StaffScope --> MatrixCard
+        TopKPI ---|100% Mathematical Sync| MatrixCard
+    end
+```
+
+---
+
 ### 📍 Version 9.49 — Mobile Sticky Footer Touch Optimizations for Building Creation 🏢📱✨
 
 ```mermaid

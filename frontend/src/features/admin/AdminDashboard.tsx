@@ -1856,27 +1856,41 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const [isSyncing, setIsSyncing] = useState(false);
   const [dashboardSourceFilter, setDashboardSourceFilter] = useState<"all" | "manual" | "online">("all");
 
-  // Scoped Bookings helper matching staff building & creator in staff mode
+  // Scoped Bookings helper matching staff building in staff mode
   const scopedBookings = useMemo(() => {
     return (bookings || []).filter((b) => {
       if (isStaffMode && activeStaffMember) {
         const staffBuildings = activeStaffMember.assignedBuildings || [];
         if (staffBuildings.includes("ALL")) return true;
 
+        const isAllocated =
+          (b.status === "allocated" || b.status === "active" || b.status === "confirmed" || Boolean(b.allocatedRoom || b.room || b.allocatedBed || b.bed)) &&
+          b.status !== "Pending Allocation" &&
+          b.status !== "pending" &&
+          b.allocatedRoom !== "Pending Allocation" &&
+          b.room !== "Pending Allocation";
+
         const bld = (b.allocatedBuilding || b.building || "").trim().toLowerCase();
-        const isAssignedBuilding = staffBuildings.some((sb: string) => {
-          const cleanSb = sb.trim().toLowerCase();
-          return cleanSb && (bld.includes(cleanSb) || cleanSb.includes(bld));
-        });
 
-        const isCreatedByStaff =
-          (b.createdById && b.createdById === activeStaffMember.id) ||
-          (b.createdBy && b.createdBy.toLowerCase() === activeStaffMember.name.toLowerCase()) ||
-          b.createdByRole === "staff";
+        // 1. If the resident is ALREADY ALLOCATED to a specific building:
+        if (isAllocated && bld && bld !== "unallocated" && bld !== "pending allocation") {
+          // They MUST strictly match one of the staff member's assigned buildings!
+          const isAssignedBuilding = staffBuildings.some((sb: string) => {
+            const cleanSb = sb.trim().toLowerCase();
+            const cleanBld = bld.trim().toLowerCase();
+            return (
+              cleanBld === cleanSb ||
+              cleanBld.replace(/[\s\-_]/g, "") === cleanSb.replace(/[\s\-_]/g, "") ||
+              cleanBld.includes(cleanSb) ||
+              cleanSb.includes(cleanBld)
+            );
+          });
+          return isAssignedBuilding;
+        }
 
-        const isUnallocated = !bld || bld === "unallocated";
-
-        return isAssignedBuilding || isCreatedByStaff || isUnallocated;
+        // 2. If the customer is PENDING ALLOCATION / UNALLOCATED:
+        // Any staff member can see them so they can admit/allocate them into their assigned building!
+        return true;
       }
       return true;
     });
@@ -1986,11 +2000,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       const bkBuilding = (bk.allocatedBuilding || bk.building || "").trim().toLowerCase();
       const targetBld = (buildingName || "").trim().toLowerCase();
       const bldMatch =
-        !bkBuilding ||
-        bkBuilding === "unallocated" ||
-        bkBuilding === targetBld ||
-        bkBuilding.replace(/[\s\-_]/g, "") === targetBld.replace(/[\s\-_]/g, "") ||
-        buildingsList.length <= 1;
+        (bkBuilding && (
+          bkBuilding === targetBld ||
+          bkBuilding.replace(/[\s\-_]/g, "") === targetBld.replace(/[\s\-_]/g, "") ||
+          bkBuilding.includes(targetBld) ||
+          targetBld.includes(bkBuilding)
+        )) ||
+        (!bkBuilding && buildingsList.length <= 1);
 
       if (!bldMatch) return false;
 
@@ -2027,21 +2043,6 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       customRoomSharing[`${buildingName}_${roomNo}`] ??
       2;
 
-    // Expand capacity only if there are explicit bookings for Bed C, Bed D, Bed E, etc.
-    allocations.forEach((bk) => {
-      const rawBed = (bk.allocatedBed || bk.bed || "").toString().trim().toLowerCase();
-      const bedLetter = rawBed.replace(/^bed\s*/i, "").trim();
-
-      if (rawBed === "bed c" || bedLetter === "c" || rawBed === "bed 3" || bedLetter === "3") capacity = Math.max(capacity, 3);
-      if (rawBed === "bed d" || bedLetter === "d" || rawBed === "bed 4" || bedLetter === "4") capacity = Math.max(capacity, 4);
-      if (rawBed === "bed e" || bedLetter === "e" || rawBed === "bed 5" || bedLetter === "5") capacity = Math.max(capacity, 5);
-      if (rawBed === "bed f" || bedLetter === "f" || rawBed === "bed 6" || bedLetter === "6") capacity = Math.max(capacity, 6);
-      if (rawBed === "bed g" || bedLetter === "g" || rawBed === "bed 7" || bedLetter === "7") capacity = Math.max(capacity, 7);
-      if (rawBed === "bed h" || bedLetter === "h" || rawBed === "bed 8" || bedLetter === "8") capacity = Math.max(capacity, 8);
-      if (rawBed === "bed i" || bedLetter === "i" || rawBed === "bed 9" || bedLetter === "9") capacity = Math.max(capacity, 9);
-      if (rawBed === "bed j" || bedLetter === "j" || rawBed === "bed 10" || bedLetter === "10") capacity = Math.max(capacity, 10);
-    });
-
     const letterLabels = ["Bed A", "Bed B", "Bed C", "Bed D", "Bed E", "Bed F", "Bed G", "Bed H", "Bed I", "Bed J", "Bed K", "Bed L"];
     const bedNames = letterLabels.slice(0, Math.min(12, Math.max(1, capacity)));
 
@@ -2068,50 +2069,45 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
         if (bkBed === `bed ${letter}` || cleanLetter === letter || bkBed === `bed ${numStr}` || cleanLetter === numStr) {
           return true;
         }
-        // First bed fallback if bed string doesn't specify letter
-        if (bedIdx === 0 && (!bkBed || bkBed === "a" || cleanLetter === "a" || cleanLetter === "1")) {
+
+        // Fuzzy match if this is the first unassigned bed and the booking has no specific bed letter
+        if (
+          bedIdx === 0 &&
+          (!bkBed || bkBed === "pending" || bkBed === "allocated" || bkBed === "bed a" || bkBed === "room")
+        ) {
           return true;
         }
-        // Suffix match (e.g. "Sharing Bed A")
-        if (bkBed.endsWith(` ${letter}`) || bkBed.endsWith(` ${numStr}`)) {
-          return true;
-        }
+
         return false;
       });
 
-      // Fallback: If no explicit bed string match, allocate to next available bed
-      if (!matchedAlloc) {
-        matchedAlloc = allocations.find((bk) => !assignedIds.has(bk.id));
-      }
-
       if (matchedAlloc) {
         assignedIds.add(matchedAlloc.id);
+        return {
+          bedName,
+          isOccupied: true,
+          occupantName: matchedAlloc.name,
+          occupantPhone: matchedAlloc.phone,
+          booking: matchedAlloc,
+        };
       }
 
       return {
         bedName,
-        isOccupied: !!matchedAlloc,
-        occupantName: matchedAlloc ? matchedAlloc.name : undefined,
-        occupantPhone: matchedAlloc ? matchedAlloc.phone : undefined,
-        booking: matchedAlloc || undefined,
+        isOccupied: false,
       };
     });
 
     const occupiedCount = beds.filter((b) => b.isOccupied).length;
     const freeCount = Math.max(0, capacity - occupiedCount);
-    const isFull = freeCount === 0;
+    const isFull = occupiedCount >= capacity;
     const isVacant = occupiedCount === 0;
-    const isPartiallyOccupied = occupiedCount > 0 && freeCount > 0;
+    const isPartiallyOccupied = occupiedCount > 0 && occupiedCount < capacity;
 
-    let freeBedsLabel = `${freeCount}/${capacity} Free`;
-    if (isVacant) {
-      freeBedsLabel = `${capacity}/${capacity} Free 🟢`;
-    } else if (isPartiallyOccupied) {
-      const freeBeds = beds.filter((b) => !b.isOccupied).map((b) => b.bedName.replace("Bed ", ""));
-      freeBedsLabel = `${freeBeds.join(", ")} Free 🟢`;
-    } else {
-      freeBedsLabel = "Full 🔴";
-    }
+    const freeBedsLabel =
+      freeCount === 0
+        ? "0 Beds Free (Full)"
+        : `${freeCount} of ${capacity} Beds Free`;
 
     return {
       building: buildingName,
@@ -2198,19 +2194,37 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       totalOccRooms += stats.occupiedRoomsCount;
     });
 
-    // Determine active residents count
-    const activeResidentsList = (scopedBookings || []).filter(
-      (b) =>
-        (b.status === "allocated" || b.status === "active" || b.status === "confirmed" || Boolean(b.allocatedRoom || b.room)) &&
+    // Determine active residents count strictly within scoped buildings
+    const activeResidentsList = (scopedBookings || []).filter((b) => {
+      const isAlloc =
+        (b.status === "allocated" || b.status === "active" || b.status === "confirmed" || Boolean(b.allocatedRoom || b.room || b.allocatedBed || b.bed)) &&
         b.status !== "cancelled" &&
         b.status !== "checked_out" &&
         b.status !== "vacated" &&
-        b.status !== "refunded"
-    );
+        b.status !== "refunded" &&
+        b.status !== "Pending Allocation" &&
+        b.status !== "pending" &&
+        b.allocatedRoom !== "Pending Allocation" &&
+        b.room !== "Pending Allocation";
+
+      if (!isAlloc) return false;
+
+      const bkBuilding = (b.allocatedBuilding || b.building || "").trim().toLowerCase();
+      return scopedBuildingsList.some((sb) => {
+        const cleanSb = sb.name.trim().toLowerCase();
+        return (
+          bkBuilding === cleanSb ||
+          bkBuilding.replace(/[\s\-_]/g, "") === cleanSb.replace(/[\s\-_]/g, "") ||
+          bkBuilding.includes(cleanSb) ||
+          cleanSb.includes(bkBuilding)
+        );
+      });
+    });
+
     const totalActiveResidents = activeResidentsList.length;
 
-    // Reconciliation safety net: Occupied beds matches active allocated residents
-    const finalOccBeds = Math.max(totalOccBeds, totalActiveResidents);
+    // Reconciliation: Top cards reflect exact room bed calculations for scoped buildings
+    const finalOccBeds = totalOccBeds;
     const finalVacBeds = Math.max(0, totalBedsCount - finalOccBeds);
 
     return {
@@ -10661,7 +10675,7 @@ function doPost(e) {
                         </span>
                         <span className="text-slate-300">•</span>
                         <span className="inline-flex items-center gap-1.5 text-indigo-900 bg-indigo-50 px-2.5 py-0.5 rounded-md border border-indigo-200 font-mono text-[11px]">
-                          <span>🔒 Password: {showStaffPasswordMap[st.id] ? (st.password || "ramesh123") : "••••••••"}</span>
+                          <span>🔒 Password: {showStaffPasswordMap[st.id] ? (st.plainPassword || st.password || "••••••••") : "••••••••"}</span>
                           <button
                             type="button"
                             onClick={() => setShowStaffPasswordMap((prev) => ({ ...prev, [st.id]: !prev[st.id] }))}
@@ -10692,8 +10706,10 @@ function doPost(e) {
                           type="button"
                           onClick={() => {
                             const staffPortalOrigin = typeof window !== "undefined" ? window.location.origin : "https://shripadpg.pages.dev";
-                            const text = `📋 SHRIPAD PG - DEDICATED STAFF CREDENTIALS\n\n👤 Staff Name: ${st.name}\n📞 Phone: ${st.phone}\n🏢 Dedicated Property: ${st.assignedBuildings.join(", ")}\n🌐 Staff Portal URL: ${staffPortalOrigin}/staff/login\n✉️ Login ID (Email): ${st.email}\n🔑 Fixed Password: ${st.password || "ramesh123"}`;
+                            const actualPass = st.plainPassword || st.password || "Set on registration";
+                            const text = `📋 SHRIPAD PG - DEDICATED STAFF CREDENTIALS\n\n👤 Staff Name: ${st.name}\n📞 Phone: ${st.phone}\n🏢 Dedicated Property: ${st.assignedBuildings.join(", ")}\n🌐 Staff Portal URL: ${staffPortalOrigin}/staff/login\n✉️ Login ID (Email): ${st.email}\n🔑 Fixed Password: ${actualPass}`;
                             navigator.clipboard.writeText(text);
+                            showToast(`Copied login credentials for ${st.name}!`, "success");
                             setCopiedStaffId(st.id);
                             setTimeout(() => setCopiedStaffId(null), 2500);
                           }}
@@ -10709,7 +10725,7 @@ function doPost(e) {
                             setNewStaffName(st.name);
                             setNewStaffPhone(st.phone);
                             setNewStaffEmail(st.email);
-                            setNewStaffPassword(st.password || "ramesh123");
+                            setNewStaffPassword(st.plainPassword || st.password || "");
                             setNewStaffRole(st.role);
                             setNewStaffAssignedBuildings(st.assignedBuildings);
                           }}
