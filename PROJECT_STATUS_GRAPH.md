@@ -2,6 +2,30 @@
 
 ---
 
+### 📍 Version 9.53 — Mobile-Responsive Staff Credentials Card Layout Architecture 🗂️✨📱
+
+```mermaid
+flowchart TD
+    subgraph OldLayout ["1. Legacy Horizontal Squeeze"]
+        Bad1["Phone + Email + Password badges in single unbreaking line"]
+        Bad2["Action Buttons (Copy, Edit, Delete) floating on top of badges"]
+        Bad1 --> Bad2 --> BadOverlap["❌ Badges & Buttons Horizontally Overlapping on Mobile"]
+    end
+
+    subgraph NewLayout ["2. Multi-Row Responsive Card Architecture"]
+        Row1["Row 1: Staff Avatar + Name + Role Badge + Wrapped Action Buttons"]
+        Row2["Row 2: 3-Col Responsive Grid for Phone, Email & Password (Eye Toggle)"]
+        Row3["Row 3: Assigned Property Badge with Emerald Highlights"]
+        Row1 --> Row2 --> Row3
+    end
+
+    subgraph MobileResult ["3. Clean Mobile Usability"]
+        Row3 --> PerfectUI["✅ Zero Button Overlap, 100% Readable on Any Phone Screen"]
+    end
+```
+
+---
+
 ### 📍 Version 9.52 — Mobile Modal Stacking & Viewport-Safe Floating Action Decoupling 📱✨🚀
 
 ```mermaid

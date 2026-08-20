@@ -10674,89 +10674,106 @@ function doPost(e) {
                   staffList
                     .filter((st) => st.role !== "super_admin")
                     .map((st) => (
-                  <div key={st.id} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3 hover:border-slate-300 transition">
-                    <div className="min-w-0 space-y-1">
+                  <div key={st.id} className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs hover:shadow-sm transition space-y-3">
+                    {/* Row 1: Header + Action Buttons */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
                       <div className="flex items-center gap-2">
-                        <span className="font-extrabold text-sm text-slate-900">{st.name}</span>
-                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-brand-navy text-white">
-                          {st.role === "super_admin" ? "Super Admin" : st.role === "building_manager" ? "Building Manager" : "Caretaker"}
-                        </span>
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#00022E]/10 text-[#00022E] font-black text-sm">
+                          {st.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-black text-sm text-slate-900">{st.name}</span>
+                          <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[#00022E] text-white">
+                            {st.role === "super_admin" ? "Super Admin" : st.role === "building_manager" ? "Building Manager" : "Caretaker"}
+                          </span>
+                        </div>
                       </div>
-                      <p className="text-xs text-slate-600 font-bold flex items-center gap-2">
-                        <span>📞 {st.phone}</span>
-                        <span className="text-slate-300">•</span>
-                        <span className="text-[#00022E] bg-[#F0F4FF] px-2 py-0.5 rounded-md border border-blue-200 font-mono text-[11px]">
-                          ✉️ Login: {st.email}
-                        </span>
-                        <span className="text-slate-300">•</span>
-                        <span className="inline-flex items-center gap-1.5 text-indigo-900 bg-indigo-50 px-2.5 py-0.5 rounded-md border border-indigo-200 font-mono text-[11px]">
-                          <span>🔒 Password: {showStaffPasswordMap[st.id] ? (st.plainPassword || st.password || "••••••••") : "••••••••"}</span>
+
+                      {st.role !== "super_admin" && (
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           <button
                             type="button"
-                            onClick={() => setShowStaffPasswordMap((prev) => ({ ...prev, [st.id]: !prev[st.id] }))}
-                            className="text-indigo-600 hover:text-indigo-950 transition cursor-pointer p-0.5 rounded-md hover:bg-indigo-100/80"
-                            title={showStaffPasswordMap[st.id] ? "Hide Password" : "Show Password"}
+                            onClick={() => {
+                              const staffPortalOrigin = typeof window !== "undefined" ? window.location.origin : "https://shripadpg.pages.dev";
+                              const actualPass = st.plainPassword || st.password || "Set on registration";
+                              const text = `📋 SHRIPAD PG - DEDICATED STAFF CREDENTIALS\n\n👤 Staff Name: ${st.name}\n📞 Phone: ${st.phone}\n🏢 Dedicated Property: ${st.assignedBuildings.join(", ")}\n🌐 Staff Portal URL: ${staffPortalOrigin}/staff/login\n✉️ Login ID (Email): ${st.email}\n🔑 Fixed Password: ${actualPass}`;
+                              navigator.clipboard.writeText(text);
+                              showToast(`Copied login credentials for ${st.name}!`, "success");
+                              setCopiedStaffId(st.id);
+                              setTimeout(() => setCopiedStaffId(null), 2500);
+                            }}
+                            className="px-2.5 py-1.5 text-xs font-bold text-[#00022E] bg-[#F0F4FF] border border-blue-200 hover:bg-blue-100 rounded-xl transition cursor-pointer flex items-center gap-1 active:scale-95"
                           >
-                            {showStaffPasswordMap[st.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                            <Copy className="h-3.5 w-3.5 text-[#00022E]" />
+                            <span>{copiedStaffId === st.id ? "Copied!" : "Copy Credentials"}</span>
                           </button>
-                        </span>
-                      </p>
-                      <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                        <span className="text-[10px] font-bold text-slate-400">Assigned Property:</span>
-                        {st.assignedBuildings.includes("ALL") ? (
-                          <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-[#F0F4FF] text-[#00022E] border border-blue-200">👑 All Buildings</span>
-                        ) : (
-                          st.assignedBuildings.map((b) => (
-                            <span key={b} className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-800">
-                              🏢 {b}
-                            </span>
-                          ))
-                        )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingStaffId(st.id);
+                              setNewStaffName(st.name);
+                              setNewStaffPhone(st.phone);
+                              setNewStaffEmail(st.email);
+                              setNewStaffPassword(st.plainPassword || st.password || "");
+                              setNewStaffRole(st.role);
+                              setNewStaffAssignedBuildings(st.assignedBuildings);
+                            }}
+                            className="px-2.5 py-1.5 text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-xl transition cursor-pointer active:scale-95"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteStaffMember(st.id, st.name)}
+                            className="px-2.5 py-1.5 text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded-xl transition cursor-pointer active:scale-95"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Row 2: Credentials Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                      <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-50 border border-slate-100 text-slate-700 font-medium">
+                        <span className="text-slate-400 font-bold">📞</span>
+                        <span className="font-bold">{st.phone || "No phone"}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-blue-50/70 border border-blue-100 text-blue-900 font-medium overflow-hidden text-ellipsis">
+                        <span className="text-blue-500 font-bold">✉️</span>
+                        <span className="font-mono text-[11px] font-bold truncate">{st.email}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-xl bg-indigo-50/70 border border-indigo-100 text-indigo-900 font-medium">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="text-indigo-500 font-bold">🔒</span>
+                          <span className="font-mono text-[11px] font-bold truncate">
+                            {showStaffPasswordMap[st.id] ? (st.plainPassword || st.password || "••••••••") : "••••••••"}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setShowStaffPasswordMap((prev) => ({ ...prev, [st.id]: !prev[st.id] }))}
+                          className="text-indigo-600 hover:text-indigo-950 transition cursor-pointer p-0.5 rounded-md hover:bg-indigo-100 shrink-0"
+                          title={showStaffPasswordMap[st.id] ? "Hide Password" : "Show Password"}
+                        >
+                          {showStaffPasswordMap[st.id] ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                        </button>
                       </div>
                     </div>
 
-                    {st.role !== "super_admin" && (
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const staffPortalOrigin = typeof window !== "undefined" ? window.location.origin : "https://shripadpg.pages.dev";
-                            const actualPass = st.plainPassword || st.password || "Set on registration";
-                            const text = `📋 SHRIPAD PG - DEDICATED STAFF CREDENTIALS\n\n👤 Staff Name: ${st.name}\n📞 Phone: ${st.phone}\n🏢 Dedicated Property: ${st.assignedBuildings.join(", ")}\n🌐 Staff Portal URL: ${staffPortalOrigin}/staff/login\n✉️ Login ID (Email): ${st.email}\n🔑 Fixed Password: ${actualPass}`;
-                            navigator.clipboard.writeText(text);
-                            showToast(`Copied login credentials for ${st.name}!`, "success");
-                            setCopiedStaffId(st.id);
-                            setTimeout(() => setCopiedStaffId(null), 2500);
-                          }}
-                          className="px-3 py-1.5 text-xs font-bold text-[#00022E] bg-[#F0F4FF] border border-blue-200 hover:bg-[#F0F4FF] rounded-xl transition cursor-pointer flex items-center gap-1"
-                        >
-                          <Copy className="h-3.5 w-3.5 text-[#00022E]" />
-                          <span>{copiedStaffId === st.id ? "Copied!" : "Copy Credentials"}</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditingStaffId(st.id);
-                            setNewStaffName(st.name);
-                            setNewStaffPhone(st.phone);
-                            setNewStaffEmail(st.email);
-                            setNewStaffPassword(st.plainPassword || st.password || "");
-                            setNewStaffRole(st.role);
-                            setNewStaffAssignedBuildings(st.assignedBuildings);
-                          }}
-                          className="px-3 py-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition cursor-pointer"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteStaffMember(st.id, st.name)}
-                          className="px-3 py-1.5 text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded-xl transition cursor-pointer"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
+                    {/* Row 3: Assigned Property */}
+                    <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Assigned Property:</span>
+                      {st.assignedBuildings.includes("ALL") ? (
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-[#F0F4FF] text-[#00022E] border border-blue-200">👑 All Buildings (Master Access)</span>
+                      ) : (
+                        st.assignedBuildings.map((b) => (
+                          <span key={b} className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800">
+                            🏢 {b}
+                          </span>
+                        ))
+                      )}
+                    </div>
                   </div>
                 ))
                 )}
