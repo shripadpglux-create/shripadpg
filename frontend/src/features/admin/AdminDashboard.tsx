@@ -8868,10 +8868,11 @@ function doPost(e) {
                       {selectedHistoryResident.documents.split(",").map((doc: string, i: number) => {
                         const trimmed = doc.trim();
                         let docUrl = "";
-                        if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("data:") || trimmed.startsWith("blob:")) {
+                        if (trimmed.includes("/uploads/")) {
+                          const uploadPath = trimmed.substring(trimmed.indexOf("/uploads/"));
+                          docUrl = `${API_BASE_URL}${uploadPath}`;
+                        } else if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("data:") || trimmed.startsWith("blob:")) {
                           docUrl = trimmed;
-                        } else if (trimmed.startsWith("/uploads/")) {
-                          docUrl = `${API_BASE_URL}${trimmed}`;
                         } else if (trimmed.includes(".png") || trimmed.includes(".jpg") || trimmed.includes(".jpeg") || trimmed.includes(".pdf") || trimmed.includes("doc_") || trimmed.includes("Image")) {
                           docUrl = `${API_BASE_URL}/uploads/documents/${trimmed}`;
                         }
@@ -11949,150 +11950,161 @@ function doPost(e) {
       )}
 
       {/* FULL-SCREEN DOCUMENT PREVIEW MODAL */}
-      {previewDocModal.isOpen && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="relative w-full max-w-4xl max-h-[90vh] flex flex-col rounded-3xl bg-white shadow-2xl border border-slate-200/80 overflow-hidden">
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F0F4FF] text-[#00022E] border border-blue-200">
-                  <FileText className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-black text-slate-900">{previewDocModal.title}</h3>
-                  <p className="text-[11px] font-mono text-slate-400">{previewDocModal.filename}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <a
-                  href={previewDocModal.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  download={previewDocModal.filename}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
-                >
-                  <Download className="h-4 w-4" />
-                  <span>Download</span>
-                </a>
-                <button
-                  type="button"
-                  onClick={() => setPreviewDocModal({ isOpen: false, url: "", title: "", filename: "" })}
-                  className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition cursor-pointer"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
+      {/* FULL-SCREEN DOCUMENT PREVIEW MODAL */}
+      {previewDocModal.isOpen && (() => {
+        const rawUrl = previewDocModal.url || "";
+        const normalizedPreviewUrl = rawUrl.includes("/uploads/")
+          ? `${API_BASE_URL}${rawUrl.substring(rawUrl.indexOf("/uploads/"))}`
+          : rawUrl;
+        const displayFilename = previewDocModal.filename.includes("/")
+          ? previewDocModal.filename.split("/").pop() || previewDocModal.filename
+          : previewDocModal.filename;
 
-            {/* Viewer Body */}
-            <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-slate-900/5 min-h-[320px]">
-              {docImageError ? (
-                <div className="p-8 text-center max-w-md space-y-3 bg-white rounded-3xl border border-slate-200 shadow-sm animate-in fade-in">
-                  <div className="h-12 w-12 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center mx-auto">
-                    <AlertCircle className="h-6 w-6" />
+        return (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
+            <div className="relative w-full max-w-4xl max-h-[90vh] flex flex-col rounded-3xl bg-white shadow-2xl border border-slate-200/80 overflow-hidden">
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F0F4FF] text-[#00022E] border border-blue-200">
+                    <FileText className="h-5 w-5" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-black text-slate-800">Document Image File Not Found</h4>
-                    <p className="text-xs text-slate-500 font-semibold mt-1">
-                      The document name <span className="font-mono font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">{previewDocModal.filename}</span> was saved, but the image file wasn't stored on the server yet.
-                    </p>
+                    <h3 className="text-sm font-black text-slate-900">{previewDocModal.title}</h3>
+                    <p className="text-[11px] font-mono text-slate-400">{displayFilename}</p>
                   </div>
-                  <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#00022E] hover:bg-[#00044A] text-white text-xs font-bold transition shadow-md cursor-pointer active:scale-95">
-                    <UploadCloud className="h-4 w-4" />
-                    <span>Upload & Attach Document Now</span>
-                    <input
-                      type="file"
-                      accept="image/*,.pdf"
-                      className="hidden"
-                      onChange={async (e) => {
-                        if (e.target.files && e.target.files[0] && selectedHistoryResident) {
-                          const file = e.target.files[0];
-                          try {
-                            let fileData = "";
-                            if (file.type.startsWith("image/")) {
-                              fileData = await new Promise<string>((resolve) => {
-                                const reader = new FileReader();
-                                reader.onload = (uploadEvent) => {
-                                  const img = new Image();
-                                  img.onload = () => {
-                                    const canvas = document.createElement("canvas");
-                                    const MAX_DIM = 1200;
-                                    let w = img.width;
-                                    let h = img.height;
-                                    if (w > h && w > MAX_DIM) {
-                                      h = Math.round((h * MAX_DIM) / w);
-                                      w = MAX_DIM;
-                                    } else if (h > MAX_DIM) {
-                                      w = Math.round((w * MAX_DIM) / h);
-                                      h = MAX_DIM;
-                                    }
-                                    canvas.width = w;
-                                    canvas.height = h;
-                                    const ctx = canvas.getContext("2d");
-                                    ctx?.drawImage(img, 0, 0, w, h);
-                                    resolve(canvas.toDataURL("image/jpeg", 0.75));
-                                  };
-                                  img.src = uploadEvent.target?.result as string;
-                                };
-                                reader.readAsDataURL(file);
-                              });
-                            } else {
-                              fileData = await new Promise<string>((resolve) => {
-                                const reader = new FileReader();
-                                reader.onload = (uploadEvent) => resolve(uploadEvent.target?.result as string || "");
-                                reader.readAsDataURL(file);
-                              });
-                            }
-
-                            const res = await fetch(`${API_BASE_URL}/api/bookings/${selectedHistoryResident.id}`, {
-                              method: "PUT",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({
-                                ...selectedHistoryResident,
-                                documents: file.name,
-                                documentData: fileData,
-                                documentName: file.name,
-                              }),
-                            });
-                            const data = await res.json();
-                            if (data.success && data.booking) {
-                              setSelectedHistoryResident(data.booking);
-                              setBookings((prev) => prev.map((b) => (b.id === data.booking.id ? data.booking : b)));
-                              setPreviewDocModal({
-                                isOpen: true,
-                                url: data.booking.documents,
-                                title: `${data.booking.name} — Document`,
-                                filename: file.name,
-                              });
-                              setDocImageError(false);
-                              setCustomToast({ isOpen: true, message: "Document uploaded and attached successfully!", type: "success" });
-                            }
-                          } catch (uploadErr) {
-                            console.error("Upload error:", uploadErr);
-                          }
-                        }
-                      }}
-                    />
-                  </label>
                 </div>
-              ) : previewDocModal.url.toLowerCase().includes(".pdf") ? (
-                <iframe
-                  src={previewDocModal.url}
-                  title="Document PDF Preview"
-                  className="w-full h-[70vh] rounded-2xl border border-slate-200 bg-white"
-                />
-              ) : (
-                <img
-                  src={previewDocModal.url}
-                  alt="Document Preview"
-                  onError={() => setDocImageError(true)}
-                  className="max-h-[75vh] max-w-full object-contain rounded-2xl shadow-md border border-slate-200 bg-white"
-                />
-              )}
+                <div className="flex items-center gap-2">
+                  <a
+                    href={normalizedPreviewUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download={displayFilename}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
+                  >
+                    <Download className="h-4 w-4" />
+                    <span>Download</span>
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewDocModal({ isOpen: false, url: "", title: "", filename: "" })}
+                    className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Viewer Body */}
+              <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-slate-900/5 min-h-[320px]">
+                {docImageError ? (
+                  <div className="p-8 text-center max-w-md space-y-3 bg-white rounded-3xl border border-slate-200 shadow-sm animate-in fade-in">
+                    <div className="h-12 w-12 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center mx-auto">
+                      <AlertCircle className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-slate-800">Document Image File Not Found</h4>
+                      <p className="text-xs text-slate-500 font-semibold mt-1">
+                        The document <span className="font-mono font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">{displayFilename}</span> is not stored on the production server.
+                      </p>
+                    </div>
+                    <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#00022E] hover:bg-[#00044A] text-white text-xs font-bold transition shadow-md cursor-pointer active:scale-95">
+                      <UploadCloud className="h-4 w-4" />
+                      <span>Upload & Attach Document Now</span>
+                      <input
+                        type="file"
+                        accept="image/*,.pdf"
+                        className="hidden"
+                        onChange={async (e) => {
+                          if (e.target.files && e.target.files[0] && selectedHistoryResident) {
+                            const file = e.target.files[0];
+                            try {
+                              let fileData = "";
+                              if (file.type.startsWith("image/")) {
+                                fileData = await new Promise<string>((resolve) => {
+                                  const reader = new FileReader();
+                                  reader.onload = (uploadEvent) => {
+                                    const img = new Image();
+                                    img.onload = () => {
+                                      const canvas = document.createElement("canvas");
+                                      const MAX_DIM = 1200;
+                                      let w = img.width;
+                                      let h = img.height;
+                                      if (w > h && w > MAX_DIM) {
+                                        h = Math.round((h * MAX_DIM) / w);
+                                        w = MAX_DIM;
+                                      } else if (h > MAX_DIM) {
+                                        w = Math.round((w * MAX_DIM) / h);
+                                        h = MAX_DIM;
+                                      }
+                                      canvas.width = w;
+                                      canvas.height = h;
+                                      const ctx = canvas.getContext("2d");
+                                      ctx?.drawImage(img, 0, 0, w, h);
+                                      resolve(canvas.toDataURL("image/jpeg", 0.75));
+                                    };
+                                    img.src = uploadEvent.target?.result as string;
+                                  };
+                                  reader.readAsDataURL(file);
+                                });
+                              } else {
+                                fileData = await new Promise<string>((resolve) => {
+                                  const reader = new FileReader();
+                                  reader.onload = (uploadEvent) => resolve(uploadEvent.target?.result as string || "");
+                                  reader.readAsDataURL(file);
+                                });
+                              }
+
+                              const res = await fetch(`${API_BASE_URL}/api/bookings/${selectedHistoryResident.id}`, {
+                                method: "PUT",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  ...selectedHistoryResident,
+                                  documents: file.name,
+                                  documentData: fileData,
+                                  documentName: file.name,
+                                }),
+                              });
+                              const data = await res.json();
+                              if (data.success && data.booking) {
+                                setSelectedHistoryResident(data.booking);
+                                setBookings((prev) => prev.map((b) => (b.id === data.booking.id ? data.booking : b)));
+                                setPreviewDocModal({
+                                  isOpen: true,
+                                  url: data.booking.documents,
+                                  title: `${data.booking.name} — Document`,
+                                  filename: file.name,
+                                });
+                                setDocImageError(false);
+                                setCustomToast({ isOpen: true, message: "Document uploaded and attached successfully!", type: "success" });
+                              }
+                            } catch (uploadErr) {
+                              console.error("Upload error:", uploadErr);
+                            }
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+                ) : normalizedPreviewUrl.toLowerCase().includes(".pdf") ? (
+                  <iframe
+                    src={normalizedPreviewUrl}
+                    title="Document PDF Preview"
+                    className="w-full h-[70vh] rounded-2xl border border-slate-200 bg-white"
+                  />
+                ) : (
+                  <img
+                    src={normalizedPreviewUrl}
+                    alt="Document Preview"
+                    onError={() => setDocImageError(true)}
+                    className="max-h-[75vh] max-w-full object-contain rounded-2xl shadow-md border border-slate-200 bg-white"
+                  />
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* CUSTOM FLOATING TOAST POPUP NOTIFICATION */}
       {customToast.isOpen && (

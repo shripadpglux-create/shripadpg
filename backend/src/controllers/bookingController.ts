@@ -140,9 +140,7 @@ export class BookingController {
           const filename = `doc_${Date.now()}_${sanitizeName}`;
           const filePath = path.join(UPLOADS_DOC_DIR, filename);
           await fs.writeFile(filePath, buffer);
-          const host = req.get("host") || "localhost:5000";
-          const protocol = req.protocol === "https" || req.get("x-forwarded-proto") === "https" ? "https" : "http";
-          storedDoc = `${protocol}://${host}/uploads/documents/${filename}`;
+          storedDoc = `/uploads/documents/${filename}`;
         } catch (fileErr) {
           console.error("⚠️ Failed to write document file, falling back to document name:", fileErr);
           storedDoc = documentName || documents || "Aadhaar Card Uploaded";
@@ -369,9 +367,7 @@ export class BookingController {
           const filename = `doc_${Date.now()}_${sanitizeName}`;
           const filePath = path.join(UPLOADS_DOC_DIR, filename);
           await fs.writeFile(filePath, buffer);
-          const host = req.get("host") || "localhost:5000";
-          const protocol = req.protocol === "https" || req.get("x-forwarded-proto") === "https" ? "https" : "http";
-          updates.documents = `${protocol}://${host}/uploads/documents/${filename}`;
+          updates.documents = `/uploads/documents/${filename}`;
           delete updates.documentData;
           delete updates.documentName;
         } catch (fileErr) {

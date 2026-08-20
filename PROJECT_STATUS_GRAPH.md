@@ -2,6 +2,25 @@
 
 ---
 
+### 📍 Version 9.46 — Production Cloudflare & Render Document URL Normalization 🌐📄⚡
+
+```mermaid
+flowchart TD
+    subgraph EnvResolution ["1. Multi-Environment Host Normalizer"]
+        RawUrl["Stored Document URL (/uploads/... or localhost:5000)"]
+        EnvDetector["getApiBaseUrl() Detects Cloudflare Pages vs Dev"]
+        RawUrl --> EnvDetector
+    end
+
+    subgraph ProductionURL ["2. Active Host Injection"]
+        EnvDetector --> ProdRender["https://shripadpg.onrender.com/uploads/documents/..."]
+        ProdRender --> CleanPreview["Load Live Fullscreen Document Preview on Cloudflare Pages"]
+        ProdRender --> DirectDownload["Direct Clean File Download without Mixed Content Blocks"]
+    end
+```
+
+---
+
 ### 📍 Version 9.45 — Smart Document Fallback & One-Click In-Modal Document Uploader 🛡️🖼️⚡
 
 ```mermaid
