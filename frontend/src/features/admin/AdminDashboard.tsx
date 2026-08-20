@@ -1058,25 +1058,30 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
   const activeStaffMember = useMemo(() => {
     if (isStaffMode) {
-      const sessionStr = localStorage.getItem("shripad_staff_session");
+      const sessionStr = typeof window !== "undefined" ? localStorage.getItem("shripad_staff_session") : null;
       if (sessionStr) {
         try {
           const parsed = JSON.parse(sessionStr);
-          if (parsed && parsed.staffId) {
-            const found = staffList.find((s) => s.id === parsed.staffId);
+          if (parsed) {
+            const found = staffList.find(
+              (s) =>
+                (parsed.staffId && s.id === parsed.staffId) ||
+                (parsed.email && s.email.toLowerCase() === parsed.email.toLowerCase()) ||
+                (parsed.name && s.name.toLowerCase() === parsed.name.toLowerCase())
+            );
             if (found) return found;
-          }
-          if (parsed && parsed.assignedBuildings) {
-            return {
-              id: parsed.staffId || "staff_ramesh",
-              name: parsed.name || "Ramesh Kumar",
-              phone: "9812345678",
-              email: parsed.email || "ramesh@shripadpg.com",
-              role: parsed.role || "building_manager",
-              assignedBuildings: parsed.assignedBuildings || ["PG A"],
-              status: "active",
-              createdAt: "",
-            };
+            if (parsed.assignedBuildings && Array.isArray(parsed.assignedBuildings) && parsed.assignedBuildings.length > 0) {
+              return {
+                id: parsed.staffId || "staff_bm",
+                name: parsed.name || "Building Manager",
+                phone: parsed.phone || "",
+                email: parsed.email || "staff@shripadpg.com",
+                role: parsed.role || "building_manager",
+                assignedBuildings: parsed.assignedBuildings,
+                status: "active",
+                createdAt: "",
+              };
+            }
           }
         } catch {}
       }
@@ -1087,20 +1092,22 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       const nonSuper = staffList.find((s) => s.role !== "super_admin");
       if (nonSuper) return nonSuper;
 
-      return {
-        id: "staff_ramesh",
-        name: "Ramesh Kumar",
-        phone: "9812345678",
-        email: "ramesh@shripadpg.com",
-        role: "building_manager",
-        assignedBuildings: ["PG A"],
-        status: "active",
-        createdAt: "",
-      };
+      return (
+        staffList[0] || {
+          id: "staff_bm",
+          name: "Building Manager",
+          phone: "",
+          email: "staff@shripadpg.com",
+          role: "building_manager",
+          assignedBuildings: [buildingsList[0]?.name || "PG LUXPG-B"],
+          status: "active",
+          createdAt: "",
+        }
+      );
     }
 
     return staffList.find((s) => s.id === activeStaffScopeId) || staffList[0];
-  }, [staffList, activeStaffScopeId, isStaffMode]);
+  }, [staffList, activeStaffScopeId, isStaffMode, buildingsList]);
 
   const scopedBuildingsList = useMemo(() => {
     if (!isStaffMode) {
@@ -1114,12 +1121,19 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
         return buildingsList;
       }
       return buildingsList.filter((b) =>
-        activeStaffMember.assignedBuildings.some(
-          (ab: string) => ab.toLowerCase().trim() === b.name.toLowerCase().trim()
-        )
+        activeStaffMember.assignedBuildings.some((ab: string) => {
+          const cleanAb = ab.toLowerCase().trim();
+          const cleanBName = b.name.toLowerCase().trim();
+          return (
+            cleanAb === cleanBName ||
+            cleanAb.replace(/[\s\-_]/g, "") === cleanBName.replace(/[\s\-_]/g, "") ||
+            cleanBName.includes(cleanAb) ||
+            cleanAb.includes(cleanBName)
+          );
+        })
       );
     }
-    return buildingsList.filter((b) => b.name === "PG A");
+    return buildingsList.slice(0, 1);
   }, [buildingsList, activeStaffMember, isStaffMode]);
 
   const handleSaveStaffMember = async (e: React.FormEvent) => {

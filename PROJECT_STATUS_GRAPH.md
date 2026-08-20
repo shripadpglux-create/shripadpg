@@ -2,6 +2,33 @@
 
 ---
 
+### 📍 Version 9.51 — Dynamic Staff Session Scoping & Database Property Cleanse 🛡️✨🏢
+
+```mermaid
+flowchart TD
+    subgraph DatabaseCleanse ["1. Live Database Property Scoping"]
+        AtlasUpdate["MongoDB Atlas: Set Omkar assignedBuildings = ['PG LUXPG-B']"]
+        SyncJSON["Synced to local staff.json with display plainPassword"]
+        AtlasUpdate --> SyncJSON
+    end
+
+    subgraph DynamicSession ["2. Pure Dynamic Staff Session Matching"]
+        StaffLogin["Staff Logs in on /staff/login"]
+        MatchSession["Match by ID, Email, or Name in Staff List"]
+        BindScope["Bind Scope strictly to assignedBuildings ['PG LUXPG-B']"]
+        NoLegacyRamesh["Zero Hardcoded Fallbacks to 'PG A' or 'Ramesh'"]
+        StaffLogin --> MatchSession --> BindScope --> NoLegacyRamesh
+    end
+
+    subgraph ScopeUI ["3. Verified Staff Dashboard Matrix"]
+        NoLegacyRamesh --> TopCards["Top KPI Cards: 32 Available, 0 Occupied, 0 Tenants"]
+        NoLegacyRamesh --> CapacityCard["Capacity Matrix: 0 Occupied, 32 Vacant (0% Filled)"]
+        NoLegacyRamesh --> ResidentList["Resident List: Omkar sees 0 PG A tenants + 1 Pending Shivam Khude"]
+    end
+```
+
+---
+
 ### 📍 Version 9.50 — Staff Scope Isolation, Occupancy Metric Sync & Accurate Password Display 🔐🏢📊
 
 ```mermaid
