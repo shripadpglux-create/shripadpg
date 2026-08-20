@@ -743,6 +743,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     phone: string;
     email: string;
     password?: string;
+    plainPassword?: string;
     role: string;
     assignedBuildings: string[];
     status: string;
