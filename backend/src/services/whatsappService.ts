@@ -291,7 +291,7 @@ export class WhatsAppService {
   public static async sendAllotmentMessage(details: ResidentAllotmentDetails): Promise<{ success: boolean; error?: string }> {
     try {
       const templates = await WhatsAppTemplateModel.getTemplates();
-      const settings = await SettingsModel.getPaymentSettings();
+      const settings = await SettingsModel.resolvePaymentSettingsForBuilding(details.building);
 
       const message = WhatsAppTemplateModel.interpolate(templates.welcomeAllotmentMessage, {
         customerName: details.name,
@@ -319,7 +319,7 @@ export class WhatsAppService {
   public static async sendComplaintStatusUpdate(details: ComplaintUpdateDetails): Promise<{ success: boolean; error?: string }> {
     try {
       const templates = await WhatsAppTemplateModel.getTemplates();
-      const settings = await SettingsModel.getPaymentSettings();
+      const settings = await SettingsModel.resolvePaymentSettingsForBuilding(details.building);
 
       const statusEmoji =
         details.status === "resolved"
@@ -392,7 +392,7 @@ export class WhatsAppService {
   public static async sendInvoiceNotification(details: InvoiceNotificationDetails): Promise<{ success: boolean; error?: string }> {
     try {
       const templates = await WhatsAppTemplateModel.getTemplates();
-      const settings = await SettingsModel.getPaymentSettings();
+      const settings = await SettingsModel.resolvePaymentSettingsForBuilding(details.building);
 
       const fallbackLink = `https://shripadpg.pages.dev/my-rooms`;
       const invoiceLink = details.invoiceLink || fallbackLink;

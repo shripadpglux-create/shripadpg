@@ -172,7 +172,7 @@ export function isBuildingMatch(
   // Extract letter or number identifier (e.g. "PG A", "PG-A", "shripadPgLux-A", "Building A", "PG 1", "PG A - Main Branch")
   const extractId = (str: string) => {
     const m = str.match(/(?:pg|building|branch|lux)?\s*[-_]?\s*([a-z0-9]+)$/i) || str.match(/\b([a-z0-9])\b/i);
-    return m ? m[1].toLowerCase() : null;
+    return m ? m[1]?.toLowerCase() ?? null : null;
   };
 
   const id1 = extractId(s1);
@@ -500,7 +500,31 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     }
   };
   const [isPaymentSettingsModalOpen, setIsPaymentSettingsModalOpen] = useState(false);
-  const [paymentSettings, setPaymentSettings] = useState({
+  const [paymentSettings, setPaymentSettings] = useState<{
+    upiId: string;
+    qrCodeUrl?: string;
+    bankName: string;
+    accountNo: string;
+    ifscCode: string;
+    accountName: string;
+    adminPhone?: string;
+    wardenPhone?: string;
+    dueDay?: number;
+    includedAmenities?: string;
+    buildingPayments?: Record<
+      string,
+      {
+        upiId?: string;
+        qrCodeUrl?: string;
+        bankName?: string;
+        accountNo?: string;
+        ifscCode?: string;
+        accountName?: string;
+        adminPhone?: string;
+        wardenPhone?: string;
+      }
+    >;
+  }>({
     upiId: "shripadpg@okaxis",
     qrCodeUrl: "",
     bankName: "Axis Bank Ltd",
@@ -511,9 +535,66 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     wardenPhone: "+91 98765 00000",
     dueDay: 5,
     includedAmenities: "Food, Water, Wi-Fi, Laundry",
+    buildingPayments: {},
   });
+  const [selectedPaymentScope, setSelectedPaymentScope] = useState<string>("GLOBAL");
   const [isSavingPaymentSettings, setIsSavingPaymentSettings] = useState(false);
   const [paymentSettingsMsg, setPaymentSettingsMsg] = useState("");
+
+  // Resolves active payment & QR configuration for the currently selected building scope tab in modal
+  const currentScopePayment = useMemo(() => {
+    if (selectedPaymentScope === "GLOBAL" || !paymentSettings.buildingPayments?.[selectedPaymentScope]) {
+      return {
+        isCustom: false,
+        upiId: paymentSettings.upiId || "",
+        qrCodeUrl: paymentSettings.qrCodeUrl || "",
+        bankName: paymentSettings.bankName || "",
+        accountNo: paymentSettings.accountNo || "",
+        ifscCode: paymentSettings.ifscCode || "",
+        accountName: paymentSettings.accountName || "",
+        adminPhone: paymentSettings.adminPhone || "",
+        wardenPhone: paymentSettings.wardenPhone || "",
+      };
+    }
+    const bld = paymentSettings.buildingPayments[selectedPaymentScope];
+    return {
+      isCustom: true,
+      upiId: bld.upiId ?? paymentSettings.upiId,
+      qrCodeUrl: bld.qrCodeUrl ?? paymentSettings.qrCodeUrl ?? "",
+      bankName: bld.bankName ?? paymentSettings.bankName,
+      accountNo: bld.accountNo ?? paymentSettings.accountNo,
+      ifscCode: bld.ifscCode ?? paymentSettings.ifscCode,
+      accountName: bld.accountName ?? paymentSettings.accountName,
+      adminPhone: bld.adminPhone ?? paymentSettings.adminPhone ?? "",
+      wardenPhone: bld.wardenPhone ?? paymentSettings.wardenPhone ?? "",
+    };
+  }, [paymentSettings, selectedPaymentScope]);
+
+  const updateCurrentScopeField = (field: string, value: string) => {
+    if (selectedPaymentScope === "GLOBAL") {
+      setPaymentSettings((prev) => ({ ...prev, [field]: value }));
+    } else {
+      setPaymentSettings((prev) => ({
+        ...prev,
+        buildingPayments: {
+          ...(prev.buildingPayments || {}),
+          [selectedPaymentScope]: {
+            ...(prev.buildingPayments?.[selectedPaymentScope] || {
+              upiId: prev.upiId,
+              qrCodeUrl: prev.qrCodeUrl || "",
+              bankName: prev.bankName,
+              accountNo: prev.accountNo,
+              ifscCode: prev.ifscCode,
+              accountName: prev.accountName,
+              adminPhone: prev.adminPhone || "",
+              wardenPhone: prev.wardenPhone || "",
+            }),
+            [field]: value,
+          },
+        },
+      }));
+    }
+  };
 
   const fetchPaymentSettings = async () => {
     try {
@@ -585,7 +666,29 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === "string") {
-        setPaymentSettings((prev) => ({ ...prev, qrCodeUrl: reader.result as string }));
+        const qrData = reader.result as string;
+        if (selectedPaymentScope === "GLOBAL") {
+          setPaymentSettings((prev) => ({ ...prev, qrCodeUrl: qrData }));
+        } else {
+          setPaymentSettings((prev) => ({
+            ...prev,
+            buildingPayments: {
+              ...(prev.buildingPayments || {}),
+              [selectedPaymentScope]: {
+                ...(prev.buildingPayments?.[selectedPaymentScope] || {
+                  upiId: prev.upiId,
+                  bankName: prev.bankName,
+                  accountNo: prev.accountNo,
+                  ifscCode: prev.ifscCode,
+                  accountName: prev.accountName,
+                  adminPhone: prev.adminPhone || "",
+                  wardenPhone: prev.wardenPhone || "",
+                }),
+                qrCodeUrl: qrData,
+              },
+            },
+          }));
+        }
       }
     };
     reader.readAsDataURL(file);
@@ -1898,7 +2001,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     if (buildingsList.length > 0) {
       const exists = buildingsList.some((b) => isBuildingMatch(b.name, bmsBuilding, buildingsList.length));
       if (!exists || bmsBuilding === "PG A") {
-        setBmsBuilding(scopedBuildingsList[0]?.name || buildingsList[0].name);
+        setBmsBuilding(scopedBuildingsList[0]?.name || buildingsList[0]?.name || "PG A");
       }
     }
   }, [buildingsList, scopedBuildingsList]);
@@ -10202,10 +10305,10 @@ function doPost(e) {
         document.body
       )}
 
-      {/* REAL PAYMENT DETAILS & QR CODE CONTROL MODAL */}
+      {/* REAL PAYMENT DETAILS & QR CODE CONTROL MODAL — BUILDING-SCOPE AWARE */}
       {isPaymentSettingsModalOpen && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in" onClick={() => setIsPaymentSettingsModalOpen(false)}>
-          <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] bg-white p-6 sm:p-8 shadow-2xl border border-slate-200 text-slate-900 space-y-6 animate-in zoom-in-95" onClick={(e) => e.stopPropagation()}>
+          <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] bg-white p-6 sm:p-8 shadow-2xl border border-slate-200 text-slate-900 space-y-5 animate-in zoom-in-95" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center gap-3">
                 <div className="p-3 rounded-2xl bg-slate-900 text-brand-gold font-bold">
@@ -10213,7 +10316,7 @@ function doPost(e) {
                 </div>
                 <div>
                   <h2 className="text-xl font-black">Official Payment & QR Settings</h2>
-                  <p className="text-xs font-semibold text-slate-500">Configure real PG UPI ID, QR code image & Bank details for residents</p>
+                  <p className="text-xs font-semibold text-slate-500">Configure UPI, QR & Bank details — per building or global default</p>
                 </div>
               </div>
               <button
@@ -10230,23 +10333,118 @@ function doPost(e) {
               </div>
             )}
 
+            {/* ── BUILDING SCOPE TAB SWITCHER ── */}
+            <div className="flex flex-wrap gap-1.5 p-1.5 rounded-2xl bg-slate-100 border border-slate-200/80">
+              <button
+                type="button"
+                onClick={() => setSelectedPaymentScope("GLOBAL")}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-black transition-all cursor-pointer ${
+                  selectedPaymentScope === "GLOBAL"
+                    ? "bg-slate-900 text-brand-gold shadow-md"
+                    : "bg-transparent text-slate-500 hover:bg-white hover:text-slate-800"
+                }`}
+              >
+                🌐 Global Default
+              </button>
+              {buildingsList.map((bld) => (
+                <button
+                  key={bld.name}
+                  type="button"
+                  onClick={() => setSelectedPaymentScope(bld.name)}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-black transition-all cursor-pointer ${
+                    selectedPaymentScope === bld.name
+                      ? "bg-brand-green text-white shadow-md"
+                      : "bg-transparent text-slate-500 hover:bg-white hover:text-slate-800"
+                  }`}
+                >
+                  🏢 {bld.name}
+                  {paymentSettings.buildingPayments?.[bld.name] && (
+                    <span className="ml-1 h-2 w-2 rounded-full bg-brand-gold inline-block" title="Custom QR Active" />
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* ── BUILDING-SPECIFIC CUSTOM TOGGLE (only shown for building tabs) ── */}
+            {selectedPaymentScope !== "GLOBAL" && (
+              <div className="flex items-center gap-3 p-3.5 rounded-2xl border border-slate-200 bg-slate-50">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (currentScopePayment.isCustom) {
+                      // Remove custom config → fallback to global
+                      setPaymentSettings((prev) => {
+                        const updated = { ...(prev.buildingPayments || {}) };
+                        delete updated[selectedPaymentScope];
+                        return { ...prev, buildingPayments: updated };
+                      });
+                    } else {
+                      // Enable custom config, pre-fill with global values
+                      setPaymentSettings((prev) => ({
+                        ...prev,
+                        buildingPayments: {
+                          ...(prev.buildingPayments || {}),
+                          [selectedPaymentScope]: {
+                            upiId: prev.upiId,
+                            qrCodeUrl: prev.qrCodeUrl || "",
+                            bankName: prev.bankName,
+                            accountNo: prev.accountNo,
+                            ifscCode: prev.ifscCode,
+                            accountName: prev.accountName,
+                            adminPhone: prev.adminPhone || "",
+                            wardenPhone: prev.wardenPhone || "",
+                          },
+                        },
+                      }));
+                    }
+                  }}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
+                    currentScopePayment.isCustom ? "bg-brand-green" : "bg-slate-300"
+                  }`}
+                >
+                  <span className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transform transition-transform ${
+                    currentScopePayment.isCustom ? "translate-x-6" : "translate-x-1"
+                  }`} />
+                </button>
+                <div>
+                  <p className="text-xs font-black text-slate-800">
+                    {currentScopePayment.isCustom ? "🟢 Custom QR & Bank Details Active" : "Using Global Default"}
+                  </p>
+                  <p className="text-[10px] font-semibold text-slate-500">
+                    {currentScopePayment.isCustom
+                      ? `Residents in ${selectedPaymentScope} see dedicated payment info`
+                      : "Toggle ON to set a separate UPI / QR / Bank for this building"}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* ── SCOPE LABEL ── */}
+            {selectedPaymentScope !== "GLOBAL" && !currentScopePayment.isCustom && (
+              <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold flex items-center gap-2">
+                <span>ℹ️</span>
+                <span>{selectedPaymentScope} is using <strong>Global Default</strong> QR & Bank Details. Enable the toggle above to customize.</span>
+              </div>
+            )}
+
             <form onSubmit={handleSavePaymentSettings} className="space-y-5 text-xs font-bold">
               {/* SECTION 1: OFFICIAL UPI & QR CODE */}
               <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-4">
                 <div className="flex items-center gap-2 text-slate-900 font-black text-xs uppercase tracking-wider">
                   <QrCode className="h-4 w-4 text-brand-green" />
-                  <span>1. Official PG UPI ID & QR Code</span>
+                  <span>1. {selectedPaymentScope === "GLOBAL" ? "Official PG" : selectedPaymentScope} UPI ID & QR Code</span>
                 </div>
 
                 <div>
                   <label className="block text-slate-600 mb-1">Official UPI ID (GPay / PhonePe / Paytm)</label>
                   <input
                     type="text"
-                    required
-                    value={paymentSettings.upiId}
-                    onChange={(e) => setPaymentSettings({ ...paymentSettings, upiId: e.target.value })}
+                    required={selectedPaymentScope === "GLOBAL"}
+                    value={currentScopePayment.upiId}
+                    onChange={(e) => updateCurrentScopeField("upiId", e.target.value)}
                     placeholder="e.g. shripadpg@okaxis"
                     className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm font-mono font-black text-slate-900 focus:ring-2 focus:ring-brand-green/30 focus:outline-none"
+                    disabled={selectedPaymentScope !== "GLOBAL" && !currentScopePayment.isCustom}
                   />
                 </div>
 
@@ -10258,16 +10456,18 @@ function doPost(e) {
                       accept="image/*"
                       onChange={handleQrUpload}
                       className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-brand-green file:text-white hover:file:bg-brand-gold cursor-pointer"
+                      disabled={selectedPaymentScope !== "GLOBAL" && !currentScopePayment.isCustom}
                     />
                   </div>
                   <div className="pt-1">
                     <label className="block text-[11px] text-slate-500 font-semibold mb-1">OR Enter Direct Image URL (Optional):</label>
                     <input
                       type="text"
-                      value={paymentSettings.qrCodeUrl && !paymentSettings.qrCodeUrl.startsWith("data:") ? paymentSettings.qrCodeUrl : ""}
-                      onChange={(e) => setPaymentSettings({ ...paymentSettings, qrCodeUrl: e.target.value })}
+                      value={currentScopePayment.qrCodeUrl && !currentScopePayment.qrCodeUrl.startsWith("data:") ? currentScopePayment.qrCodeUrl : ""}
+                      onChange={(e) => updateCurrentScopeField("qrCodeUrl", e.target.value)}
                       placeholder="https://example.com/my-pg-qr.png"
                       className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800"
+                      disabled={selectedPaymentScope !== "GLOBAL" && !currentScopePayment.isCustom}
                     />
                   </div>
                 </div>
@@ -10276,26 +10476,28 @@ function doPost(e) {
                 <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-brand-navy text-white space-y-3 shadow-md">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] uppercase font-black tracking-widest text-brand-gold bg-brand-gold/15 px-2.5 py-0.5 rounded-full border border-brand-gold/30">
-                      Resident View Preview
+                      {selectedPaymentScope === "GLOBAL" ? "Resident View Preview" : `${selectedPaymentScope} Preview`}
                     </span>
                     <QrCode className="h-5 w-5 text-brand-gold" />
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="h-24 w-24 shrink-0 rounded-2xl bg-white p-1.5 flex items-center justify-center overflow-hidden border border-brand-gold/40 shadow-md">
-                      {paymentSettings.qrCodeUrl ? (
-                        <img src={paymentSettings.qrCodeUrl} alt="QR Code Preview" className="h-full w-full object-contain rounded-xl" />
+                      {currentScopePayment.qrCodeUrl ? (
+                        <img src={currentScopePayment.qrCodeUrl} alt="QR Code Preview" className="h-full w-full object-contain rounded-xl" />
                       ) : (
                         <img
-                          src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`upi://pay?pa=${paymentSettings.upiId}&pn=${encodeURIComponent(paymentSettings.accountName)}`)}`}
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`upi://pay?pa=${currentScopePayment.upiId}&pn=${encodeURIComponent(currentScopePayment.accountName)}`)}`}
                           alt="Generated QR Code"
                           className="h-full w-full object-contain rounded-xl"
                         />
                       )}
                     </div>
                     <div>
-                      <p className="text-xs text-slate-300 font-semibold">Official PG UPI ID</p>
-                      <p className="text-base font-black text-brand-gold font-mono tracking-wide mt-0.5">{paymentSettings.upiId || "shripadpg@okaxis"}</p>
-                      <p className="text-[10px] text-emerald-400 font-bold mt-1">✓ Live Auto-Generated / Custom QR Active</p>
+                      <p className="text-xs text-slate-300 font-semibold">{selectedPaymentScope === "GLOBAL" ? "Official PG UPI ID" : `${selectedPaymentScope} UPI ID`}</p>
+                      <p className="text-base font-black text-brand-gold font-mono tracking-wide mt-0.5">{currentScopePayment.upiId || "shripadpg@okaxis"}</p>
+                      <p className="text-[10px] text-emerald-400 font-bold mt-1">
+                        {currentScopePayment.isCustom ? `✓ Custom QR for ${selectedPaymentScope}` : "✓ Live Auto-Generated / Custom QR Active"}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -10305,7 +10507,7 @@ function doPost(e) {
               <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
                 <div className="flex items-center gap-2 text-slate-900 font-black text-xs uppercase tracking-wider">
                   <Landmark className="h-4 w-4 text-brand-green" />
-                  <span>2. PG Bank Account Transfer Details</span>
+                  <span>2. {selectedPaymentScope === "GLOBAL" ? "PG" : selectedPaymentScope} Bank Account Transfer Details</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -10313,44 +10515,48 @@ function doPost(e) {
                     <label className="block text-slate-600 mb-1">Bank Name</label>
                     <input
                       type="text"
-                      required
-                      value={paymentSettings.bankName}
-                      onChange={(e) => setPaymentSettings({ ...paymentSettings, bankName: e.target.value })}
+                      required={selectedPaymentScope === "GLOBAL"}
+                      value={currentScopePayment.bankName}
+                      onChange={(e) => updateCurrentScopeField("bankName", e.target.value)}
                       placeholder="e.g. Axis Bank Ltd"
                       className="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900"
+                      disabled={selectedPaymentScope !== "GLOBAL" && !currentScopePayment.isCustom}
                     />
                   </div>
                   <div>
                     <label className="block text-slate-600 mb-1">Account Number</label>
                     <input
                       type="text"
-                      required
-                      value={paymentSettings.accountNo}
-                      onChange={(e) => setPaymentSettings({ ...paymentSettings, accountNo: e.target.value })}
+                      required={selectedPaymentScope === "GLOBAL"}
+                      value={currentScopePayment.accountNo}
+                      onChange={(e) => updateCurrentScopeField("accountNo", e.target.value)}
                       placeholder="e.g. 924020058192041"
                       className="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-mono font-bold text-slate-900"
+                      disabled={selectedPaymentScope !== "GLOBAL" && !currentScopePayment.isCustom}
                     />
                   </div>
                   <div>
                     <label className="block text-slate-600 mb-1">IFSC Code</label>
                     <input
                       type="text"
-                      required
-                      value={paymentSettings.ifscCode}
-                      onChange={(e) => setPaymentSettings({ ...paymentSettings, ifscCode: e.target.value })}
+                      required={selectedPaymentScope === "GLOBAL"}
+                      value={currentScopePayment.ifscCode}
+                      onChange={(e) => updateCurrentScopeField("ifscCode", e.target.value)}
                       placeholder="e.g. UTIB0001824"
                       className="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-mono font-bold text-slate-900 uppercase"
+                      disabled={selectedPaymentScope !== "GLOBAL" && !currentScopePayment.isCustom}
                     />
                   </div>
                   <div>
                     <label className="block text-slate-600 mb-1">Account Holder / Name</label>
                     <input
                       type="text"
-                      required
-                      value={paymentSettings.accountName}
-                      onChange={(e) => setPaymentSettings({ ...paymentSettings, accountName: e.target.value })}
+                      required={selectedPaymentScope === "GLOBAL"}
+                      value={currentScopePayment.accountName}
+                      onChange={(e) => updateCurrentScopeField("accountName", e.target.value)}
                       placeholder="e.g. Shripad PG Services"
                       className="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900"
+                      disabled={selectedPaymentScope !== "GLOBAL" && !currentScopePayment.isCustom}
                     />
                   </div>
                 </div>
@@ -10360,7 +10566,7 @@ function doPost(e) {
               <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
                 <div className="flex items-center gap-2 text-slate-900 font-black text-xs uppercase tracking-wider">
                   <PhoneCall className="h-4 w-4 text-brand-green" />
-                  <span>3. PG Support & Warden Hotline Numbers</span>
+                  <span>3. {selectedPaymentScope === "GLOBAL" ? "PG" : selectedPaymentScope} Support & Warden Hotline</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -10368,22 +10574,24 @@ function doPost(e) {
                     <label className="block text-slate-600 mb-1">PG Admin Desk Phone Number</label>
                     <input
                       type="text"
-                      required
-                      value={paymentSettings.adminPhone || ""}
-                      onChange={(e) => setPaymentSettings({ ...paymentSettings, adminPhone: e.target.value })}
+                      required={selectedPaymentScope === "GLOBAL"}
+                      value={currentScopePayment.adminPhone}
+                      onChange={(e) => updateCurrentScopeField("adminPhone", e.target.value)}
                       placeholder="e.g. +91 98765 43210"
                       className="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900"
+                      disabled={selectedPaymentScope !== "GLOBAL" && !currentScopePayment.isCustom}
                     />
                   </div>
                   <div>
                     <label className="block text-slate-600 mb-1">Warden & Maintenance Hotline</label>
                     <input
                       type="text"
-                      required
-                      value={paymentSettings.wardenPhone || ""}
-                      onChange={(e) => setPaymentSettings({ ...paymentSettings, wardenPhone: e.target.value })}
+                      required={selectedPaymentScope === "GLOBAL"}
+                      value={currentScopePayment.wardenPhone}
+                      onChange={(e) => updateCurrentScopeField("wardenPhone", e.target.value)}
                       placeholder="e.g. +91 98765 00000"
                       className="w-full px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900"
+                      disabled={selectedPaymentScope !== "GLOBAL" && !currentScopePayment.isCustom}
                     />
                   </div>
                 </div>
@@ -10397,7 +10605,7 @@ function doPost(e) {
                   className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl text-xs font-black text-white bg-brand-green hover:bg-brand-gold shadow-lg shadow-[#00022E]/30 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
                 >
                   <CheckCircle2 className="h-4 w-4" />
-                  <span>{isSavingPaymentSettings ? "Saving Settings..." : "Save Payment Details & QR Code"}</span>
+                  <span>{isSavingPaymentSettings ? "Saving Settings..." : "Save All Payment Details & QR Codes"}</span>
                 </button>
               </div>
             </form>

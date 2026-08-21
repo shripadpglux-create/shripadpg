@@ -1,5 +1,5 @@
 import { API_BASE_URL } from "../../lib/apiConfig";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -163,6 +163,19 @@ export function CustomerPortal() {
     wardenPhone?: string;
     dueDay?: number;
     includedAmenities?: string;
+    buildingPayments?: Record<
+      string,
+      {
+        upiId?: string;
+        qrCodeUrl?: string;
+        bankName?: string;
+        accountNo?: string;
+        ifscCode?: string;
+        accountName?: string;
+        adminPhone?: string;
+        wardenPhone?: string;
+      }
+    >;
   }>({
     upiId: "shripadpg@okaxis",
     qrCodeUrl: "",
@@ -174,7 +187,37 @@ export function CustomerPortal() {
     wardenPhone: "+91 98765 00000",
     dueDay: 5,
     includedAmenities: "Food, Water, Wi-Fi, Laundry",
+    buildingPayments: {},
   });
+
+  // Dynamically resolve dedicated QR and Bank details for resident's allocated building (with Global fallback)
+  const effectivePaymentSettings = useMemo(() => {
+    const residentBld = (customer?.allocatedBuilding || customer?.building || "").trim();
+    const bldConfig =
+      residentBld && paymentSettings.buildingPayments
+        ? Object.entries(paymentSettings.buildingPayments).find(([k]) => {
+            const kClean = k.trim().toLowerCase();
+            const bldClean = residentBld.toLowerCase();
+            return kClean === bldClean || kClean.includes(bldClean) || bldClean.includes(kClean);
+          })?.[1]
+        : null;
+
+    return {
+      upiId: bldConfig?.upiId || paymentSettings.upiId || "shripadpg@okaxis",
+      qrCodeUrl: bldConfig?.qrCodeUrl !== undefined && bldConfig?.qrCodeUrl !== "" ? bldConfig.qrCodeUrl : paymentSettings.qrCodeUrl || "",
+      bankName: bldConfig?.bankName || paymentSettings.bankName || "Axis Bank Ltd",
+      accountNo: bldConfig?.accountNo || paymentSettings.accountNo || "924020058192041",
+      ifscCode: bldConfig?.ifscCode || paymentSettings.ifscCode || "UTIB0001824",
+      accountName: bldConfig?.accountName || paymentSettings.accountName || "Shripad PG Services",
+      adminPhone: bldConfig?.adminPhone || paymentSettings.adminPhone || "+91 98765 43210",
+      wardenPhone: bldConfig?.wardenPhone || paymentSettings.wardenPhone || "+91 98765 00000",
+      dueDay: paymentSettings.dueDay || 5,
+      includedAmenities: paymentSettings.includedAmenities || "Food, Water, Wi-Fi, Laundry",
+      isCustomBuildingPayment: Boolean(bldConfig && (bldConfig.upiId || bldConfig.qrCodeUrl || bldConfig.accountNo)),
+      buildingName: residentBld,
+    };
+  }, [paymentSettings, customer]);
+
   const [showQrModal, setShowQrModal] = useState(false);
   const [isRefreshingComplaints, setIsRefreshingComplaints] = useState(false);
 
@@ -305,7 +348,7 @@ export function CustomerPortal() {
   };
 
   const copyUpiId = () => {
-    navigator.clipboard.writeText(paymentSettings.upiId || "shripadpg@okaxis");
+    navigator.clipboard.writeText(effectivePaymentSettings.upiId || "shripadpg@okaxis");
     setCopiedUpi(true);
     setTimeout(() => setCopiedUpi(false), 2000);
   };
@@ -1230,7 +1273,7 @@ export function CustomerPortal() {
                   <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-brand-navy p-5 rounded-2xl text-white space-y-3 shadow-md relative">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] uppercase font-black tracking-widest text-brand-gold bg-brand-gold/15 px-2.5 py-0.5 rounded-full border border-brand-gold/30">
-                        Official PG UPI
+                        {effectivePaymentSettings.isCustomBuildingPayment ? `${effectivePaymentSettings.buildingName} UPI` : "Official PG UPI"}
                       </span>
                       <button onClick={() => setShowQrModal(true)} className="p-1.5 rounded-xl bg-brand-gold/20 text-brand-gold hover:bg-brand-gold hover:text-slate-900 transition cursor-pointer" title="Scan QR Code">
                         <QrCode className="h-4 w-4" />
@@ -1243,11 +1286,11 @@ export function CustomerPortal() {
                         className="h-16 w-16 shrink-0 rounded-xl bg-white p-1 flex items-center justify-center cursor-pointer border border-brand-gold/40 shadow-sm hover:scale-105 transition-transform"
                         title="Click to view & scan large QR code"
                       >
-                        {paymentSettings.qrCodeUrl ? (
-                          <img src={paymentSettings.qrCodeUrl} alt="Real PG QR Code" className="h-full w-full object-contain rounded-md" />
+                        {effectivePaymentSettings.qrCodeUrl ? (
+                          <img src={effectivePaymentSettings.qrCodeUrl} alt="Real PG QR Code" className="h-full w-full object-contain rounded-md" />
                         ) : (
                           <img
-                            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`upi://pay?pa=${paymentSettings.upiId}&pn=${encodeURIComponent(paymentSettings.accountName)}`)}`}
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`upi://pay?pa=${effectivePaymentSettings.upiId}&pn=${encodeURIComponent(effectivePaymentSettings.accountName)}`)}`}
                             alt="Dynamic UPI QR Code"
                             className="h-full w-full object-contain rounded-md"
                           />
@@ -1255,7 +1298,7 @@ export function CustomerPortal() {
                       </div>
                       <div>
                         <p className="text-xs text-slate-300 font-semibold">UPI ID for GPay / PhonePe / Paytm</p>
-                        <p className="text-base font-black text-brand-gold font-mono tracking-wide mt-0.5">{paymentSettings.upiId || "shripadpg@okaxis"}</p>
+                        <p className="text-base font-black text-brand-gold font-mono tracking-wide mt-0.5">{effectivePaymentSettings.upiId || "shripadpg@okaxis"}</p>
                         <button onClick={() => setShowQrModal(true)} className="text-[10px] text-emerald-400 font-bold hover:underline mt-0.5 flex items-center gap-1 cursor-pointer">
                           <QrCode className="h-3 w-3" /> Tap to Scan Large QR Code
                         </button>
@@ -1273,12 +1316,19 @@ export function CustomerPortal() {
 
                   {/* PG Bank Account Transfer Details */}
                   <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-2 text-xs font-bold">
-                    <span className="text-[10px] text-slate-400 uppercase font-black">PG Bank Account Transfer</span>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-slate-400 uppercase font-black">PG Bank Account Transfer</span>
+                      {effectivePaymentSettings.isCustomBuildingPayment && (
+                        <span className="text-[9px] font-black text-brand-navy bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                          {effectivePaymentSettings.buildingName} Account
+                        </span>
+                      )}
+                    </div>
                     <div>
-                      <p className="text-slate-500">Bank Name: <span className="text-slate-900 font-black">{paymentSettings.bankName || "Axis Bank Ltd"}</span></p>
-                      <p className="text-slate-500">Account No: <span className="text-slate-900 font-black font-mono">{paymentSettings.accountNo || "924020058192041"}</span></p>
-                      <p className="text-slate-500">IFSC Code: <span className="text-slate-900 font-black font-mono">{paymentSettings.ifscCode || "UTIB0001824"}</span></p>
-                      <p className="text-slate-500">Account Name: <span className="text-slate-900 font-black">{paymentSettings.accountName || "Shripad PG Services"}</span></p>
+                      <p className="text-slate-500">Bank Name: <span className="text-slate-900 font-black">{effectivePaymentSettings.bankName || "Axis Bank Ltd"}</span></p>
+                      <p className="text-slate-500">Account No: <span className="text-slate-900 font-black font-mono">{effectivePaymentSettings.accountNo || "924020058192041"}</span></p>
+                      <p className="text-slate-500">IFSC Code: <span className="text-slate-900 font-black font-mono">{effectivePaymentSettings.ifscCode || "UTIB0001824"}</span></p>
+                      <p className="text-slate-500">Account Name: <span className="text-slate-900 font-black">{effectivePaymentSettings.accountName || "Shripad PG Services"}</span></p>
                     </div>
                   </div>
 
@@ -1286,8 +1336,8 @@ export function CustomerPortal() {
                     <span className="text-[10px] text-[#00022E] uppercase font-black">Rent Terms & Cycle</span>
                     <div>
                       <p className="text-slate-600">Standard Monthly Rent: <span className="text-[#00022E] font-black text-sm">{customer?.rentAmount ? `₹${Number(customer.rentAmount).toLocaleString("en-IN")} / month` : "Not Set"}</span></p>
-                      <p className="text-slate-600">Due Date: <span className="text-slate-900 font-extrabold">{paymentSettings.dueDay || 5}th of every month</span></p>
-                      <p className="text-slate-600">Included: <span className="text-slate-900 font-bold">{paymentSettings.includedAmenities || "Food, Water, Wi-Fi, Laundry"}</span></p>
+                      <p className="text-slate-600">Due Date: <span className="text-slate-900 font-extrabold">{effectivePaymentSettings.dueDay || 5}th of every month</span></p>
+                      <p className="text-slate-600">Included: <span className="text-slate-900 font-bold">{effectivePaymentSettings.includedAmenities || "Food, Water, Wi-Fi, Laundry"}</span></p>
                     </div>
                     <div className="pt-1">
                       <span className="text-[10px] bg-[#F0F4FF] text-[#00022E] px-2.5 py-1 rounded-full font-black">
@@ -2045,8 +2095,8 @@ export function CustomerPortal() {
                       </div>
                       <div>
                         <p className="text-xs font-black uppercase text-[#00022E]">PG Admin Desk</p>
-                        <a href={`tel:${(paymentSettings.adminPhone || "+91 98765 43210").replace(/\s+/g, "")}`} className="text-lg font-black text-slate-900 hover:text-[#00022E]">
-                          {paymentSettings.adminPhone || "+91 98765 43210"}
+                        <a href={`tel:${(effectivePaymentSettings.adminPhone || "+91 98765 43210").replace(/\s+/g, "")}`} className="text-lg font-black text-slate-900 hover:text-[#00022E]">
+                          {effectivePaymentSettings.adminPhone || "+91 98765 43210"}
                         </a>
                       </div>
                     </div>
@@ -2060,8 +2110,8 @@ export function CustomerPortal() {
                       </div>
                       <div>
                         <p className="text-xs font-black uppercase text-blue-700">Warden & Maintenance Hotline</p>
-                        <a href={`tel:${(paymentSettings.wardenPhone || "+91 98765 00000").replace(/\s+/g, "")}`} className="text-lg font-black text-slate-900 hover:text-blue-700">
-                          {paymentSettings.wardenPhone || "+91 98765 00000"}
+                        <a href={`tel:${(effectivePaymentSettings.wardenPhone || "+91 98765 00000").replace(/\s+/g, "")}`} className="text-lg font-black text-slate-900 hover:text-blue-700">
+                          {effectivePaymentSettings.wardenPhone || "+91 98765 00000"}
                         </a>
                       </div>
                     </div>
@@ -2081,7 +2131,7 @@ export function CustomerPortal() {
                   </div>
 
                   <a
-                    href={`https://wa.me/${(paymentSettings.adminPhone || "919876543210").replace(/\D/g, "")}?text=${encodeURIComponent(
+                    href={`https://wa.me/${(effectivePaymentSettings.wardenPhone || effectivePaymentSettings.adminPhone || "919876543210").replace(/\D/g, "")}?text=${encodeURIComponent(
                       `Hello Warden, I am ${customer.name} (Resident ID: ${customer.customerId || "Allocated Resident"}), staying at ${customer.allocatedBuilding || "PG A"} Room ${customer.allocatedRoom || "-"}. I need assistance.`
                     )}`}
                     target="_blank"
@@ -2432,11 +2482,11 @@ export function CustomerPortal() {
             </div>
 
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex justify-center">
-              {paymentSettings.qrCodeUrl ? (
-                <img src={paymentSettings.qrCodeUrl} alt="Official QR Code" className="w-64 h-64 object-contain rounded-xl shadow-md bg-white p-2" />
+              {effectivePaymentSettings.qrCodeUrl ? (
+                <img src={effectivePaymentSettings.qrCodeUrl} alt="Official QR Code" className="w-64 h-64 object-contain rounded-xl shadow-md bg-white p-2" />
               ) : (
                 <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`upi://pay?pa=${paymentSettings.upiId}&pn=${encodeURIComponent(paymentSettings.accountName)}`)}`}
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`upi://pay?pa=${effectivePaymentSettings.upiId}&pn=${encodeURIComponent(effectivePaymentSettings.accountName)}`)}`}
                   alt="Dynamic UPI QR Code"
                   className="w-64 h-64 object-contain rounded-xl shadow-md bg-white p-2"
                 />
@@ -2445,7 +2495,10 @@ export function CustomerPortal() {
 
             <div>
               <p className="text-xs text-slate-500 font-semibold">Scan with Google Pay, PhonePe, Paytm or BHIM</p>
-              <p className="text-base font-black text-brand-navy font-mono tracking-wide mt-1">{paymentSettings.upiId}</p>
+              <p className="text-base font-black text-brand-navy font-mono tracking-wide mt-1">{effectivePaymentSettings.upiId}</p>
+              {effectivePaymentSettings.isCustomBuildingPayment && (
+                <p className="text-[10px] text-brand-green font-bold mt-0.5">🏢 Dedicated QR for {effectivePaymentSettings.buildingName}</p>
+              )}
             </div>
 
             <button

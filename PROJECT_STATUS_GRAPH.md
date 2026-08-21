@@ -2,6 +2,53 @@
 
 ---
 
+### 📍 Version 9.58 — Building-Wise Dedicated QR Code & Payment Isolation Architecture 🏢💳🔀
+
+```mermaid
+flowchart TD
+    subgraph PaymentScope ["1. Building-Scoped Payment Resolution"]
+        GlobalDefault["🌐 Global Default: UPI, QR, Bank, Phones"]
+        BuildingA["🏢 Building A: Custom UPI, QR, Bank (if enabled)"]
+        BuildingB["🏢 Building B: Custom UPI, QR, Bank (if enabled)"]
+        FallbackLogic["Fallback: If no custom config → use Global Default"]
+        GlobalDefault --> FallbackLogic
+        BuildingA --> FallbackLogic
+        BuildingB --> FallbackLogic
+    end
+
+    subgraph AdminModal ["2. Admin Dashboard — Payment Settings Modal"]
+        ScopeTabSwitcher["Tab Switcher: 🌐 Global | 🏢 Bld-A | 🏢 Bld-B"]
+        CustomToggle["Toggle: Use Custom QR & Bank for this building"]
+        ScopeAwareForm["Form: UPI, QR Upload, Bank, Phones — scoped to active tab"]
+        LivePreview["Live QR Preview: Updates per selected scope"]
+        ScopeTabSwitcher --> CustomToggle --> ScopeAwareForm --> LivePreview
+    end
+
+    subgraph CustomerPortal ["3. Customer Portal — Building-Aware Payment"]
+        ResidentBldResolve["Resident's Allocated Building resolved at login"]
+        EffectiveSettings["effectivePaymentSettings: useMemo resolves building config → global fallback"]
+        PaymentTab["Payment Tab: Shows dedicated QR + Bank for resident's building"]
+        QrModal["QR Modal: Shows building-specific QR with 🏢 badge"]
+        SupportTab["Support Tab: Building-specific admin/warden hotline"]
+        ResidentBldResolve --> EffectiveSettings --> PaymentTab
+        EffectiveSettings --> QrModal
+        EffectiveSettings --> SupportTab
+    end
+
+    subgraph Backend ["4. Backend — Settings Model & WhatsApp Service"]
+        SettingsModel["settingsModel.ts: buildingPayments map + resolvePaymentSettingsForBuilding()"]
+        SettingsAPI["GET /api/settings/payment?building=X"]
+        WhatsApp["whatsappService: Invoice/Welcome uses building-resolved UPI & QR"]
+        SettingsModel --> SettingsAPI --> WhatsApp
+    end
+
+    PaymentScope --> AdminModal
+    PaymentScope --> CustomerPortal
+    PaymentScope --> Backend
+```
+
+---
+
 ### 📍 Version 9.57 — Bed vs Room Metric Separation & Terminology Standardization Architecture 🛏️🚪📊
 
 ```mermaid

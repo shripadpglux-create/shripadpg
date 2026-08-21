@@ -7,6 +7,17 @@ import { SettingMongoModel } from "../schemas/mongoSchemas.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+export interface BuildingPaymentConfig {
+  upiId?: string;
+  qrCodeUrl?: string;
+  bankName?: string;
+  accountNo?: string;
+  ifscCode?: string;
+  accountName?: string;
+  adminPhone?: string;
+  wardenPhone?: string;
+}
+
 export interface PaymentSettings {
   upiId: string;
   qrCodeUrl?: string;
@@ -18,6 +29,7 @@ export interface PaymentSettings {
   wardenPhone?: string;
   dueDay?: number;
   includedAmenities?: string;
+  buildingPayments?: Record<string, BuildingPaymentConfig>;
 }
 
 const DATA_DIR = path.join(__dirname, "..", "..", "data");
@@ -34,6 +46,7 @@ const DEFAULT_PAYMENT_SETTINGS: PaymentSettings = {
   wardenPhone: "+91 98765 00000",
   dueDay: 5,
   includedAmenities: "Food, Water, Wi-Fi, Laundry",
+  buildingPayments: {},
 };
 
 export class SettingsModel {
@@ -100,6 +113,37 @@ export class SettingsModel {
   public static async getPaymentSettings(): Promise<PaymentSettings> {
     await this.init();
     return { ...this.cache! };
+  }
+
+  public static async resolvePaymentSettingsForBuilding(buildingName?: string): Promise<PaymentSettings> {
+    await this.init();
+    const globalSettings = { ...this.cache! };
+    if (!buildingName || !globalSettings.buildingPayments) {
+      return globalSettings;
+    }
+
+    const bldNameClean = buildingName.trim().toLowerCase();
+    const matchEntry = Object.entries(globalSettings.buildingPayments).find(([k]) => {
+      const kClean = k.trim().toLowerCase();
+      return kClean === bldNameClean || kClean.includes(bldNameClean) || bldNameClean.includes(kClean);
+    });
+
+    if (!matchEntry || !matchEntry[1]) {
+      return globalSettings;
+    }
+
+    const bldConfig = matchEntry[1];
+    return {
+      ...globalSettings,
+      upiId: bldConfig.upiId || globalSettings.upiId,
+      qrCodeUrl: bldConfig.qrCodeUrl !== undefined && bldConfig.qrCodeUrl !== "" ? bldConfig.qrCodeUrl : globalSettings.qrCodeUrl,
+      bankName: bldConfig.bankName || globalSettings.bankName,
+      accountNo: bldConfig.accountNo || globalSettings.accountNo,
+      ifscCode: bldConfig.ifscCode || globalSettings.ifscCode,
+      accountName: bldConfig.accountName || globalSettings.accountName,
+      adminPhone: bldConfig.adminPhone || globalSettings.adminPhone,
+      wardenPhone: bldConfig.wardenPhone || globalSettings.wardenPhone,
+    };
   }
 
   public static async updatePaymentSettings(data: Partial<PaymentSettings>): Promise<PaymentSettings> {

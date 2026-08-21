@@ -2,12 +2,12 @@ import { Request, Response } from "express";
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
+import { SettingsModel } from "../models/settingsModel.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DATA_DIR = path.join(__dirname, "../../data");
 const SETTINGS_FILE = path.join(DATA_DIR, "settings.json");
-const PAYMENT_SETTINGS_FILE = path.join(DATA_DIR, "payment_settings.json");
 
 export interface SettingsData {
   manualBookingSheetUrl: string;
@@ -16,35 +16,11 @@ export interface SettingsData {
   lastSyncedAt?: string;
 }
 
-export interface PaymentSettingsData {
-  upiId: string;
-  accountHolder: string;
-  accountNumber: string;
-  ifscCode: string;
-  bankName: string;
-  qrCodeUrl: string;
-  monthlyRentAmount: number;
-  securityDepositAmount: number;
-  includedAmenities: string;
-}
-
 const DEFAULT_SETTINGS: SettingsData = {
   manualBookingSheetUrl: process.env.MANUAL_BOOKING_SHEET_URL || "",
   onlineBookingSheetUrl: process.env.GOOGLE_SHEET_CSV_URL || "",
   autoSyncIntervalMinutes: 5,
   lastSyncedAt: new Date().toISOString(),
-};
-
-const DEFAULT_PAYMENT_SETTINGS: PaymentSettingsData = {
-  upiId: "shripadpg@ybl",
-  accountHolder: "Shripad PG Luxuries",
-  accountNumber: "918237465012",
-  ifscCode: "HDFC0001234",
-  bankName: "HDFC Bank",
-  qrCodeUrl: "",
-  monthlyRentAmount: 6500,
-  securityDepositAmount: 5000,
-  includedAmenities: "Food, Water, Wi-Fi, Laundry",
 };
 
 export class SettingsController {
@@ -148,18 +124,15 @@ export class SettingsController {
     }
   }
 
-  public static async getPaymentSettings(_req: Request, res: Response) {
+  public static async getPaymentSettings(req: Request, res: Response) {
     try {
-      try {
-        await fs.access(PAYMENT_SETTINGS_FILE);
-        const content = await fs.readFile(PAYMENT_SETTINGS_FILE, "utf-8");
-        const parsed = JSON.parse(content);
-        return res.json({ success: true, settings: { ...DEFAULT_PAYMENT_SETTINGS, ...parsed } });
-      } catch {
-        await fs.mkdir(DATA_DIR, { recursive: true });
-        await fs.writeFile(PAYMENT_SETTINGS_FILE, JSON.stringify(DEFAULT_PAYMENT_SETTINGS, null, 2), "utf-8");
-        return res.json({ success: true, settings: DEFAULT_PAYMENT_SETTINGS });
+      const building = req.query.building ? String(req.query.building).trim() : undefined;
+      if (building) {
+        const resolved = await SettingsModel.resolvePaymentSettingsForBuilding(building);
+        return res.json({ success: true, settings: resolved });
       }
+      const settings = await SettingsModel.getPaymentSettings();
+      return res.json({ success: true, settings });
     } catch (error: any) {
       res.status(500).json({ success: false, message: "Failed to fetch payment settings.", error: error.message });
     }
@@ -167,20 +140,7 @@ export class SettingsController {
 
   public static async updatePaymentSettings(req: Request, res: Response) {
     try {
-      let current = DEFAULT_PAYMENT_SETTINGS;
-      try {
-        const content = await fs.readFile(PAYMENT_SETTINGS_FILE, "utf-8");
-        current = { ...DEFAULT_PAYMENT_SETTINGS, ...JSON.parse(content) };
-      } catch {}
-
-      const updated: PaymentSettingsData = {
-        ...current,
-        ...req.body,
-      };
-
-      await fs.mkdir(DATA_DIR, { recursive: true });
-      await fs.writeFile(PAYMENT_SETTINGS_FILE, JSON.stringify(updated, null, 2), "utf-8");
-
+      const updated = await SettingsModel.updatePaymentSettings(req.body);
       res.json({
         success: true,
         message: "Payment settings updated successfully!",
