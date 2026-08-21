@@ -23,10 +23,20 @@ export class BookingController {
 
       // Optional Building Filter
       if (building && typeof building === "string" && building !== "ALL") {
-        bookings = bookings.filter((b) =>
-          b.allocatedBuilding?.toLowerCase() === building.toLowerCase() ||
-          b.building?.toLowerCase() === building.toLowerCase()
-        );
+        const qBld = building.toLowerCase().trim();
+        const cleanQ = qBld.replace(/[\s\-_]/g, "");
+        bookings = bookings.filter((b) => {
+          const b1 = (b.allocatedBuilding || "").toLowerCase().trim();
+          const b2 = (b.building || "").toLowerCase().trim();
+          const c1 = b1.replace(/[\s\-_]/g, "");
+          const c2 = b2.replace(/[\s\-_]/g, "");
+          return (
+            b1 === qBld ||
+            b2 === qBld ||
+            (c1 && (c1.includes(cleanQ) || cleanQ.includes(c1))) ||
+            (c2 && (c2.includes(cleanQ) || cleanQ.includes(c2)))
+          );
+        });
       }
 
       // Optional Status Filter

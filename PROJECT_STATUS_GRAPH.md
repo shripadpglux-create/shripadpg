@@ -2,6 +2,35 @@
 
 ---
 
+### 📍 Version 9.56 — Unified Building Matching & Live Bed Occupancy Sync Architecture 🛏️🏢⚡
+
+```mermaid
+flowchart TD
+    subgraph MismatchCause ["1. The Root Cause: Building Name Inconsistency"]
+        Allocated["Resident Allocated with: 'PG A'"]
+        BuildingDoc["Building Registered as: 'PG shripadPgLux-A' (70 Beds)"]
+        StrictMatch["Strict bk.allocatedBuilding === bld.name ➡️ Failed Match"]
+        ZeroStats["❌ Occupied Beds = 0, Active Residents = 0 (Despite 6 Valid Allocations)"]
+        Allocated --> StrictMatch
+        BuildingDoc --> StrictMatch
+        StrictMatch --> ZeroStats
+    end
+
+    subgraph MatcherEngine ["2. Robust isBuildingMatch Pipeline"]
+        Helper["isBuildingMatch(bld1, bld2, totalCount)<br/>• Single-building safety fallback (if totalCount === 1 ➡️ 100% matched)<br/>• Alphanumeric token & identifier normalization<br/>• Prefix/Suffix letter parsing (PG A ↔ PG shripadPgLux-A)<br/>• Unallocated/pending exclusion guard"]
+        StateSync["bmsBuilding auto-syncs with loaded buildingsList"]
+    end
+
+    subgraph SyncedSystem ["3. Real-time Live Occupancy Sync"]
+        Helper --> Matrix["getAllocationsForRoom ➡️ Correctly maps Bed A/B to Rooms"]
+        Helper --> KPI["overallOccupancyStats ➡️ Real Occupied Beds & Active Tenants"]
+        Helper --> Reports["Excel Reports & Customer Directory ➡️ 100% Consistent"]
+        StateSync --> UnifiedAlloc["Future Allotments strictly use true building name"]
+    end
+```
+
+---
+
 ### 📍 Version 9.55 — Network-First PWA Navigation & Stale Screen Flash Elimination 🚀⚡🛡️
 
 ```mermaid

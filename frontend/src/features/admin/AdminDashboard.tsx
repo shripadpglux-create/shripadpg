@@ -133,6 +133,60 @@ export function formatPhoneWithCountryCode(val: string): string {
   return `+91 ${digits}`;
 }
 
+export function isBuildingMatch(
+  bld1?: string | null,
+  bld2?: string | null,
+  totalBuildingsCount?: number
+): boolean {
+  if (!bld1 && !bld2) return true;
+  if (totalBuildingsCount === 1) return true;
+
+  if (!bld1 || !bld2) {
+    if (totalBuildingsCount !== undefined && totalBuildingsCount <= 1) return true;
+    return false;
+  }
+
+  const s1 = bld1.trim().toLowerCase();
+  const s2 = bld2.trim().toLowerCase();
+
+  // Exclude unallocated / pending values from matching actual properties
+  if (
+    s1 === "unallocated" ||
+    s1 === "pending allocation" ||
+    s1 === "pending" ||
+    s2 === "unallocated" ||
+    s2 === "pending allocation" ||
+    s2 === "pending"
+  ) {
+    return false;
+  }
+
+  if (s1 === s2) return true;
+
+  // Clean strings by removing special chars, spaces, hyphens
+  const clean1 = s1.replace(/[\s\-_.()]/g, "");
+  const clean2 = s2.replace(/[\s\-_.()]/g, "");
+  if (clean1 === clean2) return true;
+  if (clean1.includes(clean2) || clean2.includes(clean1)) return true;
+
+  // Extract letter or number identifier (e.g. "PG A", "PG-A", "shripadPgLux-A", "Building A", "PG 1", "PG A - Main Branch")
+  const extractId = (str: string) => {
+    const m = str.match(/(?:pg|building|branch|lux)?\s*[-_]?\s*([a-z0-9]+)$/i) || str.match(/\b([a-z0-9])\b/i);
+    return m ? m[1].toLowerCase() : null;
+  };
+
+  const id1 = extractId(s1);
+  const id2 = extractId(s2);
+  if (id1 && id2 && id1 === id2) return true;
+
+  // Suffix letter match (e.g., "-a", " a", "a")
+  const suff1 = s1.replace(/[^a-z0-9]/gi, "").slice(-1).toLowerCase();
+  const suff2 = s2.replace(/[^a-z0-9]/gi, "").slice(-1).toLowerCase();
+  if (suff1 && suff2 && suff1 === suff2) return true;
+
+  return false;
+}
+
 export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab?: string; isStaffMode?: boolean }) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(() => normalizeTabName(tab));
@@ -1839,9 +1893,19 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const [bmsRoom, setBmsRoom] = useState("102");
   const [bmsBed, setBmsBed] = useState("Bed B");
 
+  // Auto-sync bmsBuilding when buildingsList is loaded/updated
+  useEffect(() => {
+    if (buildingsList.length > 0) {
+      const exists = buildingsList.some((b) => isBuildingMatch(b.name, bmsBuilding, buildingsList.length));
+      if (!exists || bmsBuilding === "PG A") {
+        setBmsBuilding(scopedBuildingsList[0]?.name || buildingsList[0].name);
+      }
+    }
+  }, [buildingsList, scopedBuildingsList]);
+
   // Auto-adjust selected floor if building has 0 rooms on Ground Floor (Fault Tolerance)
   useEffect(() => {
-    const bldObj = buildingsList.find((b) => b.name === bmsBuilding);
+    const bldObj = buildingsList.find((b) => isBuildingMatch(b.name, bmsBuilding, buildingsList.length));
     if (bldObj) {
       const currentRoomCount = getFloorRoomCount(bldObj, bmsFloor);
       if (currentRoomCount === 0) {
@@ -1885,21 +1949,14 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
           b.allocatedRoom !== "Pending Allocation" &&
           b.room !== "Pending Allocation";
 
-        const bld = (b.allocatedBuilding || b.building || "").trim().toLowerCase();
+        const bld = (b.allocatedBuilding || b.building || "").trim();
 
         // 1. If the resident is ALREADY ALLOCATED to a specific building:
-        if (isAllocated && bld && bld !== "unallocated" && bld !== "pending allocation") {
+        if (isAllocated && bld && bld.toLowerCase() !== "unallocated" && bld.toLowerCase() !== "pending allocation") {
           // They MUST strictly match one of the staff member's assigned buildings!
-          const isAssignedBuilding = staffBuildings.some((sb: string) => {
-            const cleanSb = sb.trim().toLowerCase();
-            const cleanBld = bld.trim().toLowerCase();
-            return (
-              cleanBld === cleanSb ||
-              cleanBld.replace(/[\s\-_]/g, "") === cleanSb.replace(/[\s\-_]/g, "") ||
-              cleanBld.includes(cleanSb) ||
-              cleanSb.includes(cleanBld)
-            );
-          });
+          const isAssignedBuilding = staffBuildings.some((sb: string) =>
+            isBuildingMatch(bld, sb, buildingsList.length)
+          );
           return isAssignedBuilding;
         }
 
@@ -1909,7 +1966,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       }
       return true;
     });
-  }, [bookings, isStaffMode, activeStaffMember]);
+  }, [bookings, isStaffMode, activeStaffMember, buildingsList.length]);
 
   // Scoped Expenses helper matching staff building in staff mode
   const scopedExpensesList = useMemo(() => {
@@ -1917,18 +1974,15 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       if (isStaffMode && activeStaffMember) {
         const staffBuildings = activeStaffMember.assignedBuildings || [];
         if (staffBuildings.includes("ALL")) return true;
-        const bld = (e.building || "").trim().toLowerCase();
+        const bld = (e.building || "").trim();
         return (
-          bld === "all" ||
-          staffBuildings.some((sb: string) => {
-            const cleanSb = sb.trim().toLowerCase();
-            return cleanSb && (bld.includes(cleanSb) || cleanSb.includes(bld));
-          })
+          bld.toLowerCase() === "all" ||
+          staffBuildings.some((sb: string) => isBuildingMatch(bld, sb, buildingsList.length))
         );
       }
       return true;
     });
-  }, [expensesList, isStaffMode, activeStaffMember]);
+  }, [expensesList, isStaffMode, activeStaffMember, buildingsList.length]);
 
   const totalMonthlySpend = useMemo(() => {
     return scopedExpensesList.reduce((sum, e) => sum + Number(e.amount || 0), 0);
@@ -2011,21 +2065,13 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       }
       if (!isAllocated) return false;
 
-      // Match building (check allocatedBuilding first, fallback to building)
-      const bkBuilding = (bk.allocatedBuilding || bk.building || "").trim().toLowerCase();
-      const targetBld = (buildingName || "").trim().toLowerCase();
-      const bldMatch =
-        (bkBuilding && (
-          bkBuilding === targetBld ||
-          bkBuilding.replace(/[\s\-_]/g, "") === targetBld.replace(/[\s\-_]/g, "") ||
-          bkBuilding.includes(targetBld) ||
-          targetBld.includes(bkBuilding)
-        )) ||
-        (!bkBuilding && buildingsList.length <= 1);
+      // Match building using robust matcher
+      const bkBuilding = (bk.allocatedBuilding || bk.building || "").trim();
+      const bldMatch = isBuildingMatch(bkBuilding, buildingName, buildingsList.length);
 
       if (!bldMatch) return false;
 
-      // Match room (strip "Room " prefix, e.g. "Room 102" -> "102", "G01" -> "g1")
+      // Match room (strip "Room " prefix, e.g. "Room 102" -> "102", "G01" -> "g1", "G03" -> "g3")
       const rawRoom = (bk.allocatedRoom || bk.room || "").toString().trim().replace(/^Room\s+/i, "").toLowerCase();
       const bkNorm = rawRoom.replace(/^0+/, "");
 
@@ -2224,16 +2270,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
       if (!isAlloc) return false;
 
-      const bkBuilding = (b.allocatedBuilding || b.building || "").trim().toLowerCase();
-      return scopedBuildingsList.some((sb) => {
-        const cleanSb = sb.name.trim().toLowerCase();
-        return (
-          bkBuilding === cleanSb ||
-          bkBuilding.replace(/[\s\-_]/g, "") === cleanSb.replace(/[\s\-_]/g, "") ||
-          bkBuilding.includes(cleanSb) ||
-          cleanSb.includes(bkBuilding)
-        );
-      });
+      const bkBuilding = (b.allocatedBuilding || b.building || "").trim();
+      return scopedBuildingsList.some((sb) => isBuildingMatch(bkBuilding, sb.name, buildingsList.length));
     });
 
     const totalActiveResidents = activeResidentsList.length;
@@ -3841,7 +3879,9 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       {scopedBuildingsList.map((bld) => {
                         const stats = getBuildingOccupancyDetails(bld.name);
                         const occPct = stats.totalBeds > 0 ? Math.round((stats.occupiedBedsCount / stats.totalBeds) * 100) : 0;
-                        const bldBookings = scopedBookings.filter((bk) => (bk.allocatedBuilding || bk.building) === bld.name);
+                        const bldBookings = scopedBookings.filter((bk) =>
+                          isBuildingMatch(bk.allocatedBuilding || bk.building, bld.name, buildingsList.length)
+                        );
                         let bldRev = 0;
                         bldBookings.forEach((bk) => {
                           (bk.paymentHistory || []).forEach((p: any) => {
@@ -4207,7 +4247,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   <button
                     onClick={() => {
                       const filtered = bookings.filter((b) => {
-                        const matchesBld = reportSelectedBuilding === "All" || b.allocatedBuilding === reportSelectedBuilding || b.building === reportSelectedBuilding;
+                        const matchesBld = reportSelectedBuilding === "All" || isBuildingMatch(b.allocatedBuilding || b.building, reportSelectedBuilding, buildingsList.length);
                         const matchesSearch = !reportSearchQuery || b.name.toLowerCase().includes(reportSearchQuery.toLowerCase()) || b.phone.includes(reportSearchQuery);
                         return matchesBld && matchesSearch;
                       });
@@ -4252,7 +4292,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   <button
                     onClick={() => {
                       const filtered = bookings.filter((b) => {
-                        const matchesBld = reportSelectedBuilding === "All" || b.allocatedBuilding === reportSelectedBuilding || b.building === reportSelectedBuilding;
+                        const matchesBld = reportSelectedBuilding === "All" || isBuildingMatch(b.allocatedBuilding || b.building, reportSelectedBuilding, buildingsList.length);
                         const matchesSearch = !reportSearchQuery || b.name.toLowerCase().includes(reportSearchQuery.toLowerCase()) || b.phone.includes(reportSearchQuery);
                         return matchesBld && matchesSearch;
                       });
@@ -4335,7 +4375,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   <button
                     onClick={() => {
                       const filtered = bookings.filter((b) => {
-                        const matchesBld = reportSelectedBuilding === "All" || b.allocatedBuilding === reportSelectedBuilding || b.building === reportSelectedBuilding;
+                        const matchesBld = reportSelectedBuilding === "All" || isBuildingMatch(b.allocatedBuilding || b.building, reportSelectedBuilding, buildingsList.length);
                         const matchesSearch = !reportSearchQuery || b.name.toLowerCase().includes(reportSearchQuery.toLowerCase()) || b.phone.includes(reportSearchQuery);
                         return matchesBld && matchesSearch;
                       });
@@ -4516,7 +4556,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       <tbody className="divide-y divide-slate-200">
                         {(() => {
                           const filtered = bookings.filter((b) => {
-                            const matchesBld = reportSelectedBuilding === "All" || b.allocatedBuilding === reportSelectedBuilding || b.building === reportSelectedBuilding;
+                            const matchesBld = reportSelectedBuilding === "All" || isBuildingMatch(b.allocatedBuilding || b.building, reportSelectedBuilding, buildingsList.length);
                             const matchesSearch = !reportSearchQuery || b.name.toLowerCase().includes(reportSearchQuery.toLowerCase()) || b.phone.includes(reportSearchQuery);
                             return matchesBld && matchesSearch;
                           });
@@ -4579,7 +4619,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                             totalRooms += bld.floorRoomCounts && bld.floorRoomCounts[f] !== undefined ? bld.floorRoomCounts[f]! : bld.roomsPerFloor;
                           }
                           const cap = totalRooms * 2;
-                          const occ = bookings.filter((bk) => bk.status === "allocated" && (bk.allocatedBuilding === bld.name || bk.building === bld.name)).length;
+                          const occ = bookings.filter((bk) => bk.status === "allocated" && isBuildingMatch(bk.allocatedBuilding || bk.building, bld.name, buildingsList.length)).length;
                           const vac = Math.max(0, cap - occ);
                           const rate = cap > 0 ? ((occ / cap) * 100).toFixed(1) + "%" : "0.0%";
                           const rev = occ * 8500;
@@ -4619,7 +4659,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       <tbody className="divide-y divide-slate-200">
                         {(() => {
                           const filtered = bookings.filter((b) => {
-                            const matchesBld = reportSelectedBuilding === "All" || b.allocatedBuilding === reportSelectedBuilding || b.building === reportSelectedBuilding;
+                            const matchesBld = reportSelectedBuilding === "All" || isBuildingMatch(b.allocatedBuilding || b.building, reportSelectedBuilding, buildingsList.length);
                             const matchesSearch = !reportSearchQuery || b.name.toLowerCase().includes(reportSearchQuery.toLowerCase()) || b.phone.includes(reportSearchQuery);
                             return matchesBld && matchesSearch;
                           });
@@ -4725,9 +4765,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   const stats = getBuildingOccupancyDetails(b.name);
                   let bldRevenue = 0;
                   (scopedBookings || []).forEach((bk) => {
-                    const bkMatch =
-                      (bk.allocatedBuilding && bk.allocatedBuilding.trim().toLowerCase() === b.name.trim().toLowerCase()) ||
-                      (bk.building && bk.building.trim().toLowerCase() === b.name.trim().toLowerCase());
+                    const bkMatch = isBuildingMatch(bk.allocatedBuilding || bk.building, b.name, buildingsList.length);
                     if (!bkMatch) return;
                     if (bk.paymentHistory && Array.isArray(bk.paymentHistory)) {
                       bk.paymentHistory.forEach((p: any) => {
@@ -5030,8 +5068,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                     const filtered = scopedBookings.filter((b) => {
                       const matchesBuilding =
                         customerDirectoryBuilding === "All" ||
-                        b.allocatedBuilding === customerDirectoryBuilding ||
-                        b.building === customerDirectoryBuilding;
+                        isBuildingMatch(b.allocatedBuilding || b.building, customerDirectoryBuilding, buildingsList.length);
 
                       const matchesStatus =
                         customerDirectoryStatus === "all" ||
