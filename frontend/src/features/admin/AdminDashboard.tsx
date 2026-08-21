@@ -2245,14 +2245,22 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     let totalAvailRooms = 0;
     let totalOccRooms = 0;
     let totalBedsCount = 0;
+    let totalRoomsCount = 0;
+    let totalFullyVacantRooms = 0;
+    let totalPartiallyOccupiedRooms = 0;
+    let totalFullyOccupiedRooms = 0;
 
     scopedBuildingsList.forEach((bld) => {
       const stats = getBuildingOccupancyDetails(bld.name);
       totalBedsCount += stats.totalBeds;
+      totalRoomsCount += stats.totalRooms;
       totalOccBeds += stats.occupiedBedsCount;
       totalVacBeds += stats.vacantBedsCount;
       totalAvailRooms += stats.availableRoomsCount;
       totalOccRooms += stats.occupiedRoomsCount;
+      totalFullyVacantRooms += stats.fullyVacantRoomsCount;
+      totalPartiallyOccupiedRooms += stats.partiallyOccupiedRoomsCount;
+      totalFullyOccupiedRooms += stats.fullyOccupiedRoomsCount;
     });
 
     // Determine active residents count strictly within scoped buildings
@@ -2282,10 +2290,14 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
 
     return {
       totalBedsCount,
+      totalRoomsCount,
       totalOccBeds: finalOccBeds,
       totalVacBeds: finalVacBeds,
       totalAvailRooms,
       totalOccRooms,
+      totalFullyVacantRooms,
+      totalPartiallyOccupiedRooms,
+      totalFullyOccupiedRooms,
       totalActiveResidents,
       totalOcc: finalOccBeds,
       totalUnocc: finalVacBeds,
@@ -3341,12 +3353,12 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       {overallOccupancyStats.totalVacBeds} <span className="text-[11px] sm:text-xs font-bold text-slate-400">Beds</span>
                     </p>
                     <p className="mt-1 text-[10px] sm:text-xs font-bold text-emerald-700 group-hover:underline flex items-center gap-1">
-                      Vacant Matrix →
+                      Availability Matrix →
                     </p>
                   </div>
                 </div>
 
-                {/* 2. Occupied / Booked Rooms (Rose 🔴) */}
+                {/* 2. Occupied / Booked Beds (Rose 🔴) */}
                 <div
                   onClick={() =>
                     setOccupancyExplorerModal({
@@ -3371,7 +3383,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       {overallOccupancyStats.totalOccBeds} <span className="text-[11px] sm:text-xs font-bold text-slate-400">Beds</span>
                     </p>
                     <p className="mt-1 text-[10px] sm:text-xs font-bold text-rose-700 group-hover:underline flex items-center gap-1">
-                      Occupied Matrix →
+                      Occupancy Matrix →
                     </p>
                   </div>
                 </div>
@@ -3491,9 +3503,9 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                           </div>
 
                           <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 pt-0.5">
-                            <span>🔴 {occBeds} Occupied</span>
-                            <span>🟢 {unoccBeds} Vacant</span>
-                            <span>🛏️ {totalBeds} Total</span>
+                            <span>🔴 {occBeds} Occupied Beds</span>
+                            <span>🟢 {unoccBeds} Available Beds</span>
+                            <span>🏢 {stats.occupiedRoomsCount}/{stats.totalRooms} Rooms</span>
                           </div>
                         </div>
                       );
@@ -9163,7 +9175,7 @@ function doPost(e) {
         </div>
       )}
 
-      {/* BOOKMYSHOW-STYLE OCCUPANCY EXPLORER MODAL (OCCUPIED vs UNOCCUPIED ROOMS) */}
+      {/* BOOKMYSHOW-STYLE OCCUPANCY EXPLORER MODAL (OCCUPIED vs AVAILABLE BEDS & ROOMS) */}
       {occupancyExplorerModal && occupancyExplorerModal.isOpen && (
         <div className="fixed inset-0 z-[85] flex items-center justify-center p-3 sm:p-4 pb-24 sm:pb-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
           <div className="w-full max-w-3xl rounded-[2.5rem] bg-white border border-slate-200 p-6 sm:p-7 shadow-2xl space-y-5 animate-in zoom-in-95 max-h-[78vh] sm:max-h-[88vh] overflow-y-auto">
@@ -9184,7 +9196,7 @@ function doPost(e) {
                         ? "bg-emerald-500 ring-emerald-100"
                         : "bg-rose-500 ring-rose-100"
                     }`} />
-                    {occupancyExplorerModal.mode === "unoccupied" ? "Vacant / Available Rooms Matrix" : "Occupied Rooms Matrix"}
+                    {occupancyExplorerModal.mode === "unoccupied" ? "Available Beds & Rooms Matrix" : "Occupied Beds & Rooms Matrix"}
                   </h2>
                   <p className="text-xs font-semibold text-slate-500">
                     BookMyShow-style seat grid for building room & bed availability
@@ -9203,7 +9215,7 @@ function doPost(e) {
               </button>
             </div>
 
-            {/* Mode Switcher Toggle Pill Bar (Symmetrical Production Design) */}
+            {/* Mode Switcher Toggle Pill Bar (Accurate Bed Metric Separation) */}
             <div className="flex items-center justify-between gap-2 bg-slate-100/90 p-1.5 rounded-2xl border border-slate-200/60">
               <button
                 onClick={() => setOccupancyExplorerModal({ ...occupancyExplorerModal, mode: "unoccupied" })}
@@ -9214,7 +9226,7 @@ function doPost(e) {
                 }`}
               >
                 <span className={`h-2 w-2 rounded-full ${occupancyExplorerModal.mode === "unoccupied" ? "bg-emerald-400 animate-pulse" : "bg-emerald-500"}`} />
-                <span>Vacant / Free Rooms ({overallOccupancyStats.totalUnocc})</span>
+                <span>🟢 Available / Free Beds ({overallOccupancyStats.totalVacBeds})</span>
               </button>
               <button
                 onClick={() => setOccupancyExplorerModal({ ...occupancyExplorerModal, mode: "occupied" })}
@@ -9225,20 +9237,19 @@ function doPost(e) {
                 }`}
               >
                 <span className={`h-2 w-2 rounded-full ${occupancyExplorerModal.mode === "occupied" ? "bg-rose-400" : "bg-rose-500"}`} />
-                <span>Occupied Rooms ({overallOccupancyStats.totalOcc})</span>
+                <span>🔴 Occupied Beds ({overallOccupancyStats.totalOccBeds})</span>
               </button>
             </div>
 
-            {/* Step 1: Small Building Cards Selection (Symmetrical Structure) */}
+            {/* Step 1: Building Cards Selection with Explicit Room & Bed Metrics */}
             <div>
               <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">
                 1. Select PG Building:
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                 {scopedBuildingsList.map((bld) => {
                   const isSelected = occupancyExplorerModal.selectedBuilding === bld.name;
                   const stats = getBuildingOccupancyDetails(bld.name);
-                  const countToShow = occupancyExplorerModal.mode === "unoccupied" ? stats.availableRoomsCount : stats.occupiedRoomsCount;
 
                   return (
                     <button
@@ -9254,15 +9265,24 @@ function doPost(e) {
                     >
                       <div className="flex items-center justify-between gap-1 mb-1.5">
                         <span className="font-extrabold text-xs text-slate-900 truncate">{bld.name}</span>
-                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 border ${
+                        <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full shrink-0 border ${
                           occupancyExplorerModal.mode === "unoccupied"
                             ? "bg-emerald-100/90 text-emerald-800 border-emerald-200/80"
                             : "bg-rose-100/90 text-rose-800 border-rose-200/80"
                         }`}>
-                          {countToShow} {occupancyExplorerModal.mode === "unoccupied" ? "Vacant" : "Occupied"}
+                          {occupancyExplorerModal.mode === "unoccupied"
+                            ? `${stats.vacantBedsCount} Free Beds`
+                            : `${stats.occupiedBedsCount} Occupied Beds`}
                         </span>
                       </div>
-                      <p className="text-[10px] text-slate-500 font-semibold">{bld.floors} Floors • {stats.totalRooms} Rooms</p>
+                      <div className="flex items-center justify-between text-[10px] font-semibold text-slate-500">
+                        <span>{bld.floors} Floors • {stats.totalRooms} Rooms ({stats.totalBeds} Beds)</span>
+                        <span className="font-bold text-slate-700">
+                          {occupancyExplorerModal.mode === "unoccupied"
+                            ? `${stats.fullyVacantRoomsCount} Vacant Rooms`
+                            : `${stats.occupiedRoomsCount} Occ./Partial Rooms`}
+                        </span>
+                      </div>
                     </button>
                   );
                 })}
@@ -9277,14 +9297,14 @@ function doPost(e) {
               return (
                 <div className="space-y-4 pt-2 border-t border-slate-100">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                    <span className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <span className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5 flex-wrap">
                       <span>2. Room & Bed Matrix ({currentBld.name})</span>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold border ${
+                      <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-extrabold border ${
                         occupancyExplorerModal.mode === "unoccupied"
                           ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                           : "bg-rose-50 text-rose-700 border-rose-200"
                       }`}>
-                        {occupancyExplorerModal.mode === "unoccupied" ? "🟢 Green = Vacant / Free Beds" : "🔴 Red = Occupied / Booked Beds"}
+                        {occupancyExplorerModal.mode === "unoccupied" ? "🟢 GREEN = AVAILABLE / FREE BEDS" : "🔴 RED = OCCUPIED / BOOKED BEDS"}
                       </span>
                     </span>
                     <span className="text-[11px] font-bold text-slate-500">Tap a room box to view bed breakdown</span>
@@ -9297,12 +9317,18 @@ function doPost(e) {
                       const flName = flIdx === 0 ? "Ground Floor" : flIdx === 1 ? "1st Floor" : flIdx === 2 ? "2nd Floor" : flIdx === 3 ? "3rd Floor" : `${flIdx}th Floor`;
                       const roomCount = getFloorRoomCount(currentBld, flIdx);
 
-                      const roomsOnThisFloor = Array.from({ length: roomCount }, (_, idx) => {
+                      const allRoomsOnFloor = Array.from({ length: roomCount }, (_, idx) => {
                         const roomNo = flIdx === 0 ? `G${(idx + 1).toString().padStart(2, "0")}` : `${flIdx}${(idx + 1).toString().padStart(2, "0")}`;
                         const rmState = getRoomBedState(currentBld.name, roomNo);
-
                         return { roomNo, rmState, flIdx, flName };
-                      }).filter((r) => (occupancyExplorerModal.mode === "occupied" ? !r.rmState.isVacant : !r.rmState.isFull));
+                      });
+
+                      const floorOccupiedRooms = allRoomsOnFloor.filter((r) => !r.rmState.isVacant);
+                      const floorAvailableRooms = allRoomsOnFloor.filter((r) => !r.rmState.isFull);
+                      const floorOccupiedBeds = allRoomsOnFloor.reduce((sum, r) => sum + r.rmState.occupiedCount, 0);
+                      const floorFreeBeds = allRoomsOnFloor.reduce((sum, r) => sum + r.rmState.freeCount, 0);
+
+                      const displayedRooms = occupancyExplorerModal.mode === "occupied" ? floorOccupiedRooms : floorAvailableRooms;
 
                       return (
                         <div key={flIdx} className="space-y-2 bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs">
@@ -9313,17 +9339,19 @@ function doPost(e) {
                                 ? "bg-emerald-50 text-emerald-700 border-emerald-200/70"
                                 : "bg-rose-50 text-rose-700 border-rose-200/70"
                             }`}>
-                              {roomsOnThisFloor.length} {occupancyExplorerModal.mode === "unoccupied" ? "Vacant/Partial Room(s)" : "Occupied Room(s)"}
+                              {occupancyExplorerModal.mode === "unoccupied"
+                                ? `${displayedRooms.length} Available Room(s) • ${floorFreeBeds} Bed(s) Free`
+                                : `${displayedRooms.length} Occupied Room(s) • ${floorOccupiedBeds} Bed(s) Occupied`}
                             </span>
                           </div>
 
-                          {roomsOnThisFloor.length === 0 ? (
+                          {displayedRooms.length === 0 ? (
                             <div className="p-3 rounded-xl bg-slate-50/80 border border-dashed border-slate-200 text-center text-xs font-semibold text-slate-400">
-                              {occupancyExplorerModal.mode === "unoccupied" ? "All rooms on this floor are occupied." : "No occupied rooms on this floor (100% vacant)."}
+                              {occupancyExplorerModal.mode === "unoccupied" ? "All rooms on this floor are fully occupied." : "No occupied rooms on this floor (100% vacant)."}
                             </div>
                           ) : (
                             <div className="flex flex-wrap gap-2 pt-1">
-                              {roomsOnThisFloor.map((rm) => {
+                              {displayedRooms.map((rm) => {
                                 const isGreenVacant = occupancyExplorerModal.mode === "unoccupied";
 
                                 return (
@@ -9366,9 +9394,24 @@ function doPost(e) {
                     return (
                       <div className="p-5 rounded-[2rem] bg-gradient-to-b from-slate-50 to-white text-slate-900 space-y-4 text-xs animate-in fade-in shadow-xl border border-slate-200/90">
                         <div className="flex items-center justify-between pb-2 border-b border-slate-200/60 font-black">
-                          <span className="text-sm flex items-center gap-2 text-slate-900">
-                            <Bed className="h-4.5 w-4.5 text-brand-green" /> Room {rmState.roomNo} ({rmState.building} • {selectedRoomDetails.floor})
-                          </span>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm flex items-center gap-1.5 text-slate-900 font-black">
+                              <Bed className="h-4.5 w-4.5 text-brand-green" /> Room {rmState.roomNo} ({rmState.building} • {selectedRoomDetails.floor})
+                            </span>
+                            <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-black border ${
+                              rmState.isFull
+                                ? "bg-rose-100 text-rose-800 border-rose-200"
+                                : rmState.isPartiallyOccupied
+                                ? "bg-amber-100 text-amber-800 border-amber-200"
+                                : "bg-emerald-100 text-emerald-800 border-emerald-200"
+                            }`}>
+                              {rmState.isFull
+                                ? `🔴 Fully Occupied (${rmState.occupiedCount}/${rmState.capacity} Beds)`
+                                : rmState.isPartiallyOccupied
+                                ? `🟡 Partially Occupied (${rmState.occupiedCount}/${rmState.capacity} Beds • ${rmState.freeCount} Free)`
+                                : `🟢 Fully Vacant (${rmState.freeCount}/${rmState.capacity} Beds Free)`}
+                            </span>
+                          </div>
                           <button
                             onClick={() => setSelectedRoomDetails(null)}
                             className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200/70 hover:bg-slate-300 text-slate-600 transition cursor-pointer"
@@ -9392,7 +9435,7 @@ function doPost(e) {
                                 <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-black border ${
                                   b.isOccupied ? "bg-rose-100 text-rose-800 border-rose-200" : "bg-emerald-100 text-emerald-800 border-emerald-200"
                                 }`}>
-                                  {b.isOccupied ? "🔴 Occupied" : "🟢 Vacant"}
+                                  {b.isOccupied ? "🔴 Occupied Bed" : "🟢 Available Bed"}
                                 </span>
                               </div>
                               {b.isOccupied ? (

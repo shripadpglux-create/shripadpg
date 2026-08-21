@@ -2,6 +2,40 @@
 
 ---
 
+### 📍 Version 9.57 — Bed vs Room Metric Separation & Terminology Standardization Architecture 🛏️🚪📊
+
+```mermaid
+flowchart TD
+    subgraph MetricSeparation ["1. Precise CRM Metric Definitions"]
+        TotalBeds["Total Beds: 70"]
+        OccupiedBeds["Occupied Beds: 14/15"]
+        AvailBeds["Available / Free Beds: 56/55"]
+        TotalRooms["Total Rooms: 35"]
+        OccRooms["Occupied/Partial Rooms: 10 (Rooms with >= 1 Occupied Bed)"]
+        VacRooms["Fully Vacant Rooms: 25 (Rooms with 0 Occupied Beds)"]
+    end
+
+    subgraph TerminologyStandard ["2. Clean Terminology Standard"]
+        AvailBedLabel["🟢 Available Bed: Ready for resident allocation"]
+        OccBedLabel["🔴 Occupied Bed: Active resident allotted"]
+        VacRoomLabel["🟢 Fully Vacant Room: All beds free in room"]
+        PartRoomLabel["🟡 Partially Occupied Room: Some beds occupied, some free"]
+        FullRoomLabel["🔴 Fully Occupied Room: All beds booked"]
+    end
+
+    subgraph UIReconciliation ["3. Live UI Reconciled Surfaces"]
+        BentoCards["Dashboard Bento Cards: Available Beds -> 'Availability Matrix', Occupied Beds -> 'Occupancy Matrix'"]
+        ModalSwitcher["Matrix Switcher: '🟢 Available / Free Beds (56)' vs '🔴 Occupied Beds (14)'"]
+        FloorBadges["Floor Badges: 'X Occupied Room(s) • Y Beds Occupied' & 'X Available Room(s) • Y Beds Free'"]
+        RoomDrawer["Room Drawer: Shows Room Status (Full/Partial/Vacant) + Bed A/B '🔴 Occupied Bed' / '🟢 Available Bed'"]
+    end
+
+    MetricSeparation --> TerminologyStandard
+    TerminologyStandard --> UIReconciliation
+```
+
+---
+
 ### 📍 Version 9.56 — Unified Building Matching & Live Bed Occupancy Sync Architecture 🛏️🏢⚡
 
 ```mermaid
