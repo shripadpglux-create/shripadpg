@@ -2,6 +2,65 @@
 
 ---
 
+### 📍 Version 9.55 — Network-First PWA Navigation & Stale Screen Flash Elimination 🚀⚡🛡️
+
+```mermaid
+flowchart TD
+    subgraph ProblemAnalysis ["1. Root Cause: Stale-While-Revalidate HTML Cache"]
+        OldSW["Legacy sw.js (v1) Caches '/' HTML Document"]
+        AppOpen["User Opens App / PWA"]
+        StaleCache["SW Returns Old HTML Immediately ➡️ Image 1 (Old Layout Flash)"]
+        BgFetch["Background Fetch updates Cache silently"]
+        Reload["User Reloads Page ➡️ Image 2 (New Layout)"]
+        OldSW --> AppOpen --> StaleCache
+        AppOpen --> BgFetch --> Reload
+    end
+
+    subgraph SolutionArchitecture ["2. Network-First Navigation & Cache Purging"]
+        NewSW["sw.js (v3) with skipWaiting & clients.claim"]
+        CachePurge["activate Event: Automatically wipes legacy caches (v1/v2)"]
+        HeadersConfig["_headers: /sw.js no-cache & HTML must-revalidate"]
+        RegistrationUpdate["__root.tsx: reg.update() on app launch"]
+        NewSW --> CachePurge
+        NewSW --> HeadersConfig
+        NewSW --> RegistrationUpdate
+    end
+
+    subgraph ResultStream ["3. Guaranteed Instant Strict Rendering"]
+        UserVisit["User Opens App / PWA"]
+        NetFetch["Network-First Fetch for Navigation (HTML)"]
+        LiveRender["Renders Live Modern UI (Image 2) Instantly on First Open 🎯"]
+        OfflineFallback["Offline Fallback only if Internet is Disconnected"]
+        UserVisit --> NetFetch
+        NetFetch -->|Online| LiveRender
+        NetFetch -->|Offline| OfflineFallback
+    end
+```
+
+---
+
+### 📍 Version 9.54 — Dedicated /health Health Check Route & System Diagnostic 🩺⚡🌐
+
+```mermaid
+flowchart TD
+    subgraph HealthProbes ["1. Multi-Target Health Check Probes"]
+        RootRoute["GET /<br/>(Render & Cloud Provider Ping)"]
+        HealthRoute["GET /health<br/>(Dedicated Uptime & Container Probe)"]
+        ApiHealthRoute["GET /api/health<br/>(API Gateway & Proxy Probe)"]
+    end
+
+    subgraph HealthEngine ["2. Unified Health Status Resolver"]
+        StatusResolver["getHealthStatus() Helper<br/>• Service Name & Version (2.0.0)<br/>• Node Process Uptime (seconds)<br/>• Environment (NODE_ENV)<br/>• MongoDB Connection Status & Database Name<br/>• ISO Timestamp"]
+    end
+
+    subgraph MonitoringOutput ["3. Structured Diagnostic Response"]
+        HealthProbes --> StatusResolver
+        StatusResolver --> JsonOutput["200 OK JSON Diagnostic Payload<br/>(Provides status: ok | degraded with live cluster connection state)"]
+    end
+```
+
+---
+
 ### 📍 Version 9.53 — Mobile-Responsive Staff Credentials Card Layout Architecture 🗂️✨📱
 
 ```mermaid

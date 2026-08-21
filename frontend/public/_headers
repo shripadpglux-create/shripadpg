@@ -1,0 +1,19 @@
+# Cloudflare Pages Headers Configuration
+
+# Service Worker - Never cache in browser or CDN
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
+
+# Manifest
+/manifest.json
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Static Vite Assets (Hashed filenames)
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Root and all HTML Navigation routes - Revalidate so fresh index is always loaded
+/*
+  Cache-Control: public, max-age=0, must-revalidate

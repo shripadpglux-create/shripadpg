@@ -116,14 +116,38 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 // Static uploads serving
 app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
-// ── Root route for Render service health checks ─────────────────────
-app.get("/", (_req: Request, res: Response) => {
-  res.json({
-    status: "ok",
+// ── Health Check Helper ─────────────────────────────────────────────
+const getHealthStatus = () => {
+  const readyStateMap = ["disconnected", "connected", "connecting", "disconnecting"];
+  const dbState = readyStateMap[mongoose.connection.readyState] || "unknown";
+  const isDbConnected = mongoose.connection.readyState === 1;
+
+  return {
+    status: isDbConnected ? "ok" : "degraded",
     service: "Shripad PG Backend API",
     version: "2.0.0",
+    uptime: `${Math.floor(process.uptime())}s`,
     timestamp: new Date().toISOString(),
-  });
+    environment: NODE_ENV,
+    database: {
+      status: dbState,
+      connected: isDbConnected,
+      name: mongoose.connection.name || "shripad_pg",
+    },
+  };
+};
+
+// ── Root & Health check routes for Render & uptime monitors ─────────
+app.get("/", (_req: Request, res: Response) => {
+  res.json(getHealthStatus());
+});
+
+app.get("/health", (_req: Request, res: Response) => {
+  res.json(getHealthStatus());
+});
+
+app.get("/api/health", (_req: Request, res: Response) => {
+  res.json(getHealthStatus());
 });
 
 // ── Public Auth Routes (no JWT required) ────────────────────────────
@@ -146,15 +170,6 @@ app.use("/api/whatsapp", whatsappRoutes);
 // Fallback direct webhook endpoints for OpenWA synchronization
 app.post("/webhook", WhatsAppController.handleWebhook);
 app.post("/api/webhook", WhatsAppController.handleWebhook);
-
-// ── Health check endpoint ───────────────────────────────────────────
-app.get("/api/health", (_req: Request, res: Response) => {
-  res.json({
-    status: "ok",
-    service: "Shripad PG Backend API",
-    timestamp: new Date().toISOString(),
-  });
-});
 
 // ── Database diagnostics health endpoint ────────────────────────────
 app.get("/api/health/db", async (_req: Request, res: Response) => {

@@ -123,7 +123,13 @@ function RootComponent() {
 
   useEffect(() => {
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch(() => {});
+      navigator.serviceWorker
+        .register("/sw.js")
+        .then((reg) => {
+          // Check for service worker updates on app load
+          reg.update().catch(() => {});
+        })
+        .catch(() => {});
     }
   }, []);
 

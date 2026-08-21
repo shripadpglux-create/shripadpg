@@ -1,7 +1,6 @@
-// SripadPG PWA Service Worker v1.0
-const CACHE_NAME = "sripadpg-cache-v1";
-const ASSETS_TO_CACHE = [
-  "/",
+// SripadPG PWA Service Worker v3.0 - Network-First for Navigation
+const CACHE_NAME = "sripadpg-cache-v3";
+const PRECACHE_ASSETS = [
   "/manifest.json",
   "/pwa-192x192.png",
   "/pwa-512x512.png",
@@ -12,7 +11,7 @@ const ASSETS_TO_CACHE = [
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
+      return cache.addAll(PRECACHE_ASSETS);
     }).then(() => self.skipWaiting())
   );
 });
@@ -23,6 +22,7 @@ self.addEventListener("activate", (event) => {
       return Promise.all(
         cacheNames.map((cache) => {
           if (cache !== CACHE_NAME) {
+            console.log("[SW] Deleting stale cache:", cache);
             return caches.delete(cache);
           }
         })
@@ -34,21 +34,58 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   // Only handle GET requests
   if (event.request.method !== "GET") return;
-  // Skip API requests from offline cache
-  if (event.request.url.includes("/api/")) return;
 
+  const url = new URL(event.request.url);
+
+  // 1. Skip backend API requests completely (Network Only)
+  if (url.pathname.startsWith("/api/")) return;
+
+  // 2. Navigation / HTML Document requests MUST use NETWORK-FIRST
+  // This guarantees users always see the latest updated screen on initial launch (no stale flash)
+  const isNavigation = event.request.mode === "navigate" || 
+                       (event.request.headers.get("accept") && event.request.headers.get("accept").includes("text/html"));
+
+  if (isNavigation) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(async () => {
+          // If offline / network fails, fallback to cached HTML
+          const cached = await caches.match(event.request);
+          if (cached) return cached;
+          const fallback = await caches.match("/");
+          if (fallback) return fallback;
+          return new Response("Offline - Please check your internet connection.", {
+            status: 503,
+            headers: { "Content-Type": "text/plain" }
+          });
+        })
+    );
+    return;
+  }
+
+  // 3. Static Assets (Images, Icons, Fonts, Bundles)
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        // Return cached asset and update in background
-        fetch(event.request).then((networkResponse) => {
+      const fetchPromise = fetch(event.request)
+        .then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse));
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
           }
-        }).catch(() => {});
-        return cachedResponse;
-      }
-      return fetch(event.request);
+          return networkResponse;
+        })
+        .catch(() => null);
+
+      return cachedResponse || fetchPromise;
     })
   );
 });
