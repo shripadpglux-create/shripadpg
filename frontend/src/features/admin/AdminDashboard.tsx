@@ -228,6 +228,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const [rentSetupAmount, setRentSetupAmount] = useState<string>("");
   const [rentSetupStartDate, setRentSetupStartDate] = useState(new Date().toISOString().substring(0, 10));
   const [rentSetupCheckoutDate, setRentSetupCheckoutDate] = useState("");
+  const [rentSetupStayType, setRentSetupStayType] = useState<"monthly" | "short_stay">("monthly");
   const [isRentSetupSubmitting, setIsRentSetupSubmitting] = useState(false);
   const [isEditingRent, setIsEditingRent] = useState(false);
 
@@ -4365,18 +4366,16 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    setPaymentModalTarget({
-                                      id: due.bookingId,
-                                      name: due.name,
-                                      phone: due.phone,
-                                      building: due.building,
-                                      room: due.room,
-                                      bed: due.bed,
-                                      rentAmount: due.rentAmount,
-                                      balanceDue: due.totalDue,
-                                    });
-                                    setPaymentAmountInput(String(due.totalDue || due.rentDue || 0));
-                                    setIsPaymentModalOpen(true);
+                                    const targetBooking = bookings.find((b) => b.id === due.bookingId);
+                                    if (targetBooking) {
+                                      setSelectedResident(targetBooking);
+                                      setNewPaymentAmount(due.totalDue || due.rentDue || 0);
+                                      setNewPaymentPayerName(due.name);
+                                      setIsRecordPaymentOpen(true);
+                                      handleTabClick("Payments");
+                                    } else {
+                                      showToast("Resident record not found", "error");
+                                    }
                                   }}
                                   className="flex h-9 items-center gap-1.5 rounded-xl bg-[#00022E] hover:bg-[#00044A] px-3.5 text-xs font-black text-white transition shadow-xs cursor-pointer"
                                   title="Record Payment"
