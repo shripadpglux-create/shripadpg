@@ -23,19 +23,25 @@ export class BookingController {
 
       // Optional Building Filter
       if (building && typeof building === "string" && building !== "ALL") {
-        const qBld = building.toLowerCase().trim();
-        const cleanQ = qBld.replace(/[\s\-_]/g, "");
+        const normalizeBld = (str?: string) => (str || "").toLowerCase().replace(/[^a-z0-9]/gi, "").trim();
+        const extractCore = (str?: string) => {
+          const norm = normalizeBld(str);
+          return norm
+            .replace(/^(?:pg|shripad|sreepad|lux|property|branch)+/g, "")
+            .replace(/(?:wing|branch|building|block|pg)+$/g, "")
+            .replace(/^(?:pg|shripad|sreepad|lux)+/g, "");
+        };
+
+        const targetNorm = normalizeBld(building);
+        const targetCore = extractCore(building);
+
         bookings = bookings.filter((b) => {
-          const b1 = (b.allocatedBuilding || "").toLowerCase().trim();
-          const b2 = (b.building || "").toLowerCase().trim();
-          const c1 = b1.replace(/[\s\-_]/g, "");
-          const c2 = b2.replace(/[\s\-_]/g, "");
-          return (
-            b1 === qBld ||
-            b2 === qBld ||
-            (c1 && (c1.includes(cleanQ) || cleanQ.includes(c1))) ||
-            (c2 && (c2.includes(cleanQ) || cleanQ.includes(c2)))
-          );
+          const bld = b.allocatedBuilding || b.building;
+          const bNorm = normalizeBld(bld);
+          if (!bNorm) return false;
+          if (bNorm === targetNorm) return true;
+          const bCore = extractCore(bld);
+          return Boolean(bCore && targetCore && bCore === targetCore);
         });
       }
 

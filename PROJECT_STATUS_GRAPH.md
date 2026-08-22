@@ -2,6 +2,40 @@
 
 ---
 
+### 📍 Version 9.69 — Multi-Building Occupancy Isolation & Key Matching Normalization 🏢🛡️📊
+
+```mermaid
+flowchart TD
+    subgraph MultiBuildingMatchEngine ["1. Precise Multi-Building Normalization Engine"]
+        RawBuildingInput["Building Name Input (e.g. 'PG ShripadLux-A wing', 'PG ShripadLux-B wing', 'Green Villa')"]
+        KeyExtraction["normalizeBuildingKey & extractBuildingCoreKey:
+        • Strips punctuation and case variance
+        • Removes generic PG filler words (pg, shripad, lux, wing) to extract core token
+        • Purged flawed suffix letter matching (suff1 === suff2) and loose substring 'includes'"]
+        DeterministicMatch["isBuildingMatch:
+        • Exact token match between active buildings
+        • Strict isolation preventing cross-building resident leak"]
+        RawBuildingInput --> KeyExtraction --> DeterministicMatch
+    end
+
+    subgraph OccupancyStatsPipeline ["2. Isolated Capacity & Bed Occupancy Calculations"]
+        BuildingAStats["Building A: 25 Occupied / 70 Beds (45 Vacant)"]
+        BuildingBStats["Building B: 0 Occupied / 24 Beds (24 Vacant)"]
+        NewResidentB["New Resident in B -> Updates B to 1 Occupied (A remains 25)"]
+        DeterministicMatch --> BuildingAStats & BuildingBStats --> NewResidentB
+    end
+
+    subgraph PlatformSync ["3. Unified Portal Alignment (Admin, Staff & Reports)"]
+        AdminDashboardSync["Admin Dashboard: BookMyShow, Capacity Cards, Floor Matrix"]
+        StaffDashboardSync["Staff Dashboard: Scoped assigned building filters"]
+        ExcelReportSync["Excel Reports: Building Infrastructure & Occupancy Worksheets"]
+        BackendFilterSync["Backend API: /api/bookings?building filter normalized"]
+        NewResidentB --> AdminDashboardSync & StaffDashboardSync & ExcelReportSync & BackendFilterSync
+    end
+```
+
+---
+
 ### 📍 Version 9.68 — Automated WhatsApp Rent Due Reminders & Cycle Scheduler ⏰📲💰
 
 ```mermaid

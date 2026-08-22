@@ -139,6 +139,31 @@ export function formatPhoneWithCountryCode(val: string): string {
   return `+91 ${digits}`;
 }
 
+export function normalizeBuildingKey(name?: string | null): string {
+  if (!name) return "";
+  const s = name.trim().toLowerCase();
+  if (
+    s === "unallocated" ||
+    s === "pending allocation" ||
+    s === "pending" ||
+    s === "none" ||
+    s === "n/a"
+  ) {
+    return "";
+  }
+  return s.replace(/[^a-z0-9]/gi, "").toLowerCase();
+}
+
+export function extractBuildingCoreKey(name?: string | null): string {
+  const norm = normalizeBuildingKey(name);
+  if (!norm) return "";
+  const stripped = norm
+    .replace(/^(?:pg|shripad|sreepad|lux|property|branch)+/g, "")
+    .replace(/(?:wing|branch|building|block|pg)+$/g, "")
+    .replace(/^(?:pg|shripad|sreepad|lux)+/g, "");
+  return stripped || norm;
+}
+
 export function isBuildingMatch(
   bld1?: string | null,
   bld2?: string | null,
@@ -152,43 +177,14 @@ export function isBuildingMatch(
     return false;
   }
 
-  const s1 = bld1.trim().toLowerCase();
-  const s2 = bld2.trim().toLowerCase();
+  const k1 = normalizeBuildingKey(bld1);
+  const k2 = normalizeBuildingKey(bld2);
+  if (!k1 || !k2) return false;
+  if (k1 === k2) return true;
 
-  // Exclude unallocated / pending values from matching actual properties
-  if (
-    s1 === "unallocated" ||
-    s1 === "pending allocation" ||
-    s1 === "pending" ||
-    s2 === "unallocated" ||
-    s2 === "pending allocation" ||
-    s2 === "pending"
-  ) {
-    return false;
-  }
-
-  if (s1 === s2) return true;
-
-  // Clean strings by removing special chars, spaces, hyphens
-  const clean1 = s1.replace(/[\s\-_.()]/g, "");
-  const clean2 = s2.replace(/[\s\-_.()]/g, "");
-  if (clean1 === clean2) return true;
-  if (clean1.includes(clean2) || clean2.includes(clean1)) return true;
-
-  // Extract letter or number identifier (e.g. "PG A", "PG-A", "shripadPgLux-A", "Building A", "PG 1", "PG A - Main Branch")
-  const extractId = (str: string) => {
-    const m = str.match(/(?:pg|building|branch|lux)?\s*[-_]?\s*([a-z0-9]+)$/i) || str.match(/\b([a-z0-9])\b/i);
-    return m ? m[1]?.toLowerCase() ?? null : null;
-  };
-
-  const id1 = extractId(s1);
-  const id2 = extractId(s2);
-  if (id1 && id2 && id1 === id2) return true;
-
-  // Suffix letter match (e.g., "-a", " a", "a")
-  const suff1 = s1.replace(/[^a-z0-9]/gi, "").slice(-1).toLowerCase();
-  const suff2 = s2.replace(/[^a-z0-9]/gi, "").slice(-1).toLowerCase();
-  if (suff1 && suff2 && suff1 === suff2) return true;
+  const core1 = extractBuildingCoreKey(bld1);
+  const core2 = extractBuildingCoreKey(bld2);
+  if (core1 && core2 && core1 === core2) return true;
 
   return false;
 }

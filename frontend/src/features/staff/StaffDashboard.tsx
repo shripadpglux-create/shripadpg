@@ -36,6 +36,7 @@ import {
 
 import brandLogo from "@/assets/shripad-logo.png";
 import { InvoiceDesign } from "../../components/InvoiceDesign";
+import { isBuildingMatch } from "../admin/AdminDashboard";
 
 export default function StaffDashboard() {
   const navigate = useNavigate();
@@ -233,9 +234,9 @@ export default function StaffDashboard() {
   const scopedBookings = useMemo(() => {
     return bookings.filter((b) => {
       const bld = b.allocatedBuilding || b.building;
-      return assignedBuildings.includes(bld);
+      return assignedBuildings.some((ab) => isBuildingMatch(ab, bld, buildingsList.length));
     });
-  }, [bookings, assignedBuildings]);
+  }, [bookings, assignedBuildings, buildingsList.length]);
 
   const activeResidents = useMemo(() => {
     return scopedBookings.filter((b) => b.status === "allocated");
@@ -243,7 +244,9 @@ export default function StaffDashboard() {
 
   // Dynamic stats calculation accounting for per-room bed overrides and custom floor counts
   const totalBeds = useMemo(() => {
-    const activeBldObjs = buildingsList.filter((b) => assignedBuildings.includes(b.name));
+    const activeBldObjs = buildingsList.filter((b) =>
+      assignedBuildings.some((ab) => isBuildingMatch(ab, b.name, buildingsList.length))
+    );
     let beds = 0;
     activeBldObjs.forEach((bld: any) => {
       const floorsCount = Number(bld.floors) || 1;

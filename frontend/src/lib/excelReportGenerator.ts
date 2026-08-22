@@ -1,4 +1,5 @@
 import type ExcelJS from "exceljs";
+import { isBuildingMatch } from "../features/admin/AdminDashboard";
 
 async function createWorkbook(): Promise<ExcelJS.Workbook> {
   const { default: ExcelJS } = await import("exceljs");
@@ -492,7 +493,9 @@ export async function generateBuildingReport(
 
     // Occupied count
     const occupiedCount = bookings.filter(
-      (b) => b.status === "allocated" && (b.allocatedBuilding === bld.name || b.building === bld.name)
+      (b) =>
+        b.status === "allocated" &&
+        isBuildingMatch(b.allocatedBuilding || b.building, bld.name, buildings.length)
     ).length;
 
     const vacantBeds = Math.max(0, totalCapacity - occupiedCount);
@@ -835,7 +838,11 @@ export async function generateMasterReport(
 
   buildings.forEach((b, idx) => {
     const { totalRooms, totalCapacity: cap } = getBuildingCapacityAndRooms(b);
-    const occ = bookings.filter((bk) => bk.status === "allocated" && (bk.allocatedBuilding === b.name || bk.building === b.name)).length;
+    const occ = bookings.filter(
+      (bk) =>
+        bk.status === "allocated" &&
+        isBuildingMatch(bk.allocatedBuilding || bk.building, b.name, buildings.length)
+    ).length;
 
     const row = wsBld.getRow(9 + idx);
     row.getCell(1).value = idx + 1;
