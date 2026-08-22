@@ -120,7 +120,7 @@ export function normalizeResident(raw: any): NormalizedResident {
     phone,
     cleanPhone,
     email: String(raw.email || "").trim(),
-    building: String(raw.allocatedBuilding || raw.building || "PG A").trim(),
+    building: String(raw.allocatedBuilding || raw.building || "PG ShripadLux-A wing").trim(),
     floor: floorDisplay,
     floorNumber,
     floorDisplay,

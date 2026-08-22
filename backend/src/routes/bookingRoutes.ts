@@ -6,7 +6,9 @@ const router = Router();
 // Route mappings for /api/bookings
 router.get("/", BookingController.getBookings);
 router.get("/sheet-csv", BookingController.downloadSheetCSV);
+router.get("/apps-script-code", BookingController.getAppsScriptCode);
 router.post("/", BookingController.createBooking);
+router.post("/webhook", BookingController.handleOnlineBookingWebhook);
 router.post("/sync", BookingController.syncBookings);
 router.post("/push-to-sheet", BookingController.pushToSheet);
 router.post("/login", BookingController.customerLogin);
@@ -21,4 +23,5 @@ router.put("/:id", BookingController.updateBooking);
 router.delete("/:id", BookingController.deleteBooking);
 
 export default router;
+
 

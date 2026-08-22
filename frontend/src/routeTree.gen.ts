@@ -21,6 +21,7 @@ import { Route as AdminBookingsRouteImport } from './routes/admin/bookings'
 import { Route as AdminBuildingsRouteImport } from './routes/admin/buildings'
 import { Route as AdminCustomersRouteImport } from './routes/admin/customers'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
+import { Route as AdminDuesRouteImport } from './routes/admin/dues'
 import { Route as AdminFinanceRouteImport } from './routes/admin/finance'
 import { Route as AdminInvoiceRouteImport } from './routes/admin/invoice'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
@@ -36,6 +37,7 @@ import { Route as StaffBookingsRouteImport } from './routes/staff/bookings'
 import { Route as StaffBuildingsRouteImport } from './routes/staff/buildings'
 import { Route as StaffCustomersRouteImport } from './routes/staff/customers'
 import { Route as StaffDashboardRouteImport } from './routes/staff/dashboard'
+import { Route as StaffDuesRouteImport } from './routes/staff/dues'
 import { Route as StaffFinanceRouteImport } from './routes/staff/finance'
 import { Route as StaffInvoiceRouteImport } from './routes/staff/invoice'
 import { Route as StaffLoginRouteImport } from './routes/staff/login'
@@ -102,6 +104,11 @@ const AdminCustomersRoute = AdminCustomersRouteImport.update({
 const AdminDashboardRoute = AdminDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminDuesRoute = AdminDuesRouteImport.update({
+  id: '/dues',
+  path: '/dues',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminFinanceRoute = AdminFinanceRouteImport.update({
@@ -179,6 +186,11 @@ const StaffDashboardRoute = StaffDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => StaffRoute,
 } as any)
+const StaffDuesRoute = StaffDuesRouteImport.update({
+  id: '/dues',
+  path: '/dues',
+  getParentRoute: () => StaffRoute,
+} as any)
 const StaffFinanceRoute = StaffFinanceRouteImport.update({
   id: '/finance',
   path: '/finance',
@@ -227,6 +239,7 @@ export interface FileRoutesByFullPath {
   '/admin/buildings': typeof AdminBuildingsRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/dues': typeof AdminDuesRoute
   '/admin/finance': typeof AdminFinanceRoute
   '/admin/invoice': typeof AdminInvoiceRoute
   '/admin/login': typeof AdminLoginRoute
@@ -241,6 +254,7 @@ export interface FileRoutesByFullPath {
   '/staff/buildings': typeof StaffBuildingsRoute
   '/staff/customers': typeof StaffCustomersRoute
   '/staff/dashboard': typeof StaffDashboardRoute
+  '/staff/dues': typeof StaffDuesRoute
   '/staff/finance': typeof StaffFinanceRoute
   '/staff/invoice': typeof StaffInvoiceRoute
   '/staff/login': typeof StaffLoginRoute
@@ -261,6 +275,7 @@ export interface FileRoutesByTo {
   '/admin/buildings': typeof AdminBuildingsRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/dues': typeof AdminDuesRoute
   '/admin/finance': typeof AdminFinanceRoute
   '/admin/invoice': typeof AdminInvoiceRoute
   '/admin/login': typeof AdminLoginRoute
@@ -275,6 +290,7 @@ export interface FileRoutesByTo {
   '/staff/buildings': typeof StaffBuildingsRoute
   '/staff/customers': typeof StaffCustomersRoute
   '/staff/dashboard': typeof StaffDashboardRoute
+  '/staff/dues': typeof StaffDuesRoute
   '/staff/finance': typeof StaffFinanceRoute
   '/staff/invoice': typeof StaffInvoiceRoute
   '/staff/login': typeof StaffLoginRoute
@@ -298,6 +314,7 @@ export interface FileRoutesById {
   '/admin/buildings': typeof AdminBuildingsRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/dues': typeof AdminDuesRoute
   '/admin/finance': typeof AdminFinanceRoute
   '/admin/invoice': typeof AdminInvoiceRoute
   '/admin/login': typeof AdminLoginRoute
@@ -312,6 +329,7 @@ export interface FileRoutesById {
   '/staff/buildings': typeof StaffBuildingsRoute
   '/staff/customers': typeof StaffCustomersRoute
   '/staff/dashboard': typeof StaffDashboardRoute
+  '/staff/dues': typeof StaffDuesRoute
   '/staff/finance': typeof StaffFinanceRoute
   '/staff/invoice': typeof StaffInvoiceRoute
   '/staff/login': typeof StaffLoginRoute
@@ -336,6 +354,7 @@ export interface FileRouteTypes {
     | '/admin/buildings'
     | '/admin/customers'
     | '/admin/dashboard'
+    | '/admin/dues'
     | '/admin/finance'
     | '/admin/invoice'
     | '/admin/login'
@@ -350,6 +369,7 @@ export interface FileRouteTypes {
     | '/staff/buildings'
     | '/staff/customers'
     | '/staff/dashboard'
+    | '/staff/dues'
     | '/staff/finance'
     | '/staff/invoice'
     | '/staff/login'
@@ -370,6 +390,7 @@ export interface FileRouteTypes {
     | '/admin/buildings'
     | '/admin/customers'
     | '/admin/dashboard'
+    | '/admin/dues'
     | '/admin/finance'
     | '/admin/invoice'
     | '/admin/login'
@@ -384,6 +405,7 @@ export interface FileRouteTypes {
     | '/staff/buildings'
     | '/staff/customers'
     | '/staff/dashboard'
+    | '/staff/dues'
     | '/staff/finance'
     | '/staff/invoice'
     | '/staff/login'
@@ -406,6 +428,7 @@ export interface FileRouteTypes {
     | '/admin/buildings'
     | '/admin/customers'
     | '/admin/dashboard'
+    | '/admin/dues'
     | '/admin/finance'
     | '/admin/invoice'
     | '/admin/login'
@@ -420,6 +443,7 @@ export interface FileRouteTypes {
     | '/staff/buildings'
     | '/staff/customers'
     | '/staff/dashboard'
+    | '/staff/dues'
     | '/staff/finance'
     | '/staff/invoice'
     | '/staff/login'
@@ -524,6 +548,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/admin/dashboard'
       preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/dues': {
+      id: '/admin/dues'
+      path: '/dues'
+      fullPath: '/admin/dues'
+      preLoaderRoute: typeof AdminDuesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/finance': {
@@ -631,6 +662,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StaffDashboardRouteImport
       parentRoute: typeof StaffRoute
     }
+    '/staff/dues': {
+      id: '/staff/dues'
+      path: '/dues'
+      fullPath: '/staff/dues'
+      preLoaderRoute: typeof StaffDuesRouteImport
+      parentRoute: typeof StaffRoute
+    }
     '/staff/finance': {
       id: '/staff/finance'
       path: '/finance'
@@ -689,6 +727,7 @@ interface AdminRouteChildren {
   AdminBuildingsRoute: typeof AdminBuildingsRoute
   AdminCustomersRoute: typeof AdminCustomersRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminDuesRoute: typeof AdminDuesRoute
   AdminFinanceRoute: typeof AdminFinanceRoute
   AdminInvoiceRoute: typeof AdminInvoiceRoute
   AdminLoginRoute: typeof AdminLoginRoute
@@ -707,6 +746,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminBuildingsRoute: AdminBuildingsRoute,
   AdminCustomersRoute: AdminCustomersRoute,
   AdminDashboardRoute: AdminDashboardRoute,
+  AdminDuesRoute: AdminDuesRoute,
   AdminFinanceRoute: AdminFinanceRoute,
   AdminInvoiceRoute: AdminInvoiceRoute,
   AdminLoginRoute: AdminLoginRoute,
@@ -727,6 +767,7 @@ interface StaffRouteChildren {
   StaffBuildingsRoute: typeof StaffBuildingsRoute
   StaffCustomersRoute: typeof StaffCustomersRoute
   StaffDashboardRoute: typeof StaffDashboardRoute
+  StaffDuesRoute: typeof StaffDuesRoute
   StaffFinanceRoute: typeof StaffFinanceRoute
   StaffInvoiceRoute: typeof StaffInvoiceRoute
   StaffLoginRoute: typeof StaffLoginRoute
@@ -743,6 +784,7 @@ const StaffRouteChildren: StaffRouteChildren = {
   StaffBuildingsRoute: StaffBuildingsRoute,
   StaffCustomersRoute: StaffCustomersRoute,
   StaffDashboardRoute: StaffDashboardRoute,
+  StaffDuesRoute: StaffDuesRoute,
   StaffFinanceRoute: StaffFinanceRoute,
   StaffInvoiceRoute: StaffInvoiceRoute,
   StaffLoginRoute: StaffLoginRoute,

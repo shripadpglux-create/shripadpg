@@ -86,9 +86,51 @@ export interface Booking {
   balanceDue?: number;
   lastPaymentDate?: string;
   paymentStatus?: string;
+  lastRentReminderDate?: string;      // ISO date string of last reminder sent, e.g. "2026-08-31"
+  lastReminderType?: "upcoming" | "due_today" | "overdue";
   createdBy?: string;
   createdByRole?: "admin" | "staff" | "customer";
   createdById?: string;
+}
+
+export interface RentDueCycleInfo {
+  cycleDueDay: number;
+  nextDueDate: Date;
+  nextDueDateFormatted: string;
+  nextDueDateISO: string;
+  daysUntilDue: number;
+  isUpcoming: boolean;
+  isDueToday: boolean;
+  isOverdue: boolean;
+  daysOverdue: number;
+  cycleMonthName: string;
+}
+
+export interface ResidentDueItem {
+  id: string;
+  bookingId: string;
+  name: string;
+  phone: string;
+  email: string;
+  building: string;
+  floor: string | number;
+  room: string;
+  bed: string;
+  status: "pending" | "allocated" | "checked_out";
+  rentAmount: number;
+  paidRentAmount: number;
+  rentDue: number;
+  depositAmount: number;
+  paidDepositAmount: number;
+  depositDue: number;
+  totalDue: number;
+  depositStatus: "pending" | "paid" | "partially_paid" | "refunded";
+  dueCategory: "rent_only" | "deposit_only" | "rent_and_deposit" | "paid";
+  lastPaymentDate?: string;
+  daysOverdue: number;
+  isOverdue: boolean;
+  rentStartDate?: string;
+  paymentHistoryCount: number;
 }
 
 const DATA_DIR = path.join(__dirname, "..", "..", "data");
@@ -244,6 +286,13 @@ export class BookingModel {
     await this.init();
     return [...this.cache];
   }
+
+  public static async getById(id: string): Promise<Booking | null> {
+    await this.init();
+    const cleanId = String(id || "").trim();
+    return this.cache.find((b) => String(b.id) === cleanId || String((b as any)._id) === cleanId || (b.customerId && String(b.customerId) === cleanId)) || null;
+  }
+
 
   public static async add(booking: Omit<Booking, "id" | "status">): Promise<Booking> {
     await this.init();
@@ -647,4 +696,280 @@ export class BookingModel {
     await this.saveToFile();
     return this.cache[bookingIndex];
   }
+
+  /**
+   * Calculates individual rent cycle due date, countdown, and overdue status.
+   * e.g. If joined on 1-08-2026, due day is 1st of month.
+   * - If rent is unpaid and today (22nd) is past due day (1st): isOverdue = true (21 days overdue for current month).
+   * - If today is 30/31-08-2026 and cycle due day is 1st: isUpcoming = true (1-2 days left for next month).
+   * - If today is 01-09-2026: isDueToday = true (0 days left).
+   */
+  public static calculateNextDueDate(b: Booking, targetDate = new Date()): RentDueCycleInfo {
+    let cycleDueDay = 5; // default PG due day
+    if (b.rentStartDate) {
+      const parsed = new Date(b.rentStartDate);
+      if (!isNaN(parsed.getTime())) {
+        cycleDueDay = parsed.getDate();
+      }
+    } else if (b.timestamp) {
+      const parsed = new Date(b.timestamp);
+      if (!isNaN(parsed.getTime())) {
+        cycleDueDay = parsed.getDate();
+      }
+    }
+
+    const currentYear = targetDate.getFullYear();
+    const currentMonth = targetDate.getMonth(); // 0-indexed
+    const currentDay = targetDate.getDate();
+
+    const maxDaysInCurrentMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const actualCycleDayThisMonth = Math.min(cycleDueDay, maxDaysInCurrentMonth);
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const pad = (n: number) => String(n).padStart(2, "0");
+
+    let isDueToday = false;
+    let isUpcoming = false;
+    let isOverdue = false;
+    let daysUntilDue = 0;
+    let daysOverdue = 0;
+    let targetDueYear = currentYear;
+    let targetDueMonth = currentMonth;
+    let targetDueDay = actualCycleDayThisMonth;
+
+    if (currentDay === actualCycleDayThisMonth) {
+      // Due Today!
+      isDueToday = true;
+      daysUntilDue = 0;
+      targetDueYear = currentYear;
+      targetDueMonth = currentMonth;
+      targetDueDay = actualCycleDayThisMonth;
+    } else if (currentDay > actualCycleDayThisMonth) {
+      // Past the cycle day in current month
+      // If today is near end of month (e.g. 30th/31st for 1st of next month), check if upcoming for next month
+      let nextMonthYear = currentYear;
+      let nextMonth = currentMonth + 1;
+      if (nextMonth > 11) {
+        nextMonth = 0;
+        nextMonthYear++;
+      }
+      const maxDaysInNextMonth = new Date(nextMonthYear, nextMonth + 1, 0).getDate();
+      const actualCycleDayNextMonth = Math.min(cycleDueDay, maxDaysInNextMonth);
+
+      const nextMonthDueDate = new Date(nextMonthYear, nextMonth, actualCycleDayNextMonth, 0, 0, 0, 0);
+      const todayZero = new Date(currentYear, currentMonth, currentDay, 0, 0, 0, 0);
+      const daysToNextCycle = Math.round((nextMonthDueDate.getTime() - todayZero.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (daysToNextCycle === 1 || daysToNextCycle === 2) {
+        // Upcoming for next month (e.g. 30th or 31st of August for 1st September)
+        isUpcoming = true;
+        daysUntilDue = daysToNextCycle;
+        targetDueYear = nextMonthYear;
+        targetDueMonth = nextMonth;
+        targetDueDay = actualCycleDayNextMonth;
+      } else {
+        // Overdue for the current month!
+        isOverdue = true;
+        daysOverdue = currentDay - actualCycleDayThisMonth;
+        daysUntilDue = -daysOverdue;
+        targetDueYear = currentYear;
+        targetDueMonth = currentMonth;
+        targetDueDay = actualCycleDayThisMonth;
+      }
+    } else {
+      // currentDay < actualCycleDayThisMonth (e.g. Day 3 and due day is 5th)
+      const diff = actualCycleDayThisMonth - currentDay;
+      daysUntilDue = diff;
+      targetDueYear = currentYear;
+      targetDueMonth = currentMonth;
+      targetDueDay = actualCycleDayThisMonth;
+
+      if (diff === 1 || diff === 2) {
+        isUpcoming = true;
+      }
+    }
+
+    const nextDueDate = new Date(targetDueYear, targetDueMonth, targetDueDay, 0, 0, 0, 0);
+    const nextDueDateFormatted = `${targetDueDay} ${monthNames[targetDueMonth]} ${targetDueYear}`;
+    const nextDueDateISO = `${targetDueYear}-${pad(targetDueMonth + 1)}-${pad(targetDueDay)}`;
+    const cycleMonthName = `${monthNames[targetDueMonth]} ${targetDueYear}`;
+
+    return {
+      cycleDueDay: targetDueDay,
+      nextDueDate,
+      nextDueDateFormatted,
+      nextDueDateISO,
+      daysUntilDue,
+      isUpcoming,
+      isDueToday,
+      isOverdue,
+      daysOverdue,
+      cycleMonthName,
+    };
+  }
+
+  /**
+   * Calculates real-time dues breakdown (rent dues, deposit dues, total dues, overdue age) for a resident.
+   */
+  public static calculateResidentDues(b: Booking): ResidentDueItem {
+    const monthlyRent = Number(b.rentAmount) || 0;
+    const depositAmount = Number(b.depositAmount) || 0;
+    const paidDeposit = Number(b.paidDepositAmount) || 0;
+    const depositDue = Math.max(0, depositAmount - paidDeposit);
+
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+
+    const history = b.paymentHistory || b.payments || [];
+    const verifiedHistory = history.filter((p) => p.status === "verified");
+
+    // Verified rent payments for current month / cycle
+    const currentMonthPaid = verifiedHistory
+      .filter((p) => p.month === currentMonth && p.year === currentYear)
+      .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+
+    let paidRentAmount = currentMonthPaid;
+    if (paidRentAmount === 0 && (b.paidAmount !== undefined && b.paidAmount > 0)) {
+      paidRentAmount = Number(b.paidAmount);
+    }
+
+    const rentDue = Math.max(0, monthlyRent - paidRentAmount);
+    const totalDue = rentDue + depositDue;
+
+    // Calculate last payment date
+    let lastPaymentDate = b.lastPaymentDate;
+    if (!lastPaymentDate && verifiedHistory.length > 0) {
+      const sorted = [...verifiedHistory].sort(
+        (a, b) => new Date(b.paymentDate || b.submittedAt).getTime() - new Date(a.paymentDate || a.submittedAt).getTime()
+      );
+      lastPaymentDate = sorted[0].paymentDate || sorted[0].submittedAt;
+    }
+
+    // Calculate days overdue (Due by 5th of each month)
+    const dueDate = new Date(currentYear, currentMonth - 1, 5);
+    let daysOverdue = 0;
+    if (totalDue > 0 && now.getTime() > dueDate.getTime()) {
+      daysOverdue = Math.floor((now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+    }
+
+    let dueCategory: "rent_only" | "deposit_only" | "rent_and_deposit" | "paid" = "paid";
+    if (rentDue > 0 && depositDue > 0) dueCategory = "rent_and_deposit";
+    else if (rentDue > 0) dueCategory = "rent_only";
+    else if (depositDue > 0) dueCategory = "deposit_only";
+
+    let depositStatus: "pending" | "paid" | "partially_paid" | "refunded" = b.depositStatus || "pending";
+    if (depositAmount > 0) {
+      if (paidDeposit >= depositAmount) depositStatus = "paid";
+      else if (paidDeposit > 0) depositStatus = "partially_paid";
+      else depositStatus = "pending";
+    }
+
+    return {
+      id: b.id,
+      bookingId: b.id,
+      name: b.name || "Unnamed Resident",
+      phone: b.phone || "",
+      email: b.email || "",
+      building: (b.allocatedBuilding || b.building || "PG ShripadLux-A wing").trim(),
+      floor: b.allocatedFloor !== undefined ? b.allocatedFloor : 1,
+      room: (b.allocatedRoom || "Unallocated").trim(),
+      bed: (b.allocatedBed || "Unallocated").trim(),
+      status: b.status || "pending",
+      rentAmount: monthlyRent,
+      paidRentAmount,
+      rentDue,
+      depositAmount,
+      paidDepositAmount: paidDeposit,
+      depositDue,
+      totalDue,
+      depositStatus,
+      dueCategory,
+      lastPaymentDate,
+      daysOverdue,
+      isOverdue: daysOverdue > 0,
+      rentStartDate: b.rentStartDate,
+      paymentHistoryCount: history.length,
+    };
+  }
+
+  /**
+   * Retrieves all dues across residents with summary statistics.
+   */
+  public static async getAllDues(buildingFilter?: string): Promise<{
+    dues: ResidentDueItem[];
+    summary: {
+      totalResidents: number;
+      residentsWithDues: number;
+      totalDuesAmount: number;
+      totalRentDues: number;
+      totalDepositDues: number;
+      totalCollectedThisMonth: number;
+      overdueCount: number;
+    };
+  }> {
+    await this.init();
+    let list = [...this.cache];
+
+    if (buildingFilter && buildingFilter.trim() && buildingFilter.toUpperCase() !== "ALL") {
+      const bClean = buildingFilter.trim().toLowerCase();
+      list = list.filter((b) => {
+        const bld = (b.allocatedBuilding || b.building || "").trim().toLowerCase();
+        return bld === bClean;
+      });
+    }
+    // Only include allocated residents — unallocated ones have no rent/deposit set
+    list = list.filter((b) => b.status === "allocated" && b.allocatedRoom);
+
+    const calculatedDues = list.map((b) => this.calculateResidentDues(b));
+
+    // Sort by totalDue descending (highest dues first)
+    calculatedDues.sort((a, b) => b.totalDue - a.totalDue);
+
+    const withDues = calculatedDues.filter((d) => d.totalDue > 0);
+    const totalDuesAmount = withDues.reduce((s, d) => s + d.totalDue, 0);
+    const totalRentDues = withDues.reduce((s, d) => s + d.rentDue, 0);
+    const totalDepositDues = withDues.reduce((s, d) => s + d.depositDue, 0);
+    const totalCollectedThisMonth = calculatedDues.reduce((s, d) => s + d.paidRentAmount, 0);
+    const overdueCount = withDues.filter((d) => d.isOverdue).length;
+
+    return {
+      dues: calculatedDues,
+      summary: {
+        totalResidents: calculatedDues.length,
+        residentsWithDues: withDues.length,
+        totalDuesAmount,
+        totalRentDues,
+        totalDepositDues,
+        totalCollectedThisMonth,
+        overdueCount,
+      },
+    };
+  }
+
+  /**
+   * When a building is renamed, update all residents' allocatedBuilding to the new name.
+   * This keeps financial filters (Dues, Revenue) accurate across building renames.
+   */
+  public static async updateBuildingNames(oldName: string, newName: string): Promise<number> {
+    await this.init();
+    let count = 0;
+    const oldClean = oldName.trim().toLowerCase();
+
+    for (const booking of this.cache) {
+      const bld = (booking.allocatedBuilding || "").trim().toLowerCase();
+      if (bld === oldClean) {
+        booking.allocatedBuilding = newName;
+        this.dirtyIds.add(booking.id);
+        count++;
+      }
+    }
+
+    if (count > 0) {
+      await this.saveToFile();
+      console.log(`🏢 Updated ${count} residents from building "${oldName}" → "${newName}"`);
+    }
+    return count;
+  }
 }
+

@@ -142,9 +142,10 @@ export class WhatsAppService {
    * Normalize an Indian or international phone number to WhatsApp JID format.
    * e.g., "9876543210" -> "919876543210@c.us"
    */
-  public static formatPhoneNumber(rawPhone: string): string {
+  public static formatPhoneNumber(rawPhone: string | number): string {
     if (!rawPhone) return "";
-    let cleaned = rawPhone.split(":")[0].replace(/@.*$/, "").replace(/\D/g, "");
+    const str = String(rawPhone).trim();
+    let cleaned = str.split(":")[0].replace(/@.*$/, "").replace(/\D/g, "");
 
     // If starts with 0 (e.g. 09876543210), trim leading zero
     if (cleaned.startsWith("0")) {

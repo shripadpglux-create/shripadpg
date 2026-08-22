@@ -24,6 +24,9 @@ export interface WhatsAppTemplatesConfig {
   complaintUpdateMessage: string;
   paymentConfirmationMessage: string;
   welcomeAllotmentMessage: string;
+  upcomingRentReminderMessage: string;
+  dueTodayRentReminderMessage: string;
+  overdueRentReminderMessage: string;
   chatbotEnabled: boolean;
   chatbotGreetingMessage: string;
   chatbotLocations: LocationBranch[];
@@ -105,6 +108,60 @@ https://shripadpg.pages.dev/login
 Login to view invoices, download payment receipts, and submit service requests.
 
 For any help, contact Manager: {adminPhone}`,
+
+  upcomingRentReminderMessage: `🔔 *UPCOMING RENT REMINDER - SHRIPAD LUXURY PG* 🏢
+Dear *{residentName}*,
+
+This is a friendly advance reminder that your monthly accommodation rent is due soon.
+
+💰 *Monthly Rent Amount:* ₹{rentAmount}
+📅 *Rent Due Date:* {dueDate} (in {daysLeft} days)
+🚪 *Room / Bed:* Room {room}, Bed {bed}
+🏢 *Building:* {building}
+
+💳 *Pay Seamlessly via UPI:*
+• UPI ID: \`{upiId}\`
+• Account Name: {accountName}
+
+📲 *Pay Online / Upload Receipt in Resident Portal:*
+{portalLink}
+
+If you have already transferred the rent, please submit the transaction screenshot in your portal or reply here. Thank you! ✨`,
+
+  dueTodayRentReminderMessage: `⚡ *RENT DUE TODAY - SHRIPAD LUXURY PG* 🏢
+Dear *{residentName}*,
+
+Your monthly PG rent for *Room {room} (Bed {bed})* is due *TODAY, {dueDate}*.
+
+💰 *Total Rent Payable:* ₹{rentAmount}
+🏢 *Building:* {building}
+
+💳 *Instant UPI Payment Details:*
+• UPI ID: \`{upiId}\`
+• Account Name: {accountName}
+
+📲 *Submit Payment Proof:*
+{portalLink}
+
+Please clear your dues today to maintain uninterrupted premium PG services (Wi-Fi, Meals, Laundry). Thank you! 🙏`,
+
+  overdueRentReminderMessage: `⚠️ *IMPORTANT NOTICE: OVERDUE RENT PAYMENT* 🏢
+Dear *{residentName}*,
+
+Your monthly PG rent of *₹{rentAmount}* was due on *{dueDate}* and is currently *{daysOverdue} days overdue*.
+
+🚪 *Room:* Room {room} (Bed {bed})
+🏢 *Building:* {building}
+💰 *Outstanding Amount:* ₹{rentAmount}
+
+💳 *Pay Immediately via UPI:*
+• UPI ID: \`{upiId}\`
+• Account Name: {accountName}
+
+📲 *Upload Payment Receipt:*
+{portalLink}
+
+Please settle the outstanding balance immediately or contact PG Management at {adminPhone} to avoid service restriction.`,
 
   chatbotEnabled: true,
 
@@ -267,13 +324,18 @@ export class WhatsAppTemplateModel {
   }
 
   /**
-   * Helper: Replace template tokens like {customerName}, {amount}, {room}, etc.
+   * Helper: Replace template tokens like {customerName}, {{customerName}}, {amount}, etc.
+   * Supports both single `{var}` and double `{{var}}` braces and case-insensitive tokens.
    */
   public static interpolate(template: string, vars: Record<string, string | number | undefined>): string {
+    if (!template || typeof template !== "string") return "";
     let result = template;
+
     for (const [key, value] of Object.entries(vars)) {
-      const regex = new RegExp(`\\{${key}\\}`, "g");
-      result = result.replace(regex, value !== undefined && value !== null ? String(value) : "");
+      const valStr = value !== undefined && value !== null ? String(value) : "";
+      // Match {key} or {{key}} (case-insensitive)
+      const regex = new RegExp(`\\{\\{?\\s*${key}\\s*\\}?}`, "gi");
+      result = result.replace(regex, valStr);
     }
     return result;
   }

@@ -123,7 +123,7 @@ export class ExpenseModel {
       category: data.category || "other",
       amount: Number(data.amount) || 0,
       date: data.date || new Date().toISOString().substring(0, 10),
-      building: data.building || "PG A",
+      building: data.building || "PG ShripadLux-A wing",
       notes: data.notes || "",
       createdBy: data.createdBy || "Master Admin",
       createdAt: new Date().toISOString(),
@@ -178,5 +178,30 @@ export class ExpenseModel {
     }
     return false;
   }
+
+  /**
+   * When a building is renamed, update all expenses' building field to the new name.
+   */
+  public static async updateBuildingNames(oldName: string, newName: string): Promise<number> {
+    await this.init();
+    let count = 0;
+    const oldClean = oldName.trim().toLowerCase();
+
+    for (const exp of this.cache) {
+      const bld = (exp.building || "").trim().toLowerCase();
+      if (bld === oldClean || bld === "pg a" || bld === "pg shripadpglux-a" || bld === "pg shripadlux-a") {
+        exp.building = newName;
+        this.dirtyIds.add(exp.id);
+        count++;
+      }
+    }
+
+    if (count > 0) {
+      await this.saveToFile();
+      console.log(`💸 Cascaded building rename in ${count} expenses: "${oldName}" → "${newName}"`);
+    }
+    return count;
+  }
 }
+
 

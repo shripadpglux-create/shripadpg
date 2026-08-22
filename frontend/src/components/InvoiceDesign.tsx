@@ -156,6 +156,9 @@ export function InvoiceDesign({
   const [rentAmount, setRentAmount] = useState<number>(initialInvoiceData?.rentAmount ?? initPipeline?.rentAmount ?? 0);
   const [paidAmount, setPaidAmount] = useState<number>(initialInvoiceData?.paidAmount ?? initPipeline?.rentAmount ?? 0);
   const [selectedModes, setSelectedModes] = useState<string[]>(initialInvoiceData?.paymentModes || ["UPI"]);
+  const [splitAmounts, setSplitAmounts] = useState<Record<string, number>>(
+    (initialInvoiceData as any)?.splitAmounts || {}
+  );
   const [notes, setNotes] = useState<string>(
     initialInvoiceData?.notes || "Monthly PG rent payment for comfortable living space including Wi-Fi, 3-time meals, and maintenance charges."
   );
@@ -281,12 +284,30 @@ export function InvoiceDesign({
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
-    const targetNo = params.get("invoiceNo") || params.get("txnId") || params.get("id");
+    const targetNo = (params.get("invoiceNo") || params.get("txnId") || params.get("id") || "").trim();
     if (!targetNo) return;
 
     setInvoiceNo(targetNo);
 
-    // If invoices already loaded, find match
+    const applyInvoiceToState = (inv: Partial<SavedInvoice> & { splitAmounts?: Record<string, number> }) => {
+      if (inv.invoiceNo) setInvoiceNo(inv.invoiceNo);
+      if (inv.tenantName) setTenantName(inv.tenantName);
+      if (inv.contact) setContact(inv.contact);
+      if (inv.email) setEmail(inv.email);
+      if (inv.building) setBuilding(inv.building);
+      if (inv.floor) setFloor(inv.floor);
+      if (inv.room) setRoom(inv.room);
+      if (inv.bed) setBed(inv.bed);
+      if (inv.date) setDate(inv.date);
+      if (inv.dueDate) setDueDate(inv.dueDate);
+      if (inv.rentAmount !== undefined) setRentAmount(Number(inv.rentAmount) || 0);
+      if (inv.paidAmount !== undefined) setPaidAmount(Number(inv.paidAmount) || 0);
+      if (inv.paymentModes && Array.isArray(inv.paymentModes)) setSelectedModes(inv.paymentModes);
+      if (inv.splitAmounts && typeof inv.splitAmounts === "object") setSplitAmounts(inv.splitAmounts);
+      if (inv.notes) setNotes(inv.notes);
+    };
+
+    // 1. Check if already present in local state
     const match = invoicesList.find(
       (inv) =>
         inv.invoiceNo?.toLowerCase() === targetNo.toLowerCase() ||
@@ -295,83 +316,69 @@ export function InvoiceDesign({
     );
 
     if (match) {
-      setTenantName(match.tenantName || "");
-      setContact(match.contact || "");
-      if (match.email) setEmail(match.email);
-      if (match.building) setBuilding(match.building);
-      if (match.floor) setFloor(match.floor);
-      if (match.room) setRoom(match.room);
-      if (match.bed) setBed(match.bed);
-      if (match.date) setDate(match.date);
-      if (match.dueDate) setDueDate(match.dueDate);
-      if (match.rentAmount !== undefined) setRentAmount(match.rentAmount);
-      if (match.paidAmount !== undefined) setPaidAmount(match.paidAmount);
-      if (match.paymentModes) setSelectedModes(match.paymentModes);
-      if (match.notes) setNotes(match.notes);
-    } else {
-      // Fetch directly by ID or invoiceNo from API
-      void fetch(`${API_BASE_URL}/api/invoices`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success && Array.isArray(data.invoices)) {
-            const apiMatch = data.invoices.find(
-              (inv: SavedInvoice) =>
-                inv.invoiceNo?.toLowerCase() === targetNo.toLowerCase() ||
-                inv.id === targetNo ||
-                inv.residentId === targetNo
-            );
-            if (apiMatch) {
-              setTenantName(apiMatch.tenantName || "");
-              setContact(apiMatch.contact || "");
-              if (apiMatch.email) setEmail(apiMatch.email);
-              if (apiMatch.building) setBuilding(apiMatch.building);
-              if (apiMatch.floor) setFloor(apiMatch.floor);
-              if (apiMatch.room) setRoom(apiMatch.room);
-              if (apiMatch.bed) setBed(apiMatch.bed);
-              if (apiMatch.date) setDate(apiMatch.date);
-              if (apiMatch.dueDate) setDueDate(apiMatch.dueDate);
-              if (apiMatch.rentAmount !== undefined) setRentAmount(apiMatch.rentAmount);
-              if (apiMatch.paidAmount !== undefined) setPaidAmount(apiMatch.paidAmount);
-              if (apiMatch.paymentModes) setSelectedModes(apiMatch.paymentModes);
-              if (apiMatch.notes) setNotes(apiMatch.notes);
-              return;
-            }
-          }
-
-          // Fallback: Check resident bookings if invoiceNo is a payment Txn ID
-          return fetch(`${API_BASE_URL}/api/bookings`)
-            .then((r) => r.json())
-            .then((bData) => {
-              if (bData.success && Array.isArray(bData.bookings)) {
-                const bMatch = bData.bookings.find((b: any) => {
-                  if (b.id === targetNo) return true;
-                  return (b.paymentHistory || []).some(
-                    (p: any) => p.transactionId?.toLowerCase() === targetNo.toLowerCase()
-                  );
-                });
-
-                if (bMatch) {
-                  const payMatch = (bMatch.paymentHistory || []).find(
-                    (p: any) => p.transactionId?.toLowerCase() === targetNo.toLowerCase()
-                  );
-                  setTenantName(bMatch.name || "");
-                  setContact(bMatch.phone || "");
-                  if (bMatch.email) setEmail(bMatch.email);
-                  setBuilding(bMatch.allocatedBuilding || bMatch.building || "PG A");
-                  setFloor(bMatch.allocatedFloor !== undefined ? `Floor ${bMatch.allocatedFloor}` : "1st Floor");
-                  setRoom(bMatch.allocatedRoom ? `Room ${bMatch.allocatedRoom}` : "Room 101");
-                  setBed(bMatch.allocatedBed || "Bed A");
-                  const amt = payMatch?.amount || bMatch.rentAmount || 5000;
-                  setRentAmount(amt);
-                  setPaidAmount(amt);
-                  if (payMatch?.paymentDate) setDate(payMatch.paymentDate);
-                  if (payMatch?.paymentMethod) setSelectedModes([payMatch.paymentMethod.toUpperCase()]);
-                }
-              }
-            });
-        })
-        .catch((err) => console.warn("Failed fetching specific invoice or booking:", err));
+      applyInvoiceToState(match as any);
+      return;
     }
+
+    // 2. Fetch directly by specific ID / Invoice Number from backend API
+    fetch(`${API_BASE_URL}/api/invoices/${encodeURIComponent(targetNo)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.invoice) {
+          applyInvoiceToState(data.invoice);
+          return;
+        }
+        // Fallback: Fetch all invoices and match
+        return fetch(`${API_BASE_URL}/api/invoices`)
+          .then((r) => r.json())
+          .then((allData) => {
+            if (allData.success && Array.isArray(allData.invoices)) {
+              const apiMatch = allData.invoices.find(
+                (inv: SavedInvoice) =>
+                  inv.invoiceNo?.toLowerCase() === targetNo.toLowerCase() ||
+                  inv.id === targetNo ||
+                  inv.residentId === targetNo
+              );
+              if (apiMatch) {
+                applyInvoiceToState(apiMatch as any);
+                return;
+              }
+            }
+
+            // Fallback: Check resident bookings if invoiceNo is a payment Txn ID
+            return fetch(`${API_BASE_URL}/api/bookings`)
+              .then((br) => br.json())
+              .then((bData) => {
+                if (bData.success && Array.isArray(bData.bookings)) {
+                  const bMatch = bData.bookings.find((b: any) => {
+                    if (b.id === targetNo) return true;
+                    return (b.paymentHistory || []).some(
+                      (p: any) => p.transactionId?.toLowerCase() === targetNo.toLowerCase()
+                    );
+                  });
+
+                  if (bMatch) {
+                    const payMatch = (bMatch.paymentHistory || []).find(
+                      (p: any) => p.transactionId?.toLowerCase() === targetNo.toLowerCase()
+                    );
+                    setTenantName(bMatch.name || "");
+                    setContact(bMatch.phone || "");
+                    if (bMatch.email) setEmail(bMatch.email);
+                    setBuilding(bMatch.allocatedBuilding || bMatch.building || "PG ShripadLux-A wing");
+                    setFloor(bMatch.allocatedFloor !== undefined ? `Floor ${bMatch.allocatedFloor}` : "1st Floor");
+                    setRoom(bMatch.allocatedRoom ? `Room ${bMatch.allocatedRoom}` : "Room 101");
+                    setBed(bMatch.allocatedBed || "Bed A");
+                    const amt = payMatch?.amount || bMatch.rentAmount || 5000;
+                    setRentAmount(amt);
+                    setPaidAmount(amt);
+                    if (payMatch?.paymentDate) setDate(payMatch.paymentDate);
+                    if (payMatch?.paymentMethod) setSelectedModes([payMatch.paymentMethod.toUpperCase()]);
+                  }
+                }
+              });
+          });
+      })
+      .catch((err) => console.warn("Failed fetching specific invoice:", err));
   }, [invoicesList]);
 
   // Synchronize resident selection when selected from dropdown
@@ -409,10 +416,27 @@ export function InvoiceDesign({
   };
 
   const togglePaymentMode = (mode: string) => {
-    setSelectedModes((prev) =>
-      prev.includes(mode) ? prev.filter((m) => m !== mode) : [...prev, mode]
-    );
+    setSelectedModes((prev) => {
+      if (prev.includes(mode)) {
+        const next = prev.filter((m) => m !== mode);
+        setSplitAmounts((sa) => {
+          const copy = { ...sa };
+          delete copy[mode];
+          return copy;
+        });
+        return next;
+      }
+      return [...prev, mode];
+    });
   };
+
+  // Auto-sum paidAmount from splitAmounts when multiple modes are selected
+  React.useEffect(() => {
+    if (selectedModes.length > 1) {
+      const total = selectedModes.reduce((sum, m) => sum + (splitAmounts[m] || 0), 0);
+      setPaidAmount(total);
+    }
+  }, [splitAmounts, selectedModes]);
 
   // Save Invoice & Sync Resident Payment Record
   const handleSaveInvoice = async () => {
@@ -441,6 +465,7 @@ export function InvoiceDesign({
       paidAmount: Number(paidAmount) || 0,
       balanceDue,
       paymentModes: selectedModes,
+      splitAmounts: selectedModes.length > 1 ? splitAmounts : undefined,
       notes: notes.trim(),
     };
 
@@ -702,7 +727,7 @@ export function InvoiceDesign({
                           .filter((r) => r.room && r.room !== "Unallocated")
                           .map((r) => (
                             <option key={r.id} value={r.id}>
-                              {r.name} — {r.building || "PG A"} ({r.room}{r.bed ? `, ${r.bed}` : ""})
+                              {r.name} — {r.building || "PG ShripadLux-A wing"} ({r.room}{r.bed ? `, ${r.bed}` : ""})
                             </option>
                           ))}
                       </optgroup>
@@ -738,6 +763,8 @@ export function InvoiceDesign({
                   <button
                     type="button"
                     onClick={() => {
+                      const origin = typeof window !== "undefined" ? window.location.origin : "https://shripadpg.pages.dev";
+                      const onlineLink = `${origin}/invoice?invoiceNo=${encodeURIComponent(invoiceNo)}`;
                       const text = encodeURIComponent(
                         `*Official Rent Receipt - SHRIPAD PG*\n` +
                         `Invoice No: ${invoiceNo}\n` +
@@ -748,6 +775,7 @@ export function InvoiceDesign({
                         `Paid Amount: ₹${paidAmount.toLocaleString("en-IN")}\n` +
                         `Balance Due: ₹${balanceDue.toLocaleString("en-IN")}\n` +
                         `Date: ${date}\n\n` +
+                        `📄 View Online Receipt: ${onlineLink}\n\n` +
                         `Thank you for choosing Shripad PG!`
                       );
                       const phoneClean = (contact || "").replace(/[^0-9]/g, "");
@@ -824,8 +852,18 @@ export function InvoiceDesign({
                   <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-[#0f1b3d] leading-none">
                     INVOICE
                   </h1>
-                  <p className="text-[11px] sm:text-xs font-black tracking-[0.25em] text-[#D49A3B] uppercase mt-1">
-                    RENT RECEIPT
+                  <p className={`text-[11px] sm:text-xs font-black tracking-[0.2em] uppercase mt-1 ${
+                    balanceDue === 0
+                      ? "text-[#D49A3B]"
+                      : paidAmount > 0
+                        ? "text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200"
+                        : "text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-200"
+                  }`}>
+                    {balanceDue === 0
+                      ? "RENT RECEIPT (PAID ✅)"
+                      : paidAmount > 0
+                        ? `PARTIAL PAID (₹${balanceDue.toLocaleString("en-IN")} DUE ⏳)`
+                        : `UNPAID BILL (₹${balanceDue.toLocaleString("en-IN")} DUE 🔴)`}
                   </p>
                 </div>
               </div>
@@ -1020,6 +1058,117 @@ export function InvoiceDesign({
                   </div>
                 </div>
               </div>
+
+              {/* Split Amount Inputs — shown when 2+ payment modes selected */}
+              {selectedModes.length > 1 && (
+                <div className="mt-2.5 rounded-xl border-2 border-dashed border-indigo-300 bg-indigo-50/60 p-3 space-y-2.5">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <p className="text-[11px] font-black text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
+                      💰 Split Payment Breakdown
+                    </p>
+                    <button
+                      type="button"
+                      disabled={isEffectiveReadOnly}
+                      onClick={() => {
+                        if (rentAmount <= 0) return;
+                        const perMode = Math.floor(rentAmount / selectedModes.length);
+                        const remainder = rentAmount - perMode * selectedModes.length;
+                        const newSplits: Record<string, number> = {};
+                        selectedModes.forEach((m, idx) => {
+                          newSplits[m] = idx === 0 ? perMode + remainder : perMode;
+                        });
+                        setSplitAmounts(newSplits);
+                      }}
+                      className="text-[10px] font-black text-indigo-700 bg-white hover:bg-indigo-100 px-2 py-0.5 rounded-md border border-indigo-300 shadow-2xs transition cursor-pointer"
+                    >
+                      ⚡ Split Evenly ({selectedModes.length}-Way)
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {selectedModes.map((m) => {
+                      const otherModesTotal = selectedModes
+                        .filter((om) => om !== m)
+                        .reduce((s, om) => s + (splitAmounts[om] || 0), 0);
+                      const remainingForThisMode = Math.max(0, rentAmount - otherModesTotal);
+
+                      return (
+                        <div key={m} className="flex flex-col gap-1 bg-white rounded-xl border border-indigo-200 p-2.5 shadow-2xs">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-black text-[#0f1b3d] uppercase truncate flex items-center gap-1">
+                              {m === "CASH" ? "💵" : m === "UPI" ? "📱" : m === "BANK TRANSFER" ? "🏛️" : "💳"} {m}
+                            </span>
+                            {!isEffectiveReadOnly && remainingForThisMode > 0 && (splitAmounts[m] || 0) !== remainingForThisMode && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSplitAmounts((prev) => ({
+                                    ...prev,
+                                    [m]: remainingForThisMode,
+                                  }));
+                                }}
+                                className="text-[9px] font-extrabold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-1.5 py-0.5 rounded border border-indigo-200 transition"
+                                title={`Fill remaining ₹${remainingForThisMode.toLocaleString("en-IN")}`}
+                              >
+                                Fill ₹{remainingForThisMode.toLocaleString("en-IN")}
+                              </button>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm font-black text-[#00022E]">₹</span>
+                            <input
+                              type="number"
+                              min="0"
+                              placeholder="0"
+                              value={splitAmounts[m] === undefined || splitAmounts[m] === 0 ? "" : splitAmounts[m]}
+                              disabled={isEffectiveReadOnly}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setSplitAmounts((prev) => ({
+                                  ...prev,
+                                  [m]: val === "" ? 0 : parseInt(val.replace(/^0+/, "") || "0", 10),
+                                }));
+                              }}
+                              className="w-full rounded-lg border border-slate-200 bg-[#F0F4FF] px-2.5 py-1 text-xs font-black text-slate-900 outline-none focus:border-indigo-500 focus:bg-white transition disabled:bg-transparent disabled:cursor-not-allowed"
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Summary Bar */}
+                  {(() => {
+                    const currentTotal = selectedModes.reduce((s, m) => s + (splitAmounts[m] || 0), 0);
+                    const diff = rentAmount - currentTotal;
+                    return (
+                      <div className="flex items-center justify-between text-[11px] font-black pt-1 border-t border-indigo-200/60">
+                        <span className="text-slate-600">
+                          Total Entered: <span className="text-[#00022E] text-xs font-black">₹{currentTotal.toLocaleString("en-IN")}</span>
+                          {rentAmount > 0 && <span className="text-slate-400 font-bold"> / ₹{rentAmount.toLocaleString("en-IN")}</span>}
+                        </span>
+                        {rentAmount > 0 && (
+                          <span>
+                            {diff === 0 ? (
+                              <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                ✅ Exact Match
+                              </span>
+                            ) : diff > 0 ? (
+                              <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                                ⏳ ₹{diff.toLocaleString("en-IN")} Remaining
+                              </span>
+                            ) : (
+                              <span className="text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                                ⚠️ ₹{Math.abs(diff).toLocaleString("en-IN")} Over Total
+                              </span>
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
             </section>
 
             {/* Description / Notes Section */}
@@ -1072,29 +1221,57 @@ export function InvoiceDesign({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 items-center border-t border-slate-200">
-                  <span className="px-3 py-1.5 text-xs font-bold text-[#0f1b3d]">PAID AMOUNT</span>
-                  <div className="flex items-center gap-1 px-3 py-1 border-l border-slate-200">
-                    <span className="text-[#0f1b3d]">₹</span>
-                    <input
-                      type="number"
-                      value={paidAmount === 0 ? "" : paidAmount}
-                      disabled={isEffectiveReadOnly}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setPaidAmount(val === "" ? 0 : parseInt(val.replace(/^0+/, "") || "0", 10));
-                      }}
-                      placeholder="0"
-                      className="inv-input font-bold text-xs sm:text-sm text-slate-900 py-0.5 disabled:bg-transparent disabled:cursor-not-allowed"
-                    />
+                {/* Per-mode paid breakdown in totals (when split) */}
+                {selectedModes.length > 1 ? (
+                  <>
+                    {selectedModes.map((m) => (
+                      <div key={m} className="grid grid-cols-2 items-center border-t border-slate-200">
+                        <span className="px-3 py-1 text-[10px] font-bold text-indigo-700 truncate">💳 {m}</span>
+                        <div className="flex items-center gap-1 px-3 py-1 border-l border-slate-200">
+                          <span className="text-indigo-600 text-xs">₹</span>
+                          <span className="text-xs font-bold text-slate-800">{(splitAmounts[m] || 0).toLocaleString("en-IN")}</span>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="grid grid-cols-2 items-center border-t border-indigo-300 bg-indigo-50/50">
+                      <span className="px-3 py-1.5 text-xs font-bold text-[#0f1b3d]">TOTAL PAID</span>
+                      <div className="flex items-center gap-1 px-3 py-1 border-l border-indigo-300">
+                        <span className="text-[#0f1b3d]">₹</span>
+                        <span className="text-xs sm:text-sm font-black text-slate-900">{paidAmount.toLocaleString("en-IN")}</span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="grid grid-cols-2 items-center border-t border-slate-200">
+                    <span className="px-3 py-1.5 text-xs font-bold text-[#0f1b3d]">PAID AMOUNT</span>
+                    <div className="flex items-center gap-1 px-3 py-1 border-l border-slate-200">
+                      <span className="text-[#0f1b3d]">₹</span>
+                      <input
+                        type="number"
+                        value={paidAmount === 0 ? "" : paidAmount}
+                        disabled={isEffectiveReadOnly}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setPaidAmount(val === "" ? 0 : parseInt(val.replace(/^0+/, "") || "0", 10));
+                        }}
+                        placeholder="0"
+                        className="inv-input font-bold text-xs sm:text-sm text-slate-900 py-0.5 disabled:bg-transparent disabled:cursor-not-allowed"
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
 
-                <div className="grid grid-cols-2 items-center border-t-2 border-[#0f1b3d] bg-[#F0F4FF]">
-                  <span className="px-3 py-1.5 text-xs font-black text-[#00022E]">BALANCE DUE</span>
-                  <div className="flex items-center gap-1 px-3 py-1.5 border-l border-[#0f1b3d]">
-                    <span className="font-black text-[#00022E]">₹</span>
-                    <span className="text-sm font-black text-[#00022E]">{balanceDue.toLocaleString("en-IN")}</span>
+                <div className={`grid grid-cols-2 items-center border-t-2 ${
+                  balanceDue > 0 ? "border-rose-500 bg-rose-50/90" : "border-[#0f1b3d] bg-[#F0F4FF]"
+                }`}>
+                  <span className={`px-3 py-1.5 text-xs font-black ${balanceDue > 0 ? "text-rose-900" : "text-[#00022E]"}`}>
+                    {balanceDue > 0 ? "REMAINING DUE BALANCE" : "BALANCE DUE"}
+                  </span>
+                  <div className={`flex items-center gap-1 px-3 py-1.5 border-l ${balanceDue > 0 ? "border-rose-300" : "border-[#0f1b3d]"}`}>
+                    <span className={`font-black ${balanceDue > 0 ? "text-rose-700 text-sm" : "text-[#00022E]"}`}>₹</span>
+                    <span className={`text-sm font-black ${balanceDue > 0 ? "text-rose-700 text-base font-black" : "text-[#00022E]"}`}>
+                      {balanceDue.toLocaleString("en-IN")}
+                    </span>
                   </div>
                 </div>
               </div>

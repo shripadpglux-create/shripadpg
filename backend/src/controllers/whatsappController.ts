@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { WhatsAppService } from "../services/whatsappService.js";
 import { WhatsAppTemplateModel } from "../models/whatsappTemplateModel.js";
 import { WhatsAppAuthBackupModel } from "../models/whatsappAuthBackupModel.js";
+import { RentReminderService } from "../services/rentReminderService.js";
 
 export class WhatsAppController {
   /**
@@ -71,6 +72,55 @@ export class WhatsAppController {
       res.json({ success: true, templates });
     } catch (error: any) {
       res.status(500).json({ success: false, message: "Failed to get templates", error: error.message });
+    }
+  }
+
+  /**
+   * GET /api/whatsapp/reminders/preview
+   * Previews upcoming, due today, and overdue rent reminder candidates
+   */
+  public static async getReminderPreview(req: Request, res: Response) {
+    try {
+      const targetDateStr = req.query.date as string;
+      const targetDate = targetDateStr ? new Date(targetDateStr) : new Date();
+      const preview = await RentReminderService.getReminderPreview(targetDate);
+      res.json({ success: true, preview });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: "Failed to fetch reminder preview", error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/whatsapp/reminders/send-daily
+   * Manually triggers or forces the daily automated rent reminder batch
+   */
+  public static async sendDailyReminders(req: Request, res: Response) {
+    try {
+      const { forceSend, targetDate } = req.body || {};
+      const parsedDate = targetDate ? new Date(targetDate) : new Date();
+      const summary = await RentReminderService.sendDailyAutomatedReminders(parsedDate, Boolean(forceSend));
+      res.json({
+        success: true,
+        message: `Dispatched ${summary.sentCount} automated WhatsApp rent reminders!`,
+        summary,
+      });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: "Failed to dispatch daily reminders", error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/whatsapp/reminders/send-single/:bookingId
+   * Sends an immediate rent reminder message to a specific resident
+   */
+  public static async sendSingleReminder(req: Request, res: Response) {
+    try {
+      const bookingId = req.params.bookingId as string;
+      const { reminderType } = req.body || {};
+      const result = await RentReminderService.sendSingleResidentReminder(bookingId, reminderType);
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: "Failed to send single reminder", error: error.message });
     }
   }
 

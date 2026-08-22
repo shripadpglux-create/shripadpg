@@ -874,3 +874,129 @@ export async function generateMasterReport(
 
   await downloadWorkbook(workbook, `Shripad_PG_Master_All_In_One_Report_${Date.now()}.xlsx`);
 }
+
+// ============================================================================
+// 6. DEDICATED DUES & OUTSTANDING BALANCE REPORT GENERATOR (.xlsx)
+// ============================================================================
+export interface DueReportItem {
+  name: string;
+  phone: string;
+  email?: string;
+  building: string;
+  floor: string | number;
+  room: string;
+  bed: string;
+  rentAmount: number;
+  paidRentAmount: number;
+  rentDue: number;
+  depositAmount: number;
+  paidDepositAmount: number;
+  depositDue: number;
+  totalDue: number;
+  depositStatus?: string;
+  dueCategory?: string;
+  daysOverdue: number;
+  isOverdue: boolean;
+  lastPaymentDate?: string;
+}
+
+export async function generateDuesReport(
+  duesList: DueReportItem[],
+  summary?: {
+    totalDuesAmount: number;
+    totalRentDues: number;
+    totalDepositDues: number;
+    residentsWithDues: number;
+    overdueCount: number;
+  }
+) {
+  const workbook = await createWorkbook();
+  const ws = workbook.addWorksheet("Outstanding Dues");
+
+  const totalDues = summary?.totalDuesAmount ?? duesList.reduce((s, d) => s + (d.totalDue || 0), 0);
+  const totalRentDues = summary?.totalRentDues ?? duesList.reduce((s, d) => s + (d.rentDue || 0), 0);
+  const totalDepositDues = summary?.totalDepositDues ?? duesList.reduce((s, d) => s + (d.depositDue || 0), 0);
+  const overdueCount = summary?.overdueCount ?? duesList.filter((d) => d.isOverdue).length;
+
+  applyWorkbookTheme(ws, "Resident Dues & Outstanding Balance Audit Report", 16, [
+    { label: "Total Outstanding Dues", value: `₹${totalDues.toLocaleString("en-IN")}`, colorHex: "FFFEE2E2" },
+    { label: "Total Rent Dues", value: `₹${totalRentDues.toLocaleString("en-IN")}`, colorHex: "FFFEF3C7" },
+    { label: "Total Deposit Dues", value: `₹${totalDepositDues.toLocaleString("en-IN")}`, colorHex: "FFEDE9FE" },
+    { label: "Overdue Residents", value: `${overdueCount} Tenants`, colorHex: "FFFFEDD5" },
+  ]);
+
+  const headers = [
+    "S.No.",
+    "Resident Name",
+    "Phone Number",
+    "Building",
+    "Floor",
+    "Room",
+    "Bed",
+    "Monthly Rent (₹)",
+    "Paid Rent (₹)",
+    "Rent Due (₹)",
+    "Deposit Total (₹)",
+    "Deposit Paid (₹)",
+    "Deposit Due (₹)",
+    "Total Due Balance (₹)",
+    "Overdue Status",
+    "Days Overdue",
+    "Last Payment Date",
+  ];
+
+  const headerRow = ws.getRow(8);
+  headers.forEach((h, i) => (headerRow.getCell(i + 1).value = h));
+  styleTableHeader(ws, 8, 17);
+
+  duesList.forEach((d, idx) => {
+    const row = ws.getRow(9 + idx);
+    row.getCell(1).value = idx + 1;
+    row.getCell(2).value = d.name;
+    row.getCell(3).value = d.phone || "N/A";
+    row.getCell(4).value = d.building;
+    row.getCell(5).value = d.floor !== undefined ? `Floor ${d.floor}` : "-";
+    row.getCell(6).value = d.room || "-";
+    row.getCell(7).value = d.bed || "-";
+
+    const cRent = row.getCell(8);
+    cRent.value = d.rentAmount || 0;
+    cRent.numFmt = "₹#,##0";
+
+    const cPaidRent = row.getCell(9);
+    cPaidRent.value = d.paidRentAmount || 0;
+    cPaidRent.numFmt = "₹#,##0";
+
+    const cRentDue = row.getCell(10);
+    cRentDue.value = d.rentDue || 0;
+    cRentDue.numFmt = "₹#,##0";
+
+    const cDep = row.getCell(11);
+    cDep.value = d.depositAmount || 0;
+    cDep.numFmt = "₹#,##0";
+
+    const cPaidDep = row.getCell(12);
+    cPaidDep.value = d.paidDepositAmount || 0;
+    cPaidDep.numFmt = "₹#,##0";
+
+    const cDepDue = row.getCell(13);
+    cDepDue.value = d.depositDue || 0;
+    cDepDue.numFmt = "₹#,##0";
+
+    const cTotDue = row.getCell(14);
+    cTotDue.value = d.totalDue || 0;
+    cTotDue.numFmt = "₹#,##0";
+
+    row.getCell(15).value = d.totalDue === 0 ? "Fully Paid" : d.isOverdue ? "Overdue" : "Pending";
+    row.getCell(16).value = d.daysOverdue > 0 ? `${d.daysOverdue} Days` : "On Time";
+    row.getCell(17).value = d.lastPaymentDate ? d.lastPaymentDate.split("T")[0] : "No Payments Yet";
+  });
+
+  if (duesList.length > 0) {
+    styleDataRows(ws, 9, 8 + duesList.length, 17, 17);
+  }
+
+  autoFitColumns(ws);
+  await downloadWorkbook(workbook, `Shripad_PG_Outstanding_Dues_Report_${Date.now()}.xlsx`);
+}
+

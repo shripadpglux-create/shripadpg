@@ -310,4 +310,60 @@ export class PaymentController {
       });
     }
   }
+
+  /**
+   * Get all dues across residents with summary KPIs.
+   */
+  public static async getDues(req: Request, res: Response) {
+    try {
+      const building = req.query.building ? String(req.query.building) : undefined;
+      const data = await BookingModel.getAllDues(building);
+
+      res.json({
+        success: true,
+        count: data.dues.length,
+        summary: data.summary,
+        dues: data.dues,
+      });
+    } catch (error: any) {
+      console.error("Error retrieving dues:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to retrieve dues.",
+        error: error.message,
+      });
+    }
+  }
+
+  /**
+   * Get dues for a specific resident / customer.
+   */
+  public static async getResidentDues(req: Request, res: Response) {
+    try {
+      const id = req.params.id as string;
+      const booking = await BookingModel.getById(id);
+
+      if (!booking) {
+        return res.status(404).json({
+          success: false,
+          message: "Resident not found.",
+        });
+      }
+
+      const dues = BookingModel.calculateResidentDues(booking);
+
+      res.json({
+        success: true,
+        dues,
+      });
+    } catch (error: any) {
+      console.error("Error retrieving resident dues:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to retrieve resident dues.",
+        error: error.message,
+      });
+    }
+  }
 }
+

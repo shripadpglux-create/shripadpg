@@ -25,6 +25,7 @@ import {
   X,
   Home,
   Sparkles,
+  Shield,
   ShieldCheck,
   CheckCircle2,
   Clock,
@@ -82,6 +83,7 @@ import {
   generateBuildingReport,
   generateRevenueReport,
   generateMasterReport,
+  generateDuesReport,
 } from "../../lib/excelReportGenerator";
 import { generateCustomerCredentials } from "../../lib/credentialUtils";
 
@@ -89,6 +91,10 @@ function normalizeTabName(t?: string): string {
   if (!t) return "Dashboard";
   const lower = t.toLowerCase().trim();
   const map: Record<string, string> = {
+    dues: "Dues",
+    due: "Dues",
+    pending: "Dues",
+    outstanding: "Dues",
     bookings: "Customers",
     booking: "Customers",
     customers: "Customers",
@@ -222,9 +228,66 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const [rentSetupAmount, setRentSetupAmount] = useState<string>("");
   const [rentSetupStartDate, setRentSetupStartDate] = useState(new Date().toISOString().substring(0, 10));
   const [rentSetupCheckoutDate, setRentSetupCheckoutDate] = useState("");
-  const [rentSetupStayType, setRentSetupStayType] = useState<"monthly" | "short_stay">("monthly");
   const [isRentSetupSubmitting, setIsRentSetupSubmitting] = useState(false);
   const [isEditingRent, setIsEditingRent] = useState(false);
+
+  // Outstanding Dues Hub State
+  const [duesList, setDuesList] = useState<any[]>([]);
+  const [duesSummary, setDuesSummary] = useState<any>(null);
+  const [isLoadingDues, setIsLoadingDues] = useState(false);
+  const [duesBuildingFilter, setDuesBuildingFilter] = useState("All");
+  const [duesCategoryFilter, setDuesCategoryFilter] = useState<"All" | "rent_only" | "deposit_only" | "overdue" | "partial">("All");
+  const [duesSearchQuery, setDuesSearchQuery] = useState("");
+
+  const fetchDues = async (building?: string) => {
+    setIsLoadingDues(true);
+    try {
+      const bParam = building && building !== "All" ? `?building=${encodeURIComponent(building)}` : "";
+      const res = await fetch(`${API_BASE_URL}/api/payments/dues${bParam}`);
+      const data = await res.json();
+      if (data.success) {
+        setDuesList(data.dues || []);
+        setDuesSummary(data.summary || null);
+      }
+    } catch (err) {
+      console.warn("Failed to fetch dues summary:", err);
+    } finally {
+      setIsLoadingDues(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDues(duesBuildingFilter);
+  }, [duesBuildingFilter]);
+
+  const handleSendWhatsAppDueReminder = (due: any) => {
+    const phoneClean = (due.phone || "").replace(/[^0-9]/g, "");
+    if (!phoneClean) {
+      showToast("No phone number found for this resident.", "error");
+      return;
+    }
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://shripadpg.pages.dev";
+    const text = encodeURIComponent(
+      `*⚠️ Official Due Notice - SHRIPAD PG*\n\n` +
+      `Dear *${due.name}*,\n` +
+      `This is a payment reminder for your stay at *${due.building}* (Room ${due.room}, ${due.bed}):\n\n` +
+      `🏠 *Monthly Rent:* ₹${due.rentAmount.toLocaleString("en-IN")}\n` +
+      `💵 *Rent Paid:* ₹${due.paidRentAmount.toLocaleString("en-IN")}\n` +
+      `⏳ *Rent Due Remaining:* ₹${due.rentDue.toLocaleString("en-IN")}\n` +
+      (due.depositDue > 0 ? `🛡️ *Security Deposit Due:* ₹${due.depositDue.toLocaleString("en-IN")}\n` : "") +
+      `━━━━━━━━━━━━━━━━━━━\n` +
+      `💰 *TOTAL OUTSTANDING BALANCE: ₹${due.totalDue.toLocaleString("en-IN")}*\n` +
+      (due.isOverdue ? `⚠️ *Overdue Age:* ${due.daysOverdue} days\n` : "") +
+      `━━━━━━━━━━━━━━━━━━━\n\n` +
+      `📱 *Pay Online via UPI:*\n` +
+      `UPI ID: shripadpglux@okhdfcbank\n` +
+      `View Statement Online: ${origin}/customer\n\n` +
+      `Kindly clear the remaining balance at the earliest.\nThank you! 🙏`
+    );
+    const waUrl = `https://wa.me/${phoneClean.startsWith("91") ? phoneClean : `91${phoneClean}`}?text=${text}`;
+    window.open(waUrl, "_blank");
+    showToast(`WhatsApp due notice opened for ${due.name}!`, "success");
+  };
 
   useEffect(() => {
     if (isStaffMode) {
@@ -410,12 +473,15 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const [isSendingWaTest, setIsSendingWaTest] = useState(false);
 
   // WhatsApp Templates & Location Chatbot Management State
-  const [waModalTab, setWaModalTab] = useState<"overview" | "templates" | "chatbot">("overview");
+  const [waModalTab, setWaModalTab] = useState<"overview" | "reminders" | "templates" | "chatbot">("overview");
   const [waTemplates, setWaTemplates] = useState<{
     invoiceMessage: string;
     complaintUpdateMessage: string;
     paymentConfirmationMessage: string;
     welcomeAllotmentMessage: string;
+    upcomingRentReminderMessage?: string;
+    dueTodayRentReminderMessage?: string;
+    overdueRentReminderMessage?: string;
     chatbotEnabled: boolean;
     chatbotGreetingMessage: string;
     chatbotLocations: Array<{
@@ -433,7 +499,15 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   } | null>(null);
   const [isLoadingWaTemplates, setIsLoadingWaTemplates] = useState(false);
   const [isSavingWaTemplates, setIsSavingWaTemplates] = useState(false);
-  const [activeTemplateType, setActiveTemplateType] = useState<"invoice" | "complaint" | "payment" | "welcome">("invoice");
+  const [activeTemplateType, setActiveTemplateType] = useState<
+    "invoice" | "complaint" | "payment" | "welcome" | "upcomingReminder" | "dueTodayReminder" | "overdueReminder"
+  >("upcomingReminder");
+  const [reminderPreview, setReminderPreview] = useState<any | null>(null);
+  const [reminderSimDate, setReminderSimDate] = useState<string>(new Date().toISOString().substring(0, 10));
+  const [isLoadingReminders, setIsLoadingReminders] = useState(false);
+  const [isSendingDailyReminders, setIsSendingDailyReminders] = useState(false);
+  const [reminderFilter, setReminderFilter] = useState<"all" | "upcoming" | "due_today" | "overdue">("all");
+  const [viewingCandidateMessage, setViewingCandidateMessage] = useState<any | null>(null);
   const [editingBranch, setEditingBranch] = useState<{
     id: string;
     name: string;
@@ -928,7 +1002,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const [newStaffEmail, setNewStaffEmail] = useState("");
   const [newStaffPassword, setNewStaffPassword] = useState("");
   const [newStaffRole, setNewStaffRole] = useState<string>("building_manager");
-  const [newStaffAssignedBuildings, setNewStaffAssignedBuildings] = useState<string[]>(["PG A"]);
+  const [newStaffAssignedBuildings, setNewStaffAssignedBuildings] = useState<string[]>(["PG ShripadLux-A wing"]);
   const [editingStaffId, setEditingStaffId] = useState<string | null>(null);
   const [copiedStaffId, setCopiedStaffId] = useState<string | null>(null);
   const [showStaffPasswordMap, setShowStaffPasswordMap] = useState<Record<string, boolean>>({});
@@ -1067,7 +1141,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   const [isCustomCategorySelected, setIsCustomCategorySelected] = useState(false);
   const [expAmount, setExpAmount] = useState("");
   const [expDate, setExpDate] = useState(new Date().toISOString().substring(0, 10));
-  const [expBuilding, setExpBuilding] = useState("PG A");
+  const [expBuilding, setExpBuilding] = useState("PG ShripadLux-A wing");
   const [expNotes, setExpNotes] = useState("");
   const [editingExpId, setEditingExpId] = useState<string | null>(null);
 
@@ -1189,7 +1263,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     setIsCustomCategorySelected(false);
     setExpAmount("");
     setExpDate(new Date().toISOString().substring(0, 10));
-    setExpBuilding(scopedBuildingsList[0]?.name || "PG A");
+    setExpBuilding(scopedBuildingsList[0]?.name || "PG ShripadLux-A wing");
     setExpNotes("");
     setEditingExpId(null);
   };
@@ -1303,7 +1377,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       phone: formatPhoneWithCountryCode(newStaffPhone),
       email: newStaffEmail.trim(),
       role: newStaffRole,
-      assignedBuildings: newStaffAssignedBuildings.length > 0 ? newStaffAssignedBuildings : ["PG A"],
+      assignedBuildings: newStaffAssignedBuildings.length > 0 ? newStaffAssignedBuildings : ["PG ShripadLux-A wing"],
       status: "active",
     };
 
@@ -1342,7 +1416,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     setNewStaffEmail("");
     setNewStaffPassword("");
     setNewStaffRole("building_manager");
-    setNewStaffAssignedBuildings(["PG A"]);
+    setNewStaffAssignedBuildings(["PG ShripadLux-A wing"]);
     setEditingStaffId(null);
   };
 
@@ -1991,7 +2065,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   };
 
   // BookMyShow-Style Interactive Layout Selection State
-  const [bmsBuilding, setBmsBuilding] = useState("PG A");
+  const [bmsBuilding, setBmsBuilding] = useState("PG ShripadLux-A wing");
   const [bmsFloor, setBmsFloor] = useState(1);
   const [bmsRoom, setBmsRoom] = useState("102");
   const [bmsBed, setBmsBed] = useState("Bed B");
@@ -2000,8 +2074,8 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   useEffect(() => {
     if (buildingsList.length > 0) {
       const exists = buildingsList.some((b) => isBuildingMatch(b.name, bmsBuilding, buildingsList.length));
-      if (!exists || bmsBuilding === "PG A") {
-        setBmsBuilding(scopedBuildingsList[0]?.name || buildingsList[0]?.name || "PG A");
+      if (!exists) {
+        setBmsBuilding(scopedBuildingsList[0]?.name || buildingsList[0]?.name || "PG ShripadLux-A wing");
       }
     }
   }, [buildingsList, scopedBuildingsList]);
@@ -2128,7 +2202,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
             bookingId: b.id,
             paymentId: p.id,
             residentName: b.name || "Resident",
-            building: b.allocatedBuilding || b.building || "PG A",
+            building: b.allocatedBuilding || b.building || "PG ShripadLux-A wing",
             room: b.allocatedRoom || b.room || "",
             bed: b.allocatedBed || b.bed || "",
             amount: p.amount || 0,
@@ -2425,7 +2499,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
           bookingId: b.id,
           residentName: b.name || "Resident",
           residentPhone: b.phone || "",
-          building: b.allocatedBuilding || b.building || "PG A",
+          building: b.allocatedBuilding || b.building || "PG ShripadLux-A wing",
           room: b.allocatedRoom || b.room || "Unallocated",
           bed: b.allocatedBed || b.bed || "Unallocated",
           complaint: c,
@@ -2649,6 +2723,63 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
     }
   };
 
+  const fetchReminderPreview = async (simDate?: string) => {
+    setIsLoadingReminders(true);
+    try {
+      const qDate = simDate || reminderSimDate || new Date().toISOString().substring(0, 10);
+      const res = await fetch(`${API_BASE_URL}/api/whatsapp/reminders/preview?date=${qDate}`);
+      const data = await res.json();
+      if (data.success && data.preview) {
+        setReminderPreview(data.preview);
+      }
+    } catch (err: any) {
+      console.warn("Failed to fetch reminder preview:", err);
+    } finally {
+      setIsLoadingReminders(false);
+    }
+  };
+
+  const handleSendDailyReminders = async (forceSend = false) => {
+    setIsSendingDailyReminders(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/whatsapp/reminders/send-daily`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetDate: reminderSimDate, forceSend }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`🎉 ${data.message}`, "success");
+        fetchReminderPreview(reminderSimDate);
+      } else {
+        showToast(data.message || "Failed to dispatch reminders.", "error");
+      }
+    } catch (err: any) {
+      showToast("Error dispatching reminders: " + err.message, "error");
+    } finally {
+      setIsSendingDailyReminders(false);
+    }
+  };
+
+  const handleSendSingleReminder = async (bookingId: string, residentName: string) => {
+    try {
+      showToast(`Sending WhatsApp reminder to ${residentName}...`, "info");
+      const res = await fetch(`${API_BASE_URL}/api/whatsapp/reminders/send-single/${bookingId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`✅ ${data.message}`, "success");
+        fetchReminderPreview(reminderSimDate);
+      } else {
+        showToast(data.message || "Failed to send reminder.", "error");
+      }
+    } catch (err: any) {
+      showToast("Error sending reminder: " + err.message, "error");
+    }
+  };
+
   const handleSaveWhatsAppTemplates = async () => {
     if (!waTemplates) return;
     setIsSavingWaTemplates(true);
@@ -2842,31 +2973,34 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
   }, []);
 
   const getTimeFilteredBookings = () => {
+    const parseBookingTime = (ts?: string): number => {
+      if (!ts) return Date.now();
+      const direct = new Date(ts).getTime();
+      if (!isNaN(direct)) return direct;
+      const clean = ts.replace(/\//g, "-");
+      const iso = Date.parse(clean.includes("T") ? clean : clean.replace(" ", "T"));
+      return !isNaN(iso) ? iso : Date.now();
+    };
+
     return scopedBookings.filter((b) => {
       if (customerTimeFilter === "24h") {
         if (!b.timestamp) return true;
         const now = Date.now();
-        const cleanTs = b.timestamp.replace(/\//g, "-");
-        const parsedTs = Date.parse(cleanTs.includes("T") ? cleanTs : cleanTs.replace(" ", "T"));
-        if (isNaN(parsedTs)) return true;
+        const parsedTs = parseBookingTime(b.timestamp);
         const diffHours = (now - parsedTs) / (1000 * 60 * 60);
         return diffHours <= 48 || diffHours < 0 || b.timestamp.includes("Today") || b.timestamp.includes("mins") || b.timestamp.includes("hours");
       }
       if (customerTimeFilter === "7d") {
         if (!b.timestamp) return true;
         const now = Date.now();
-        const cleanTs = b.timestamp.replace(/\//g, "-");
-        const parsedTs = Date.parse(cleanTs.includes("T") ? cleanTs : cleanTs.replace(" ", "T"));
-        if (isNaN(parsedTs)) return true;
+        const parsedTs = parseBookingTime(b.timestamp);
         const diffDays = (now - parsedTs) / (1000 * 60 * 60 * 24);
         return diffDays <= 7 || diffDays < 0;
       }
       if (customerTimeFilter === "1m") {
         if (!b.timestamp) return true;
         const now = Date.now();
-        const cleanTs = b.timestamp.replace(/\//g, "-");
-        const parsedTs = Date.parse(cleanTs.includes("T") ? cleanTs : cleanTs.replace(" ", "T"));
-        if (isNaN(parsedTs)) return true;
+        const parsedTs = parseBookingTime(b.timestamp);
         const diffDays = (now - parsedTs) / (1000 * 60 * 60 * 24);
         return diffDays <= 31 || diffDays < 0;
       }
@@ -2878,6 +3012,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
       return true;
     });
   };
+
 
   const getFilteredBookings = () => {
     const base = getTimeFilteredBookings();
@@ -2920,6 +3055,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
             <p className="px-3 text-[10px] font-black uppercase tracking-wider text-slate-400">Operations</p>
             {[
               { name: "Dashboard", label: "Dashboard", icon: LayoutDashboard },
+              { name: "Dues", label: "Outstanding Dues", icon: AlertCircle, badgeCount: duesSummary?.residentsWithDues || 0 },
               { name: "Revenue", label: "Revenue & Finance", icon: Wallet },
               { name: "Reports", label: "Reports & Export", icon: FileSpreadsheet },
               { name: "Invoice", label: "Invoices & Receipts", icon: Receipt, badgeCount: pendingPaymentsCount },
@@ -3132,7 +3268,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                   <ShieldCheck className="h-3.5 w-3.5 text-[#00022E] shrink-0" />
                   <span className="text-[10px] text-[#00022E] uppercase font-black">Staff Scope:</span>
                   <span className="font-extrabold text-xs text-emerald-950">
-                    {activeStaffMember?.name} ({activeStaffMember?.assignedBuildings?.join(", ") || "PG A"})
+                    {activeStaffMember?.name} ({activeStaffMember?.assignedBuildings?.join(", ") || (buildingsList[0]?.name || "PG ShripadLux-A wing")})
                   </span>
                 </div>
               )}
@@ -3245,7 +3381,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                         <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                           <span className="rounded-full bg-brand-green-light px-2.5 py-0.5 text-[10px] font-extrabold text-brand-green border border-brand-green/20">
                             {isStaffMode
-                              ? `🏢 ${activeStaffMember?.assignedBuildings?.join(", ") || "PG A"} Manager`
+                              ? `🏢 ${activeStaffMember?.assignedBuildings?.join(", ") || (buildingsList[0]?.name || "PG ShripadLux-A wing")} Manager`
                               : "Super Admin"}
                           </span>
                         </div>
@@ -3437,7 +3573,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                     setOccupancyExplorerModal({
                       isOpen: true,
                       mode: "unoccupied",
-                      selectedBuilding: scopedBuildingsList[0]?.name || "PG A",
+                      selectedBuilding: scopedBuildingsList[0]?.name || "PG ShripadLux-A wing",
                     })
                   }
                   className="group rounded-3xl border border-emerald-200/80 bg-white p-4 sm:p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10 hover:border-emerald-400 cursor-pointer relative overflow-hidden active:scale-[0.99]"
@@ -3467,7 +3603,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                     setOccupancyExplorerModal({
                       isOpen: true,
                       mode: "occupied",
-                      selectedBuilding: scopedBuildingsList[0]?.name || "PG A",
+                      selectedBuilding: scopedBuildingsList[0]?.name || "PG ShripadLux-A wing",
                     })
                   }
                   className="group rounded-3xl border border-rose-200/80 bg-white p-4 sm:p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-rose-500/10 hover:border-rose-400 cursor-pointer relative overflow-hidden active:scale-[0.99]"
@@ -3829,6 +3965,437 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
             </div>
           )}
 
+          {/* TAB 1.5: OUTSTANDING DUES & PARTIAL PAYMENTS HUB */}
+          {activeTab === "Dues" && (
+            <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
+              {/* Top Executive Banner */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-[#0f1b3d] via-slate-900 to-[#1e1b4b] p-6 sm:p-8 rounded-3xl text-white shadow-xl border border-indigo-900/40 relative overflow-hidden">
+                <div className="absolute right-0 top-0 translate-x-12 -translate-y-8 w-64 h-64 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
+                <div className="relative z-10 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/20 px-3 py-1 text-xs font-black text-rose-300 border border-rose-500/30">
+                      <AlertCircle className="h-3.5 w-3.5 text-rose-400" /> Outstanding Dues Ledger & Recovery Hub
+                    </span>
+                  </div>
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white flex items-center gap-2">
+                    Dues & Partial Payments Hub 💰
+                  </h1>
+                  <p className="text-xs sm:text-sm font-medium text-slate-300 max-w-2xl">
+                    Track live pending rent, deposit dues, partial payment balances, and send 1-click WhatsApp payment reminders with dynamic UPI QR links.
+                  </p>
+                </div>
+
+                <div className="relative z-10 flex flex-wrap items-center gap-3">
+                  <button
+                    onClick={() => {
+                      setWaModalTab("reminders");
+                      setIsWhatsAppModalOpen(true);
+                      fetchReminderPreview();
+                    }}
+                    className="group relative inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 px-4 py-3 text-xs sm:text-sm font-bold text-white shadow-lg shadow-blue-900/40 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer"
+                  >
+                    <span>⏰ WhatsApp Auto-Reminders</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      const filtered = duesList.filter((d) => {
+                        if (duesCategoryFilter === "rent_only" && d.rentDue <= 0) return false;
+                        if (duesCategoryFilter === "deposit_only" && d.depositDue <= 0) return false;
+                        if (duesCategoryFilter === "overdue" && !d.isOverdue) return false;
+                        if (duesCategoryFilter === "partial" && (d.paidRentAmount <= 0 || d.rentDue <= 0)) return false;
+                        if (duesSearchQuery.trim()) {
+                          const q = duesSearchQuery.toLowerCase().trim();
+                          return d.name?.toLowerCase().includes(q) || d.phone?.includes(q) || d.room?.toLowerCase().includes(q);
+                        }
+                        return true;
+                      });
+                      generateDuesReport(filtered, duesSummary);
+                      showToast("Exporting Outstanding Dues Report (.xlsx)...", "success");
+                    }}
+                    className="group relative inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 px-4 py-3 text-xs sm:text-sm font-bold text-white shadow-lg shadow-emerald-900/40 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer"
+                  >
+                    <Download className="h-4 w-4 text-emerald-200" />
+                    <span>Export Dues (.xlsx)</span>
+                  </button>
+
+                  <button
+                    onClick={() => fetchDues(duesBuildingFilter)}
+                    disabled={isLoadingDues}
+                    className="inline-flex items-center gap-2 rounded-2xl bg-white/10 hover:bg-white/20 px-3.5 py-3 text-xs sm:text-sm font-bold text-white border border-white/10 transition cursor-pointer"
+                    title="Refresh Dues"
+                  >
+                    <RotateCcw className={`h-4 w-4 text-slate-300 ${isLoadingDues ? "animate-spin" : ""}`} />
+                    <span className="hidden sm:inline">Refresh</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 5 Executive KPI Metric Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+                {/* 1. Total Dues */}
+                <div className="rounded-2xl bg-gradient-to-br from-rose-50 to-white p-4 border border-rose-200/80 shadow-xs">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] font-black text-rose-700 uppercase tracking-wider">Total Dues</span>
+                    <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
+                      <AlertCircle className="h-4 w-4" />
+                    </span>
+                  </div>
+                  <p className="text-xl sm:text-2xl font-black text-rose-900">
+                    ₹{(duesSummary?.totalDuesAmount || 0).toLocaleString("en-IN")}
+                  </p>
+                  <p className="text-[10px] font-bold text-rose-600 mt-1">
+                    {duesSummary?.residentsWithDues || 0} residents with pending balance
+                  </p>
+                </div>
+
+                {/* 2. Rent Dues */}
+                <div className="rounded-2xl bg-gradient-to-br from-amber-50 to-white p-4 border border-amber-200/80 shadow-xs">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] font-black text-amber-700 uppercase tracking-wider">Rent Dues</span>
+                    <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
+                      <Wallet className="h-4 w-4" />
+                    </span>
+                  </div>
+                  <p className="text-xl sm:text-2xl font-black text-amber-900">
+                    ₹{(duesSummary?.totalRentDues || 0).toLocaleString("en-IN")}
+                  </p>
+                  <p className="text-[10px] font-bold text-amber-600 mt-1">
+                    Monthly rent receivable
+                  </p>
+                </div>
+
+                {/* 3. Deposit Dues */}
+                <div className="rounded-2xl bg-gradient-to-br from-indigo-50 to-white p-4 border border-indigo-200/80 shadow-xs">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] font-black text-indigo-700 uppercase tracking-wider">Deposit Dues</span>
+                    <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+                      <Shield className="h-4 w-4" />
+                    </span>
+                  </div>
+                  <p className="text-xl sm:text-2xl font-black text-indigo-900">
+                    ₹{(duesSummary?.totalDepositDues || 0).toLocaleString("en-IN")}
+                  </p>
+                  <p className="text-[10px] font-bold text-indigo-600 mt-1">
+                    Security deposits pending
+                  </p>
+                </div>
+
+                {/* 4. Collected This Month */}
+                <div className="rounded-2xl bg-gradient-to-br from-emerald-50 to-white p-4 border border-emerald-200/80 shadow-xs">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] font-black text-emerald-700 uppercase tracking-wider">Collected</span>
+                    <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+                      <CheckCircle2 className="h-4 w-4" />
+                    </span>
+                  </div>
+                  <p className="text-xl sm:text-2xl font-black text-emerald-900">
+                    ₹{(duesSummary?.totalCollectedThisMonth || 0).toLocaleString("en-IN")}
+                  </p>
+                  <p className="text-[10px] font-bold text-emerald-600 mt-1">
+                    Verified this month
+                  </p>
+                </div>
+
+                {/* 5. Overdue Count */}
+                <div className="col-span-2 sm:col-span-1 rounded-2xl bg-gradient-to-br from-purple-50 to-white p-4 border border-purple-200/80 shadow-xs">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] font-black text-purple-700 uppercase tracking-wider">Overdue</span>
+                    <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-purple-100 text-purple-600">
+                      <Clock className="h-4 w-4" />
+                    </span>
+                  </div>
+                  <p className="text-xl sm:text-2xl font-black text-purple-900">
+                    {duesSummary?.overdueCount || 0}
+                  </p>
+                  <p className="text-[10px] font-bold text-purple-600 mt-1">
+                    Tenants past due date
+                  </p>
+                </div>
+              </div>
+
+              {/* Filter & Search Toolbar */}
+              <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+                <div className="flex items-center gap-3 flex-1">
+                  <div className="relative flex-1 max-w-md">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <input
+                      type="text"
+                      value={duesSearchQuery}
+                      onChange={(e) => setDuesSearchQuery(e.target.value)}
+                      placeholder="Search resident name, room, or phone..."
+                      className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#00022E] focus:bg-white transition"
+                    />
+                    {duesSearchQuery && (
+                      <button
+                        onClick={() => setDuesSearchQuery("")}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2.5">
+                  {/* Category Filter Pills */}
+                  <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                    {[
+                      { id: "All", label: "All Dues" },
+                      { id: "rent_only", label: "Rent Dues" },
+                      { id: "deposit_only", label: "Deposit Dues" },
+                      { id: "partial", label: "Partial Paid" },
+                      { id: "overdue", label: "Overdue Only" },
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setDuesCategoryFilter(tab.id as any)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-black transition cursor-pointer ${
+                          duesCategoryFilter === tab.id
+                            ? "bg-[#00022E] text-white shadow-xs"
+                            : "text-slate-600 hover:text-slate-900"
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Building Filter */}
+                  <select
+                    value={duesBuildingFilter}
+                    onChange={(e) => setDuesBuildingFilter(e.target.value)}
+                    className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#00022E] cursor-pointer"
+                  >
+                    <option value="All">All Properties</option>
+                    {buildingsList.map((b) => (
+                      <option key={b.name} value={b.name}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Dues Ledger Table / Cards */}
+              <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-sm">
+                <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                  <div>
+                    <h2 className="text-sm sm:text-base font-black text-slate-900 flex items-center gap-2">
+                      Resident Dues Ledger ({duesList.filter((d) => {
+                        if (duesCategoryFilter === "rent_only" && d.rentDue <= 0) return false;
+                        if (duesCategoryFilter === "deposit_only" && d.depositDue <= 0) return false;
+                        if (duesCategoryFilter === "overdue" && !d.isOverdue) return false;
+                        if (duesCategoryFilter === "partial" && (d.paidRentAmount <= 0 || d.rentDue <= 0)) return false;
+                        if (duesSearchQuery.trim()) {
+                          const q = duesSearchQuery.toLowerCase().trim();
+                          return d.name?.toLowerCase().includes(q) || d.phone?.includes(q) || d.room?.toLowerCase().includes(q);
+                        }
+                        return true;
+                      }).length})
+                    </h2>
+                    <p className="text-[11px] font-medium text-slate-400">
+                      Real-time breakdown of rent and deposit dues with 1-click reminders and payment collection.
+                    </p>
+                  </div>
+                </div>
+
+                {isLoadingDues ? (
+                  <div className="py-16 text-center">
+                    <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-[#00022E]" />
+                    <p className="mt-2 text-xs font-bold text-slate-500">Calculating real-time dues...</p>
+                  </div>
+                ) : (() => {
+                  const filtered = duesList.filter((d) => {
+                    if (duesCategoryFilter === "rent_only" && d.rentDue <= 0) return false;
+                    if (duesCategoryFilter === "deposit_only" && d.depositDue <= 0) return false;
+                    if (duesCategoryFilter === "overdue" && !d.isOverdue) return false;
+                    if (duesCategoryFilter === "partial" && (d.paidRentAmount <= 0 || d.rentDue <= 0)) return false;
+                    if (duesSearchQuery.trim()) {
+                      const q = duesSearchQuery.toLowerCase().trim();
+                      return d.name?.toLowerCase().includes(q) || d.phone?.includes(q) || d.room?.toLowerCase().includes(q);
+                    }
+                    return true;
+                  });
+
+                  if (filtered.length === 0) {
+                    return (
+                      <div className="py-16 text-center space-y-2">
+                        <CheckCircle2 className="h-10 w-10 text-emerald-500 mx-auto" />
+                        <p className="text-sm font-black text-slate-800">No Pending Dues Found!</p>
+                        <p className="text-xs text-slate-400">All residents in this filter have cleared their payments.</p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="divide-y divide-slate-100">
+                      {filtered.map((due) => {
+                        const rentProgress = due.rentAmount > 0 ? Math.min(100, Math.round((due.paidRentAmount / due.rentAmount) * 100)) : 100;
+                        const depositProgress = due.depositAmount > 0 ? Math.min(100, Math.round((due.paidDepositAmount / due.depositAmount) * 100)) : 100;
+
+                        return (
+                          <div
+                            key={due.id}
+                            className="p-4 sm:p-5 hover:bg-slate-50/80 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+                          >
+                            {/* Resident Info & Room */}
+                            <div className="flex items-start gap-3.5 min-w-[260px]">
+                              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0f1b3d] to-indigo-900 text-white font-black text-sm shadow-xs">
+                                {due.name.substring(0, 2).toUpperCase()}
+                              </div>
+                              <div className="space-y-0.5">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h3 className="text-sm font-black text-slate-900">{due.name}</h3>
+                                  {due.isOverdue && (
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 text-rose-700 px-2 py-0.5 text-[9px] font-black border border-rose-200">
+                                      ⚠️ {due.daysOverdue}d Overdue
+                                    </span>
+                                  )}
+                                  {due.paidRentAmount > 0 && due.rentDue > 0 && (
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 text-amber-800 px-2 py-0.5 text-[9px] font-black border border-amber-200">
+                                      ⏳ Partial Paid
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-xs font-bold text-slate-500">
+                                  🏠 {due.building} • Floor {due.floor} • Room {due.room} ({due.bed})
+                                </p>
+                                <p className="text-[11px] font-medium text-slate-400 flex items-center gap-2">
+                                  <span>📱 {due.phone || "No phone"}</span>
+                                  {due.lastPaymentDate && (
+                                    <span>• Last: {due.lastPaymentDate.split("T")[0]}</span>
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Rent Dues Breakdown */}
+                            <div className="flex-1 min-w-[200px] max-w-sm space-y-1.5">
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="font-bold text-slate-600">🏠 Rent Payment</span>
+                                <span className="font-black text-slate-900">
+                                  ₹{due.paidRentAmount.toLocaleString("en-IN")} / ₹{due.rentAmount.toLocaleString("en-IN")}
+                                </span>
+                              </div>
+                              <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
+                                <div
+                                  className={`h-full transition-all duration-500 rounded-full ${
+                                    rentProgress === 100
+                                      ? "bg-emerald-500"
+                                      : rentProgress > 0
+                                        ? "bg-amber-500"
+                                        : "bg-rose-500"
+                                  }`}
+                                  style={{ width: `${rentProgress}%` }}
+                                />
+                              </div>
+                              <div className="flex items-center justify-between text-[10px] font-bold">
+                                <span className="text-slate-400">{rentProgress}% Paid</span>
+                                <span className={due.rentDue > 0 ? "text-rose-600 font-extrabold" : "text-emerald-600"}>
+                                  {due.rentDue > 0 ? `₹${due.rentDue.toLocaleString("en-IN")} Due` : "Rent Cleared ✅"}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Deposit Dues Breakdown */}
+                            <div className="flex-1 min-w-[180px] max-w-xs space-y-1.5">
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="font-bold text-slate-600">🛡️ Deposit</span>
+                                <span className="font-black text-slate-900">
+                                  ₹{due.paidDepositAmount.toLocaleString("en-IN")} / ₹{due.depositAmount.toLocaleString("en-IN")}
+                                </span>
+                              </div>
+                              <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
+                                <div
+                                  className={`h-full transition-all duration-500 rounded-full ${
+                                    depositProgress === 100
+                                      ? "bg-indigo-600"
+                                      : depositProgress > 0
+                                        ? "bg-indigo-400"
+                                        : "bg-slate-300"
+                                  }`}
+                                  style={{ width: `${depositProgress}%` }}
+                                />
+                              </div>
+                              <div className="flex items-center justify-between text-[10px] font-bold">
+                                <span className="text-slate-400">{depositProgress}% Paid</span>
+                                <span className={due.depositDue > 0 ? "text-indigo-700 font-extrabold" : "text-emerald-600"}>
+                                  {due.depositDue > 0 ? `₹${due.depositDue.toLocaleString("en-IN")} Due` : "Deposit Cleared ✅"}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Total Due & Action Buttons */}
+                            <div className="flex flex-wrap items-center justify-between lg:justify-end gap-3 min-w-[240px] pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100">
+                              <div className="text-left lg:text-right">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Total Outstanding</span>
+                                <span className={`text-base font-black ${due.totalDue > 0 ? "text-rose-600" : "text-emerald-600"}`}>
+                                  ₹{due.totalDue.toLocaleString("en-IN")}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-1.5">
+                                {/* 1-Click WhatsApp Reminder */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleSendWhatsAppDueReminder(due)}
+                                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white border border-emerald-200 transition shadow-2xs cursor-pointer"
+                                  title="Send WhatsApp Due Notice"
+                                >
+                                  <MessageSquare className="h-4 w-4" />
+                                </button>
+
+                                {/* Issue Invoice / Bill */}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    handleTabClick("Invoice");
+                                    // Pre-populate invoice with resident dues
+                                    showToast(`Opening Invoice Studio for ${due.name}...`, "info");
+                                  }}
+                                  className="flex h-9 items-center gap-1.5 rounded-xl bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white px-3 text-xs font-black border border-indigo-200 transition shadow-2xs cursor-pointer"
+                                  title="Create / View Due Bill"
+                                >
+                                  <Receipt className="h-3.5 w-3.5" />
+                                  <span>Bill</span>
+                                </button>
+
+                                {/* Collect Payment */}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setPaymentModalTarget({
+                                      id: due.bookingId,
+                                      name: due.name,
+                                      phone: due.phone,
+                                      building: due.building,
+                                      room: due.room,
+                                      bed: due.bed,
+                                      rentAmount: due.rentAmount,
+                                      balanceDue: due.totalDue,
+                                    });
+                                    setPaymentAmountInput(String(due.totalDue || due.rentDue || 0));
+                                    setIsPaymentModalOpen(true);
+                                  }}
+                                  className="flex h-9 items-center gap-1.5 rounded-xl bg-[#00022E] hover:bg-[#00044A] px-3.5 text-xs font-black text-white transition shadow-xs cursor-pointer"
+                                  title="Record Payment"
+                                >
+                                  <CreditCard className="h-3.5 w-3.5 text-emerald-400" />
+                                  <span>Collect</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          )}
+
           {/* TAB 2: PAYMENTS & FINANCIAL INSIGHTS TAB */}
           {(activeTab === "Revenue" || activeTab === "Analytics" || activeTab === "Payments") && (
             <div className="space-y-5 sm:space-y-6 animate-in fade-in duration-300">
@@ -3841,7 +4408,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       Live Treasury Ledger
                     </span>
                     <span className="text-[11px] font-bold text-slate-400">
-                      {isStaffMode ? `Scope: ${activeStaffMember?.assignedBuildings?.join(", ") || "PG A"}` : "All Properties Active"}
+                      {isStaffMode ? `Scope: ${activeStaffMember?.assignedBuildings?.join(", ") || (buildingsList[0]?.name || "PG ShripadLux-A wing")}` : "All Properties Active"}
                     </span>
                   </div>
                   <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2">
@@ -6358,24 +6925,25 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                 <div className="p-5 rounded-3xl bg-amber-50/90 border border-amber-200/90 space-y-4 shadow-xs">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200/70 pb-3">
                     <span className="text-xs sm:text-sm font-black text-amber-950 flex items-center gap-1.5">
-                      ⚡ Automatic Live Writing into Google Sheet (Apps Script Webhook)
+                      ⚡ Two-Way Google Sheet & Online Booking Webhook (Apps Script)
                     </span>
-                    <span className="text-[10px] bg-amber-200 text-amber-900 px-2.5 py-1 rounded-full font-extrabold self-start sm:self-auto border border-amber-300">
-                      30-Sec Setup Guide
+                    <span className="text-[10px] bg-emerald-100 text-emerald-900 px-2.5 py-1 rounded-full font-extrabold self-start sm:self-auto border border-emerald-300">
+                      ⚡ Instant 0-Sec Sync
                     </span>
                   </div>
 
-                  <p className="text-xs text-amber-900 font-medium leading-relaxed">
-                    To auto-append rows to your spreadsheet in real-time on every manual booking:
-                    <br />
-                    1. Open your Google Sheet → Click <strong>Extensions → Apps Script</strong>.
-                    <br />
-                    2. Delete everything, paste the code below, and click <strong>Save (Ctrl+S)</strong>.
-                    <br />
-                    3. Click <strong>Deploy → New deployment → Select Web app</strong> (Execute as: <em>Me</em>, Who has access: <em>Anyone</em>).
-                    <br />
-                    4. Copy the Web app URL and paste it in the field below.
-                  </p>
+                  <div className="space-y-2 text-xs text-amber-900 font-medium leading-relaxed bg-amber-100/60 p-3.5 rounded-2xl border border-amber-200">
+                    <p className="font-bold text-amber-950">📋 Simple 2-Step Setup for Instant Form Submissions & Drive Uploads:</p>
+                    <p>
+                      <strong>1. Paste Script:</strong> Open your Google Sheet linked to the Google Form ➔ Click <strong>Extensions → Apps Script</strong> ➔ Paste the code below ➔ Click <strong>Save (Ctrl+S)</strong>.
+                    </p>
+                    <p>
+                      <strong>2. Add Form Trigger:</strong> In Apps Script, click <strong>Triggers (⏰ Alarm icon on left)</strong> ➔ <strong>+ Add Trigger</strong> ➔ Choose <code>onFormSubmit</code> ➔ Event source: <code>From spreadsheet</code> ➔ Event type: <code>On form submit</code> ➔ <strong>Save</strong>.
+                    </p>
+                    <p className="text-[11px] text-amber-800">
+                      <em>Optional (for outbound writing): Click Deploy → New deployment → Web app (Anyone) → Copy URL into the field below.</em>
+                    </p>
+                  </div>
 
                   {/* Clean Dedicated Code Box with Header */}
                   <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-inner">
@@ -6386,8 +6954,42 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                       <button
                         type="button"
                         onClick={() => {
-                          const code = `function doGet(e) {
-  return ContentService.createTextOutput("Google Sheet & Drive Webhook Active! ✅").setMimeType(ContentService.MimeType.TEXT);
+                          const code = `/**
+ * Shripad PG — Two-Way Google Sheet & Instant Online Booking Webhook
+ * ------------------------------------------------------------------
+ * 1. onFormSubmit(e): Triggers automatically on every Google Form submission
+ *    and sends the data directly to your Shripad PG Dashboard in 0 seconds!
+ * 2. doPost(e): Appends manual PG bookings to Google Sheet & saves files in Drive.
+ */
+
+const SHRIPAD_BACKEND_WEBHOOK = "${API_BASE_URL}/api/bookings/webhook";
+
+// ⚡ 1. INSTANT ONLINE BOOKING TRIGGER (Runs on Google Form Submit)
+function onFormSubmit(e) {
+  try {
+    var payload = {
+      timestamp: new Date().toISOString(),
+      namedValues: e && e.namedValues ? e.namedValues : {},
+      values: e && e.values ? e.values : []
+    };
+
+    var options = {
+      method: "post",
+      contentType: "application/json",
+      payload: JSON.stringify(payload),
+      muteHttpExceptions: true
+    };
+
+    var response = UrlFetchApp.fetch(SHRIPAD_BACKEND_WEBHOOK, options);
+    Logger.log("Shripad PG Response: " + response.getResponseCode() + " - " + response.getContentText());
+  } catch (error) {
+    Logger.log("Error posting to Shripad PG: " + error.toString());
+  }
+}
+
+// 🏢 2. OUTBOUND RECEIVER (Receives Manual Bookings from PG Dashboard)
+function doGet(e) {
+  return ContentService.createTextOutput("Shripad PG Two-Way Webhook Active! ✅").setMimeType(ContentService.MimeType.TEXT);
 }
 
 function doPost(e) {
@@ -6414,7 +7016,7 @@ function doPost(e) {
       file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
       docUrl = file.getUrl();
     } catch (err) {
-      console.log("Drive upload error: " + err);
+      Logger.log("Drive upload error: " + err);
     }
   }
 
@@ -6436,14 +7038,40 @@ function doPost(e) {
                         }}
                         className="px-3.5 py-1.5 rounded-xl bg-brand-green hover:bg-[#00022E] text-white text-[11px] font-sans font-extrabold transition cursor-pointer shadow-md active:scale-95"
                       >
-                        {isScriptCopied ? "Copied to Clipboard! ✅" : "Copy Apps Script Code 📋"}
+                        {isScriptCopied ? "Copied to Clipboard! ✅" : "Copy Complete Apps Script Code 📋"}
                       </button>
                     </div>
 
-                    <div className="p-4 overflow-x-auto max-h-[240px] overflow-y-auto font-mono text-[11px] leading-relaxed text-emerald-300 bg-slate-900">
+                    <div className="p-4 overflow-x-auto max-h-[260px] overflow-y-auto font-mono text-[11px] leading-relaxed text-emerald-300 bg-slate-900">
                       <pre className="whitespace-pre">
-{`function doGet(e) {
-  return ContentService.createTextOutput("Google Sheet & Drive Webhook Active! ✅").setMimeType(ContentService.MimeType.TEXT);
+{`const SHRIPAD_BACKEND_WEBHOOK = "${API_BASE_URL}/api/bookings/webhook";
+
+// ⚡ 1. RUNS INSTANTLY ON GOOGLE FORM SUBMIT (0 SECONDS)
+function onFormSubmit(e) {
+  try {
+    var payload = {
+      timestamp: new Date().toISOString(),
+      namedValues: e && e.namedValues ? e.namedValues : {},
+      values: e && e.values ? e.values : []
+    };
+
+    var options = {
+      method: "post",
+      contentType: "application/json",
+      payload: JSON.stringify(payload),
+      muteHttpExceptions: true
+    };
+
+    var response = UrlFetchApp.fetch(SHRIPAD_BACKEND_WEBHOOK, options);
+    Logger.log("Shripad PG Response: " + response.getResponseCode());
+  } catch (error) {
+    Logger.log("Webhook Error: " + error.toString());
+  }
+}
+
+// 🏢 2. RECEIVES FROM PG DASHBOARD & SAVES TO DRIVE
+function doGet(e) {
+  return ContentService.createTextOutput("Shripad PG Webhook Active! ✅");
 }
 
 function doPost(e) {
@@ -6470,7 +7098,7 @@ function doPost(e) {
       file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
       docUrl = file.getUrl();
     } catch (err) {
-      console.log("Drive upload error: " + err);
+      Logger.log("Drive upload error: " + err);
     }
   }
 
@@ -6491,7 +7119,7 @@ function doPost(e) {
                   </div>
 
                   <div>
-                    <label className="block text-amber-900 text-xs font-extrabold mb-1">Google Apps Script Webhook URL</label>
+                    <label className="block text-amber-900 text-xs font-extrabold mb-1">Google Apps Script Webhook URL (For Outbound Push)</label>
                     <input
                       type="url"
                       placeholder="https://script.google.com/macros/s/AKfycb.../exec"
@@ -7233,7 +7861,7 @@ function doPost(e) {
               <div>
                 <label className="block text-slate-600 mb-1.5">Building Branch</label>
                 <select
-                  value={editingCustomer.building || "PG A"}
+                  value={editingCustomer.building || "PG ShripadLux-A wing"}
                   onChange={(e) => setEditingCustomer({ ...editingCustomer, building: e.target.value })}
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-slate-800 outline-none focus:border-brand-green focus:bg-white transition"
                 >
@@ -8739,7 +9367,7 @@ function doPost(e) {
                                       tenantName: res?.name || p.payerName || "Resident",
                                       contact: res?.phone || "N/A",
                                       email: res?.email || "N/A",
-                                      building: res?.allocatedBuilding || res?.building || "PG A",
+                                      building: res?.allocatedBuilding || res?.building || "PG ShripadLux-A wing",
                                       floor: res?.allocatedFloor !== undefined ? `Floor ${res.allocatedFloor}` : "Ground Floor",
                                       room: res?.allocatedRoom ? `Room ${res.allocatedRoom}` : "Unallocated",
                                       bed: res?.allocatedBed || "Bed A",
@@ -9937,6 +10565,7 @@ function doPost(e) {
                     <p className="px-2.5 text-[9.5px] font-black uppercase tracking-wider text-slate-400">Operations</p>
                     {[
                       { name: "Dashboard", label: "Dashboard", icon: LayoutDashboard },
+                      { name: "Dues", label: "Outstanding Dues", icon: AlertCircle, badgeCount: duesSummary?.residentsWithDues || 0 },
                       { name: "Revenue", label: "Revenue & Finance", icon: Wallet },
                       { name: "Reports", label: "Reports & Export", icon: FileSpreadsheet },
                       { name: "Invoice", label: "Invoices & Receipts", icon: Receipt, badgeCount: pendingPaymentsCount },
@@ -10822,7 +11451,7 @@ function doPost(e) {
                       setNewStaffPhone("");
                       setNewStaffEmail("");
                       setNewStaffRole("building_manager");
-                      setNewStaffAssignedBuildings(["PG A"]);
+                      setNewStaffAssignedBuildings(["PG ShripadLux-A wing"]);
                     }}
                     className="text-xs font-bold text-rose-700 hover:underline cursor-pointer"
                   >
@@ -10909,7 +11538,7 @@ function doPost(e) {
                         if (e.target.checked) {
                           setNewStaffAssignedBuildings(["ALL"]);
                         } else {
-                          setNewStaffAssignedBuildings([buildingsList[0]?.name || "PG A"]);
+                          setNewStaffAssignedBuildings([buildingsList[0]?.name || "PG ShripadLux-A wing"]);
                         }
                       }}
                       className="h-4 w-4 accent-[#00022E] rounded cursor-pointer"
@@ -11467,6 +12096,25 @@ function doPost(e) {
               <button
                 type="button"
                 onClick={() => {
+                  setWaModalTab("reminders");
+                  if (!reminderPreview) fetchReminderPreview();
+                }}
+                className={`px-4 py-2.5 rounded-t-xl text-xs font-black transition cursor-pointer flex items-center gap-2 border-b-2 ${
+                  waModalTab === "reminders"
+                    ? "bg-white text-[#00022E] border-[#00022E] shadow-2xs"
+                    : "text-slate-600 border-transparent hover:text-slate-900"
+                }`}
+              >
+                <span>⏰ Auto-Rent Reminders</span>
+                {reminderPreview?.candidates?.length > 0 && (
+                  <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[10px] font-black">
+                    {reminderPreview.candidates.length}
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
                   setWaModalTab("templates");
                   if (!waTemplates) fetchWhatsAppTemplates();
                 }}
@@ -11560,8 +12208,8 @@ function doPost(e) {
                       <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-start gap-2">
                         <CheckCircle2 className="h-4 w-4 text-[#00022E] shrink-0 mt-0.5" />
                         <div>
-                          <p className="text-xs font-black text-slate-900">Room Allotment</p>
-                          <p className="text-[11px] text-slate-500">Auto-sends ID, Password, Wi-Fi to new resident</p>
+                          <p className="text-xs font-black text-slate-900">Rent Reminders</p>
+                          <p className="text-[11px] text-slate-500">Auto-reminds on 30th/31st, 1st & overdue cycles</p>
                         </div>
                       </div>
 
@@ -11637,7 +12285,228 @@ function doPost(e) {
                 </div>
               )}
 
-              {/* TAB 2: MESSAGE TEMPLATES */}
+              {/* TAB 2: AUTOMATED RENT REMINDERS & CYCLE SCHEDULER */}
+              {waModalTab === "reminders" && (
+                <div className="space-y-4">
+                  {/* Action & Status Header Banner */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-900 to-indigo-950 text-white shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">⏰</span>
+                        <h4 className="text-base font-black tracking-tight">Automated Rent Due Reminders & Cycle Engine</h4>
+                      </div>
+                      <p className="text-xs text-blue-200 mt-1 max-w-xl">
+                        Calculates individual cycle due dates based on joining/start dates. Sends advance alerts (30th/31st), on due date (1st), and overdue notices with automatic anti-spam deduplication.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => fetchReminderPreview(reminderSimDate)}
+                        disabled={isLoadingReminders}
+                        className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition cursor-pointer flex items-center gap-1.5"
+                      >
+                        <RefreshCw className={`h-3.5 w-3.5 ${isLoadingReminders ? "animate-spin" : ""}`} />
+                        <span>Refresh</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleSendDailyReminders(false)}
+                        disabled={isSendingDailyReminders || !reminderPreview?.candidates?.length}
+                        className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white font-black text-xs transition cursor-pointer shadow-lg active:scale-95 flex items-center gap-1.5"
+                      >
+                        <Send className="h-3.5 w-3.5" />
+                        <span>{isSendingDailyReminders ? "Sending Reminders..." : "⚡ Run Daily Reminders Now"}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Date Simulation & Filter Controls */}
+                  <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-[#00022E]" />
+                      <span className="text-xs font-bold text-slate-700">Target Date:</span>
+                      <input
+                        type="date"
+                        value={reminderSimDate}
+                        onChange={(e) => {
+                          setReminderSimDate(e.target.value);
+                          fetchReminderPreview(e.target.value);
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-white border border-slate-300 text-xs font-bold text-slate-900 outline-none focus:border-[#00022E]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const today = new Date().toISOString().substring(0, 10);
+                          setReminderSimDate(today);
+                          fetchReminderPreview(today);
+                        }}
+                        className="px-2.5 py-1.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold transition cursor-pointer"
+                      >
+                        Today
+                      </button>
+                    </div>
+
+                    {/* KPI Counters & Filters */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => setReminderFilter("all")}
+                        className={`px-3 py-1 rounded-xl text-xs font-bold transition cursor-pointer border ${
+                          reminderFilter === "all" ? "bg-[#00022E] text-white border-[#00022E]" : "bg-white text-slate-700 border-slate-200"
+                        }`}
+                      >
+                        All ({reminderPreview?.candidates?.length || 0})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setReminderFilter("upcoming")}
+                        className={`px-3 py-1 rounded-xl text-xs font-bold transition cursor-pointer border ${
+                          reminderFilter === "upcoming" ? "bg-blue-600 text-white border-blue-600" : "bg-blue-50 text-blue-700 border-blue-200"
+                        }`}
+                      >
+                        🔔 Advance Notice ({reminderPreview?.upcomingCount || 0})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setReminderFilter("due_today")}
+                        className={`px-3 py-1 rounded-xl text-xs font-bold transition cursor-pointer border ${
+                          reminderFilter === "due_today" ? "bg-amber-600 text-white border-amber-600" : "bg-amber-50 text-amber-700 border-amber-200"
+                        }`}
+                      >
+                        ⚡ Due Today ({reminderPreview?.dueTodayCount || 0})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setReminderFilter("overdue")}
+                        className={`px-3 py-1 rounded-xl text-xs font-bold transition cursor-pointer border ${
+                          reminderFilter === "overdue" ? "bg-rose-600 text-white border-rose-600" : "bg-rose-50 text-rose-700 border-rose-200"
+                        }`}
+                      >
+                        ⚠️ Overdue ({reminderPreview?.overdueCount || 0})
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Candidates Table */}
+                  {isLoadingReminders ? (
+                    <div className="p-12 text-center text-slate-500 font-bold text-sm">
+                      <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-[#00022E]" />
+                      Calculating resident rent cycles...
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-xs">
+                      <div className="overflow-x-auto max-h-[420px]">
+                        <table className="w-full text-left text-xs">
+                          <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-black uppercase text-[10px] sticky top-0 z-10">
+                            <tr>
+                              <th className="p-3 pl-4">Resident</th>
+                              <th className="p-3">Room & Bed</th>
+                              <th className="p-3">Building</th>
+                              <th className="p-3">Rent Amount</th>
+                              <th className="p-3">Due Date</th>
+                              <th className="p-3">Stage / Type</th>
+                              <th className="p-3">Status Today</th>
+                              <th className="p-3 pr-4 text-right">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {(() => {
+                              const list = (reminderPreview?.candidates || []).filter((c: any) => {
+                                if (reminderFilter === "all") return true;
+                                return c.reminderType === reminderFilter;
+                              });
+
+                              if (list.length === 0) {
+                                return (
+                                  <tr>
+                                    <td colSpan={8} className="p-8 text-center text-slate-400 font-medium">
+                                      ✨ No pending rent reminders for this filter/date.
+                                    </td>
+                                  </tr>
+                                );
+                              }
+
+                              return list.map((c: any) => (
+                                <tr key={c.bookingId} className="hover:bg-slate-50/80 transition">
+                                  <td className="p-3 pl-4 font-bold text-slate-900">
+                                    <div>{c.residentName}</div>
+                                    <div className="text-[10px] text-slate-500 font-mono font-normal">+{c.phone}</div>
+                                  </td>
+                                  <td className="p-3 font-semibold text-slate-700">
+                                    Room {c.room} • {c.bed}
+                                  </td>
+                                  <td className="p-3 text-slate-600 max-w-[140px] truncate">{c.building}</td>
+                                  <td className="p-3 font-mono font-black text-slate-900">₹{Number(c.rentAmount).toLocaleString("en-IN")}</td>
+                                  <td className="p-3">
+                                    <div className="font-bold text-slate-800">{c.dueDateFormatted}</div>
+                                    <div className="text-[10px] text-slate-500">
+                                      {c.daysUntilDue > 0 ? `in ${c.daysUntilDue} days` : c.daysUntilDue === 0 ? "Due today" : `${c.daysOverdue} days late`}
+                                    </div>
+                                  </td>
+                                  <td className="p-3">
+                                    {c.reminderType === "upcoming" && (
+                                      <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 font-bold text-[10px]">
+                                        🔔 Advance Notice
+                                      </span>
+                                    )}
+                                    {c.reminderType === "due_today" && (
+                                      <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-black text-[10px]">
+                                        ⚡ Due Today
+                                      </span>
+                                    )}
+                                    {c.reminderType === "overdue" && (
+                                      <span className="px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 font-black text-[10px]">
+                                        ⚠️ Overdue ({c.daysOverdue}d)
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="p-3">
+                                    {c.alreadySentToday ? (
+                                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600">
+                                        <CheckCircle2 className="h-3.5 w-3.5" /> Sent Today
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500">
+                                        ⏳ Pending
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="p-3 pr-4 text-right">
+                                    <div className="flex items-center justify-end gap-1.5">
+                                      <button
+                                        type="button"
+                                        onClick={() => setViewingCandidateMessage(c)}
+                                        className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition cursor-pointer"
+                                        title="Preview WhatsApp Message"
+                                      >
+                                        👁️ Preview
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleSendSingleReminder(c.bookingId, c.residentName)}
+                                        className="px-2.5 py-1 rounded-lg bg-[#00022E] hover:bg-[#00044A] text-white font-bold text-[11px] transition cursor-pointer shadow-xs"
+                                        title="Dispatch WhatsApp Notification"
+                                      >
+                                        Send 📨
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ));
+                            })()}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* TAB 3: MESSAGE TEMPLATES */}
               {waModalTab === "templates" && (
                 <div className="space-y-4">
                   {isLoadingWaTemplates ? (
@@ -11648,57 +12517,96 @@ function doPost(e) {
                   ) : waTemplates ? (
                     <div className="space-y-4">
                       {/* Template Selector Bar */}
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setActiveTemplateType("upcomingReminder")}
+                          className={`p-2 rounded-xl text-xs font-black transition cursor-pointer border flex flex-col items-center gap-0.5 ${
+                            activeTemplateType === "upcomingReminder"
+                              ? "bg-blue-700 text-white border-blue-700 shadow-sm"
+                              : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                          }`}
+                        >
+                          <span>🔔 Advance Rent</span>
+                          <span className="text-[9px] opacity-80 font-normal">30th / 31st Alert</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setActiveTemplateType("dueTodayReminder")}
+                          className={`p-2 rounded-xl text-xs font-black transition cursor-pointer border flex flex-col items-center gap-0.5 ${
+                            activeTemplateType === "dueTodayReminder"
+                              ? "bg-amber-600 text-white border-amber-600 shadow-sm"
+                              : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                          }`}
+                        >
+                          <span>⚡ Due Today</span>
+                          <span className="text-[9px] opacity-80 font-normal">1st of Month Alert</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setActiveTemplateType("overdueReminder")}
+                          className={`p-2 rounded-xl text-xs font-black transition cursor-pointer border flex flex-col items-center gap-0.5 ${
+                            activeTemplateType === "overdueReminder"
+                              ? "bg-rose-700 text-white border-rose-700 shadow-sm"
+                              : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                          }`}
+                        >
+                          <span>⚠️ Overdue Notice</span>
+                          <span className="text-[9px] opacity-80 font-normal">Unpaid Follow-up</span>
+                        </button>
+
                         <button
                           type="button"
                           onClick={() => setActiveTemplateType("invoice")}
-                          className={`p-2.5 rounded-xl text-xs font-black transition cursor-pointer border flex flex-col items-center gap-1 ${
+                          className={`p-2 rounded-xl text-xs font-black transition cursor-pointer border flex flex-col items-center gap-0.5 ${
                             activeTemplateType === "invoice"
                               ? "bg-[#00022E] text-white border-[#00022E] shadow-sm"
                               : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
                           }`}
                         >
                           <span>🧾 Invoice Notice</span>
-                          <span className="text-[10px] opacity-80 font-normal">PDF Link & UPI</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setActiveTemplateType("complaint")}
-                          className={`p-2.5 rounded-xl text-xs font-black transition cursor-pointer border flex flex-col items-center gap-1 ${
-                            activeTemplateType === "complaint"
-                              ? "bg-[#00022E] text-white border-[#00022E] shadow-sm"
-                              : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
-                          }`}
-                        >
-                          <span>📢 Complaint Update</span>
-                          <span className="text-[10px] opacity-80 font-normal">Ticket Resolution</span>
+                          <span className="text-[9px] opacity-80 font-normal">PDF Link & UPI</span>
                         </button>
 
                         <button
                           type="button"
                           onClick={() => setActiveTemplateType("payment")}
-                          className={`p-2.5 rounded-xl text-xs font-black transition cursor-pointer border flex flex-col items-center gap-1 ${
+                          className={`p-2 rounded-xl text-xs font-black transition cursor-pointer border flex flex-col items-center gap-0.5 ${
                             activeTemplateType === "payment"
                               ? "bg-[#00022E] text-white border-[#00022E] shadow-sm"
                               : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
                           }`}
                         >
                           <span>💳 Payment Receipt</span>
-                          <span className="text-[10px] opacity-80 font-normal">Rent Confirmation</span>
+                          <span className="text-[9px] opacity-80 font-normal">Confirmation</span>
                         </button>
 
                         <button
                           type="button"
                           onClick={() => setActiveTemplateType("welcome")}
-                          className={`p-2.5 rounded-xl text-xs font-black transition cursor-pointer border flex flex-col items-center gap-1 ${
+                          className={`p-2 rounded-xl text-xs font-black transition cursor-pointer border flex flex-col items-center gap-0.5 ${
                             activeTemplateType === "welcome"
                               ? "bg-[#00022E] text-white border-[#00022E] shadow-sm"
                               : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
                           }`}
                         >
-                          <span>🏠 Resident Allotment</span>
-                          <span className="text-[10px] opacity-80 font-normal">Credentials & Wi-Fi</span>
+                          <span>🏠 Allotment</span>
+                          <span className="text-[9px] opacity-80 font-normal">Credentials & Wi-Fi</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setActiveTemplateType("complaint")}
+                          className={`p-2 rounded-xl text-xs font-black transition cursor-pointer border flex flex-col items-center gap-0.5 ${
+                            activeTemplateType === "complaint"
+                              ? "bg-[#00022E] text-white border-[#00022E] shadow-sm"
+                              : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                          }`}
+                        >
+                          <span>📢 Complaint</span>
+                          <span className="text-[9px] opacity-80 font-normal">Ticket Update</span>
                         </button>
                       </div>
 
@@ -11709,41 +12617,48 @@ function doPost(e) {
                         </p>
                         <div className="flex flex-wrap gap-1.5">
                           {[
+                            "{residentName}",
                             "{customerName}",
-                            "{amount}",
-                            "{invoiceLink}",
-                            "{month}",
+                            "{rentAmount}",
+                            "{dueDate}",
+                            "{daysLeft}",
+                            "{daysOverdue}",
                             "{room}",
                             "{bed}",
                             "{building}",
                             "{upiId}",
                             "{accountName}",
-                            "{complaintTitle}",
-                            "{status}",
-                            "{adminComment}",
+                            "{portalLink}",
+                            "{invoiceLink}",
+                            "{month}",
                             "{amountPaid}",
                             "{invoiceNo}",
                             "{paymentDate}",
                             "{customerId}",
                             "{customerPassword}",
                             "{adminPhone}",
-                            "{wardenPhone}",
                           ].map((tag) => (
                             <button
                               key={tag}
                               type="button"
                               onClick={() => {
                                 const currentKey =
-                                  activeTemplateType === "invoice"
-                                    ? "invoiceMessage"
-                                    : activeTemplateType === "complaint"
-                                      ? "complaintUpdateMessage"
-                                      : activeTemplateType === "payment"
-                                        ? "paymentConfirmationMessage"
-                                        : "welcomeAllotmentMessage";
+                                  activeTemplateType === "upcomingReminder"
+                                    ? "upcomingRentReminderMessage"
+                                    : activeTemplateType === "dueTodayReminder"
+                                      ? "dueTodayRentReminderMessage"
+                                      : activeTemplateType === "overdueReminder"
+                                        ? "overdueRentReminderMessage"
+                                        : activeTemplateType === "invoice"
+                                          ? "invoiceMessage"
+                                          : activeTemplateType === "complaint"
+                                            ? "complaintUpdateMessage"
+                                            : activeTemplateType === "payment"
+                                              ? "paymentConfirmationMessage"
+                                              : "welcomeAllotmentMessage";
                                 setWaTemplates({
                                   ...waTemplates,
-                                  [currentKey]: (waTemplates[currentKey] || "") + " " + tag,
+                                  [currentKey]: ((waTemplates as any)[currentKey] || "") + " " + tag,
                                 });
                                 showToast(`Inserted ${tag}`, "info");
                               }}
@@ -11765,23 +12680,35 @@ function doPost(e) {
                           <textarea
                             rows={12}
                             value={
-                              activeTemplateType === "invoice"
-                                ? waTemplates.invoiceMessage
-                                : activeTemplateType === "complaint"
-                                  ? waTemplates.complaintUpdateMessage
-                                  : activeTemplateType === "payment"
-                                    ? waTemplates.paymentConfirmationMessage
-                                    : waTemplates.welcomeAllotmentMessage
+                              activeTemplateType === "upcomingReminder"
+                                ? waTemplates.upcomingRentReminderMessage || ""
+                                : activeTemplateType === "dueTodayReminder"
+                                  ? waTemplates.dueTodayRentReminderMessage || ""
+                                  : activeTemplateType === "overdueReminder"
+                                    ? waTemplates.overdueRentReminderMessage || ""
+                                    : activeTemplateType === "invoice"
+                                      ? waTemplates.invoiceMessage
+                                      : activeTemplateType === "complaint"
+                                        ? waTemplates.complaintUpdateMessage
+                                        : activeTemplateType === "payment"
+                                          ? waTemplates.paymentConfirmationMessage
+                                          : waTemplates.welcomeAllotmentMessage
                             }
                             onChange={(e) => {
                               const currentKey =
-                                activeTemplateType === "invoice"
-                                  ? "invoiceMessage"
-                                  : activeTemplateType === "complaint"
-                                    ? "complaintUpdateMessage"
-                                    : activeTemplateType === "payment"
-                                      ? "paymentConfirmationMessage"
-                                      : "welcomeAllotmentMessage";
+                                activeTemplateType === "upcomingReminder"
+                                  ? "upcomingRentReminderMessage"
+                                  : activeTemplateType === "dueTodayReminder"
+                                    ? "dueTodayRentReminderMessage"
+                                    : activeTemplateType === "overdueReminder"
+                                      ? "overdueRentReminderMessage"
+                                      : activeTemplateType === "invoice"
+                                        ? "invoiceMessage"
+                                        : activeTemplateType === "complaint"
+                                          ? "complaintUpdateMessage"
+                                          : activeTemplateType === "payment"
+                                            ? "paymentConfirmationMessage"
+                                            : "welcomeAllotmentMessage";
                               setWaTemplates({
                                 ...waTemplates,
                                 [currentKey]: e.target.value,
@@ -11801,23 +12728,33 @@ function doPost(e) {
                             <div className="max-w-[95%] bg-white rounded-2xl rounded-tl-xs p-3.5 shadow-sm text-xs text-slate-800 space-y-1 whitespace-pre-wrap font-sans leading-relaxed border border-slate-200/60">
                               {(() => {
                                 const raw =
-                                  activeTemplateType === "invoice"
-                                    ? waTemplates.invoiceMessage
-                                    : activeTemplateType === "complaint"
-                                      ? waTemplates.complaintUpdateMessage
-                                      : activeTemplateType === "payment"
-                                        ? waTemplates.paymentConfirmationMessage
-                                        : waTemplates.welcomeAllotmentMessage;
+                                  activeTemplateType === "upcomingReminder"
+                                    ? waTemplates.upcomingRentReminderMessage
+                                    : activeTemplateType === "dueTodayReminder"
+                                      ? waTemplates.dueTodayRentReminderMessage
+                                      : activeTemplateType === "overdueReminder"
+                                        ? waTemplates.overdueRentReminderMessage
+                                        : activeTemplateType === "invoice"
+                                          ? waTemplates.invoiceMessage
+                                          : activeTemplateType === "complaint"
+                                            ? waTemplates.complaintUpdateMessage
+                                            : activeTemplateType === "payment"
+                                              ? waTemplates.paymentConfirmationMessage
+                                              : waTemplates.welcomeAllotmentMessage;
                                 return (raw || "")
                                   .replace(/\{customerName\}/g, "Rahul Sharma")
                                   .replace(/\{residentName\}/g, "Rahul Sharma")
                                   .replace(/\{amount\}/g, "8,500")
                                   .replace(/\{amountPaid\}/g, "8,500")
                                   .replace(/\{rentAmount\}/g, "8,500")
+                                  .replace(/\{dueDate\}/g, "1 Sep 2026")
+                                  .replace(/\{daysLeft\}/g, "2")
+                                  .replace(/\{daysOverdue\}/g, "3")
                                   .replace(/\{month\}/g, "August 2026")
                                   .replace(/\{room\}/g, "204")
                                   .replace(/\{bed\}/g, "Bed B")
                                   .replace(/\{building\}/g, "Wakad Luxury Branch")
+                                  .replace(/\{portalLink\}/g, "https://shripadpg.pages.dev/my-rooms")
                                   .replace(/\{invoiceLink\}/g, "https://shripadpg.pages.dev/my-rooms")
                                   .replace(/\{upiId\}/g, "shripadpg@okaxis")
                                   .replace(/\{accountName\}/g, "Shripad PG Services")
@@ -12043,6 +12980,73 @@ function doPost(e) {
                   ) : null}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WHATSAPP RENT REMINDER MESSAGE PREVIEW MODAL */}
+      {viewingCandidateMessage && (
+        <div
+          className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in"
+          onClick={() => setViewingCandidateMessage(null)}
+        >
+          <div
+            className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200 p-5 sm:p-6 space-y-4 animate-in zoom-in-95"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                  <span>📱</span>
+                  <span>WhatsApp Message Preview</span>
+                </h3>
+                <p className="text-xs text-slate-500 font-medium">
+                  Recipient: <strong className="text-slate-800">{viewingCandidateMessage.residentName}</strong> (+{viewingCandidateMessage.phone})
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewingCandidateMessage(null)}
+                className="p-1.5 rounded-full text-slate-400 hover:bg-slate-100 transition cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Chat Bubble Simulation */}
+            <div className="rounded-2xl bg-[#EFEAE2] p-4 border border-slate-300 min-h-[220px] flex flex-col justify-start">
+              <div className="bg-white rounded-2xl rounded-tl-xs p-4 shadow-sm text-xs text-slate-800 whitespace-pre-wrap font-sans leading-relaxed border border-slate-200/60">
+                {viewingCandidateMessage.generatedMessage}
+              </div>
+              <span className="text-[10px] text-slate-500 self-end mt-1 font-mono">09:00 AM ✓✓</span>
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+              <span className="text-xs text-slate-500 font-semibold">
+                Due: <strong className="text-slate-800">{viewingCandidateMessage.dueDateFormatted}</strong> (₹{Number(viewingCandidateMessage.rentAmount).toLocaleString("en-IN")})
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setViewingCandidateMessage(null)}
+                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const c = viewingCandidateMessage;
+                    setViewingCandidateMessage(null);
+                    handleSendSingleReminder(c.bookingId, c.residentName);
+                  }}
+                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition cursor-pointer shadow-md flex items-center gap-1.5"
+                >
+                  <Send className="h-3.5 w-3.5" />
+                  <span>Send via WhatsApp 📨</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -12316,7 +13320,7 @@ function doPost(e) {
                 {viewingAdminInvoiceData.contact && (
                   <a
                     href={`https://wa.me/91${viewingAdminInvoiceData.contact.replace(/\D/g, "")}?text=${encodeURIComponent(
-                      `Hello ${viewingAdminInvoiceData.tenantName}, here is your payment receipt of ₹${viewingAdminInvoiceData.paidAmount} for ${viewingAdminInvoiceData.building}: https://shripadpg.pages.dev/invoice?invoiceNo=${viewingAdminInvoiceData.invoiceNo}`
+                      `Hello ${viewingAdminInvoiceData.tenantName}, here is your payment receipt of ₹${viewingAdminInvoiceData.paidAmount} for ${viewingAdminInvoiceData.building}: ${(typeof window !== "undefined" ? window.location.origin : "https://shripadpg.pages.dev")}/invoice?invoiceNo=${viewingAdminInvoiceData.invoiceNo}`
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"

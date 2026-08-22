@@ -10,6 +10,8 @@ dist-ssr
 **/.wrangler
 .vinxi
 .tanstack/**
+**/.tanstack
+scratch
 .nitro
 *.local
 .env

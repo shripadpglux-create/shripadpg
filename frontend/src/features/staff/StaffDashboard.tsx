@@ -219,14 +219,14 @@ export default function StaffDashboard() {
   }, []);
 
   const activeStaff = useMemo(() => {
-    return staffList.find((s) => s.id === selectedStaffId) || staffList[0] || { name: "Staff Member", assignedBuildings: ["PG A"], email: "ramesh@shripadpg.com" };
+    return staffList.find((s) => s.id === selectedStaffId) || staffList[0] || { name: "Staff Member", assignedBuildings: ["PG ShripadLux-A wing"], email: "admin@shripadpg.com" };
   }, [staffList, selectedStaffId]);
 
   const assignedBuildings = useMemo(() => {
     if (!activeStaff || activeStaff.assignedBuildings?.includes("ALL")) {
-      return buildingsList.map((b) => b.name);
+      return buildingsList.length > 0 ? buildingsList.map((b) => b.name) : ["PG ShripadLux-A wing"];
     }
-    return activeStaff.assignedBuildings || ["PG A"];
+    return activeStaff.assignedBuildings?.length ? activeStaff.assignedBuildings : (buildingsList.length > 0 ? buildingsList.map((b) => b.name) : ["PG ShripadLux-A wing"]);
   }, [activeStaff, buildingsList]);
 
   // Filter bookings to assigned building(s)
@@ -268,7 +268,7 @@ export default function StaffDashboard() {
   const occupancyRate = totalBeds > 0 ? ((occupiedBeds / totalBeds) * 100).toFixed(1) : "0.0";
 
   const totalMonthlyRevenue = useMemo(() => {
-    return activeResidents.reduce((acc, curr) => acc + (curr.monthlyRent || 5000), 0);
+    return activeResidents.reduce((acc, curr) => acc + (Number(curr.rentAmount) || Number(curr.monthlyRent) || 5000), 0);
   }, [activeResidents]);
 
   const handleRecordPayment = async (e: React.FormEvent) => {
@@ -336,7 +336,7 @@ export default function StaffDashboard() {
             >
               {staffList.map((s) => (
                 <option key={s.id} value={s.id} className="bg-slate-900 text-white">
-                  {s.name} ({s.assignedBuildings?.join(", ") || "PG A"})
+                  {s.name} ({s.assignedBuildings?.includes("ALL") ? "All Properties" : s.assignedBuildings?.join(", ") || (buildingsList[0]?.name || "PG ShripadLux-A wing")})
                 </option>
               ))}
             </select>
@@ -472,7 +472,7 @@ export default function StaffDashboard() {
             {/* Resident Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {activeResidents
-                .filter((r) => !searchQuery || r.name.toLowerCase().includes(searchQuery.toLowerCase()) || r.roomNo?.toLowerCase().includes(searchQuery.toLowerCase()) || r.phone.includes(searchQuery))
+                .filter((r) => !searchQuery || r.name?.toLowerCase().includes(searchQuery.toLowerCase()) || (r.allocatedRoom || r.room || r.roomNo)?.toLowerCase().includes(searchQuery.toLowerCase()) || r.phone?.includes(searchQuery))
                 .map((res) => (
                   <div key={res.id} className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-3 hover:border-brand-green/40 transition">
                     <div className="flex items-center justify-between">
@@ -486,16 +486,16 @@ export default function StaffDashboard() {
                         </div>
                       </div>
                       <span className="px-3 py-1 rounded-full bg-[#F0F4FF] text-[#00022E] font-black text-xs">
-                        {res.roomNo || "Room 101"} (Bed {res.bedSeat || "1"})
+                        {res.allocatedRoom ? `Room ${res.allocatedRoom}` : (res.roomNo || "Room 101")} ({res.allocatedBed ? `Bed ${res.allocatedBed}` : `Bed ${res.bedSeat || "A"}`})
                       </span>
                     </div>
 
                     <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-600">
-                      <span>Monthly Rent: ₹{(res.monthlyRent || 5000).toLocaleString("en-IN")}</span>
+                      <span>Monthly Rent: ₹{(Number(res.rentAmount) || Number(res.monthlyRent) || 5000).toLocaleString("en-IN")}</span>
                       <button
                         onClick={() => {
                           setSelectedResidentForPayment(res);
-                          setPayAmount(res.monthlyRent || 5000);
+                          setPayAmount(Number(res.rentAmount) || Number(res.monthlyRent) || 5000);
                           setIsRecordPaymentOpen(true);
                         }}
                         className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-brand-green text-white text-[11px] font-black transition cursor-pointer"
@@ -534,13 +534,13 @@ export default function StaffDashboard() {
                       <td className="p-3.5 font-bold text-slate-900">{r.name}</td>
                       <td className="p-3.5 text-slate-600">{r.phone}</td>
                       <td className="p-3.5"><span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-800 font-bold">{r.allocatedBuilding || r.building}</span></td>
-                      <td className="p-3.5 font-bold text-brand-green">{r.roomNo || "Room 101"} (Bed {r.bedSeat || "1"})</td>
-                      <td className="p-3.5 font-black text-slate-900">₹{(r.monthlyRent || 5000).toLocaleString()}</td>
+                      <td className="p-3.5 font-bold text-brand-green">{r.allocatedRoom ? `Room ${r.allocatedRoom}` : (r.roomNo || "Room 101")} ({r.allocatedBed ? `Bed ${r.allocatedBed}` : `Bed ${r.bedSeat || "A"}`})</td>
+                      <td className="p-3.5 font-black text-slate-900">₹{(Number(r.rentAmount) || Number(r.monthlyRent) || 5000).toLocaleString()}</td>
                       <td className="p-3.5">
                         <button
                           onClick={() => {
                             setSelectedResidentForPayment(r);
-                            setPayAmount(r.monthlyRent || 5000);
+                            setPayAmount(Number(r.rentAmount) || Number(r.monthlyRent) || 5000);
                             setIsRecordPaymentOpen(true);
                           }}
                           className="px-3 py-1 rounded-xl bg-brand-green text-white font-bold text-[11px] hover:bg-brand-gold transition cursor-pointer"
@@ -572,14 +572,14 @@ export default function StaffDashboard() {
                   onChange={(e) => {
                     const res = activeResidents.find((r) => r.id === e.target.value);
                     setSelectedResidentForPayment(res);
-                    if (res) setPayAmount(res.monthlyRent || 5000);
+                    if (res) setPayAmount(Number(res.rentAmount) || Number(res.monthlyRent) || 5000);
                   }}
                   className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 outline-none focus:border-brand-green font-bold text-xs cursor-pointer"
                 >
                   <option value="">-- Choose Resident --</option>
                   {activeResidents.map((r) => (
                     <option key={r.id} value={r.id}>
-                      {r.name} ({r.allocatedBuilding || r.building} • Room {r.roomNo || "101"})
+                      {r.name} ({r.allocatedBuilding || r.building} • Room {r.allocatedRoom || r.room || r.roomNo || "101"})
                     </option>
                   ))}
                 </select>
@@ -661,13 +661,13 @@ export default function StaffDashboard() {
                   onChange={(e) => {
                     const res = activeResidents.find((r) => r.id === e.target.value);
                     setSelectedResidentForPayment(res);
-                    if (res) setPayAmount(res.monthlyRent || 5000);
+                    if (res) setPayAmount(Number(res.rentAmount) || Number(res.monthlyRent) || 5000);
                   }}
                   className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50"
                 >
                   <option value="">-- Select Resident --</option>
                   {activeResidents.map((r) => (
-                    <option key={r.id} value={r.id}>{r.name} ({r.allocatedBuilding || r.building} • Room {r.roomNo || "101"})</option>
+                    <option key={r.id} value={r.id}>{r.name} ({r.allocatedBuilding || r.building} • Room {r.allocatedRoom || r.room || r.roomNo || "101"})</option>
                   ))}
                 </select>
               </div>

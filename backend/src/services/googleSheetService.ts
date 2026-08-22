@@ -1,4 +1,4 @@
-import { Booking } from "../models/bookingModel.js";
+import { Booking, BookingModel } from "../models/bookingModel.js";
 import { SettingsController } from "../controllers/settingsController.js";
 
 // Basic CSV parser that respects quoted commas
@@ -27,8 +27,10 @@ function parseCSV(csvText: string): string[][] {
 }
 
 export class GoogleSheetService {
+  private static autoSyncTimer: NodeJS.Timeout | null = null;
+
   /**
-   * Sync online bookings from the published Google Sheet.
+   * Sync online bookings from the published Google Sheet CSV.
    */
   public static async fetchOnlineBookings(overrideUrl?: string): Promise<Omit<Booking, "id">[]> {
     let csvUrl = overrideUrl;
@@ -43,7 +45,6 @@ export class GoogleSheetService {
 
     const targetUrl = (csvUrl || process.env.GOOGLE_SHEET_CSV_URL || "").trim();
     if (!targetUrl) {
-      console.log("ℹ️ No Google Sheet CSV URL configured in Settings. Skipping sheet sync.");
       return [];
     }
 
@@ -76,12 +77,21 @@ export class GoogleSheetService {
         return idx !== -1 ? idx : fallbackIdx;
       };
 
-      const timeIdx = findIndex(["time", "date"], 0);
-      const nameIdx = findIndex(["full name", "name"], 1);
-      const phoneIdx = findIndex(["phone", "number", "contact", "mobile"], 2);
-      const guardianIdx = findIndex(["guardian", "parent"], 3);
-      const emailIdx = findIndex(["email", "mail"], 4);
-      const docIdx = findIndex(["document", "aadhaar", "id", "upload", "doc"], 5);
+      const timeIdx = findIndex(["time", "date", "timestamp"], 0);
+      const nameIdx = findIndex(["full name", "applicant name", "name"], 1);
+      const emailIdx = findIndex(["email", "mail"], 2);
+      const phoneIdx = findIndex(["phone number", "mobile number", "contact number", "phone", "mobile", "contact"], 3);
+      const guardianIdx = findIndex(["guardian number", "guardian phone", "parent number", "guardian", "parent"], 4);
+      const docIdx = findIndex(["document", "documents", "adhar", "aadhaar", "pan", "photo", "id", "upload", "doc"], 5);
+
+      const formatPhone = (rawPhone?: string): string => {
+        if (!rawPhone || rawPhone === "N/A") return rawPhone || "";
+        const digits = rawPhone.replace(/\D/g, "");
+        if (digits.length === 10) return `+91${digits}`;
+        if (digits.startsWith("91") && digits.length === 12) return `+${digits}`;
+        if (digits.startsWith("0") && digits.length === 11) return `+91${digits.slice(1)}`;
+        return rawPhone.startsWith("+") ? rawPhone : (digits ? `+91${digits}` : rawPhone);
+      };
 
       const bookings: Omit<Booking, "id">[] = [];
 
@@ -89,20 +99,31 @@ export class GoogleSheetService {
         const row = rows[i];
         if (row.length < 2) continue; // Skip empty/malformed rows
 
-        const name = row[nameIdx] || "Anonymous Customer";
-        const phone = row[phoneIdx] || "N/A";
-        const timestamp = row[timeIdx] || "";
-        if (name === "Anonymous Customer" && phone === "N/A") continue;
-        if (name.includes("<script") || timestamp.includes("<script") || name.includes("waffle_api")) continue;
+        const rawName = (row[nameIdx] || "").trim();
+        const rawPhone = (row[phoneIdx] || "").trim();
+        const timestamp = (row[timeIdx] || "").trim();
+
+        // Skip blank rows or invalid template/test entries
+        if (!rawName || rawName === "Anonymous Customer" || rawName.length < 2) continue;
+        if (!rawPhone || rawPhone === "N/A" || rawPhone.replace(/\D/g, "").length < 6) continue;
+        if (rawName.includes("<script") || timestamp.includes("<script") || rawName.includes("waffle_api")) continue;
+        if (/test|dummy|sample/i.test(rawName)) continue;
+
+        const normalizedName = rawName.toUpperCase();
+        const normalizedPhone = formatPhone(rawPhone);
+        const rawGuardian = (row[guardianIdx] || "").trim();
+        const normalizedGuardianPhone = rawGuardian && rawGuardian !== "N/A" ? formatPhone(rawGuardian) : "N/A";
+        const email = (row[emailIdx] || "N/A").trim();
+        const documents = (row[docIdx] || "Aadhaar Card Uploaded").trim();
 
         bookings.push({
-          timestamp: row[timeIdx] || new Date().toISOString().replace("T", " ").substring(0, 19),
-          name,
-          phone,
-          guardianPhone: row[guardianIdx] || "N/A",
-          email: row[emailIdx] || "N/A",
-          documents: row[docIdx] || "",
-          building: "PG A", // Fallback building
+          timestamp: timestamp || new Date().toISOString().replace("T", " ").substring(0, 19),
+          name: normalizedName,
+          phone: normalizedPhone,
+          guardianPhone: normalizedGuardianPhone,
+          email: email || "N/A",
+          documents: documents || "Aadhaar Card Uploaded",
+          building: "PG ShripadLux-A wing", // Fallback active building
           roomType: "Double Sharing", // Fallback room type
           source: "online",
           status: "pending",
@@ -114,6 +135,92 @@ export class GoogleSheetService {
       console.error("❌ Google Sheet CSV fetch failed:", error);
       return [];
     }
+  }
+
+  /**
+   * Start automatic background synchronization loop.
+   */
+  public static startAutoSync(intervalMinutes: number = 2) {
+    if (this.autoSyncTimer) {
+      clearInterval(this.autoSyncTimer);
+    }
+
+    const intervalMs = Math.max(1, intervalMinutes) * 60 * 1000;
+    console.log(`⏱️ Starting Google Sheet background auto-sync every ${intervalMinutes} minute(s)...`);
+
+    // Initial sync after 10 seconds of startup
+    setTimeout(async () => {
+      try {
+        const fetched = await this.fetchOnlineBookings();
+        if (fetched.length > 0) {
+          const newlyAdded = await BookingModel.addOrUpdateMany(fetched);
+          if (newlyAdded.length > 0) {
+            console.log(`🎉 [Background Auto-Sync]: Added ${newlyAdded.length} new online bookings from Google Sheet!`);
+          }
+        }
+      } catch (err: any) {
+        console.warn("Background auto-sync initial check warning:", err?.message);
+      }
+    }, 10000);
+
+    this.autoSyncTimer = setInterval(async () => {
+      try {
+        const fetched = await this.fetchOnlineBookings();
+        if (fetched.length > 0) {
+          const newlyAdded = await BookingModel.addOrUpdateMany(fetched);
+          if (newlyAdded.length > 0) {
+            console.log(`🎉 [Background Auto-Sync]: Synchronized ${newlyAdded.length} new online bookings!`);
+          }
+        }
+      } catch (err: any) {
+        console.warn("Background auto-sync periodic check warning:", err?.message);
+      }
+    }, intervalMs);
+  }
+
+  /**
+   * Generates ready-to-use Google Apps Script code for Google Forms & Google Sheets.
+   */
+  public static getAppsScriptTemplate(backendWebhookUrl: string): string {
+    return `/**
+ * Shripad PG — Instant Online Booking Webhook Trigger
+ * ----------------------------------------------------
+ * Setup Instructions:
+ * 1. In your Google Sheet (connected to Google Form), click "Extensions" > "Apps Script".
+ * 2. Paste this complete code into Code.gs.
+ * 3. Click "Triggers" (alarm clock icon on left) > "Add Trigger".
+ * 4. Select:
+ *    - Function: "onFormSubmit"
+ *    - Event source: "From spreadsheet" (or "From form")
+ *    - Event type: "On form submit"
+ * 5. Save & Authorize permissions.
+ */
+
+const BACKEND_WEBHOOK_URL = "${backendWebhookUrl}";
+
+function onFormSubmit(e) {
+  try {
+    const payload = {
+      timestamp: new Date().toISOString(),
+      namedValues: e && e.namedValues ? e.namedValues : {},
+      values: e && e.values ? e.values : []
+    };
+
+    const options = {
+      method: "post",
+      contentType: "application/json",
+      payload: JSON.stringify(payload),
+      muteHttpExceptions: true
+    };
+
+    const response = UrlFetchApp.fetch(BACKEND_WEBHOOK_URL, options);
+    Logger.log("Shripad PG Webhook Response Code: " + response.getResponseCode());
+    Logger.log("Shripad PG Webhook Response Body: " + response.getContentText());
+  } catch (error) {
+    Logger.log("Error posting to Shripad PG Webhook: " + error.toString());
+  }
+}
+`;
   }
 
   /**
@@ -140,12 +247,17 @@ export class GoogleSheetService {
         source: booking.source || "manual",
       };
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
       const response = await fetch(webhookUrl, {
         method: "POST",
         redirect: "follow",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify(payload),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         console.warn(`⚠️ Google Sheet Webhook returned status ${response.status}`);
@@ -153,21 +265,27 @@ export class GoogleSheetService {
       }
       console.log(`✅ Successfully posted booking for "${booking.name}" to Google Sheet!`);
       return true;
-    } catch (error) {
-      console.error("❌ Failed to post booking to Google Sheet Webhook:", error);
+    } catch (error: any) {
+      console.error(`❌ Failed to post booking "${booking.name}" to Google Sheet Webhook:`, error?.message || error);
       return false;
     }
   }
 
   /**
-   * Bulk push multiple bookings to Google Sheet Webhook.
+   * Bulk push multiple bookings to Google Sheet Webhook with parallel batching.
    */
   public static async pushAllBookingsToGoogleSheet(bookings: Booking[], customWebhookUrl?: string): Promise<{ successCount: number; totalCount: number }> {
     let successCount = 0;
-    for (const b of bookings) {
-      const ok = await this.postToGoogleSheet(b, customWebhookUrl);
-      if (ok) successCount++;
+    const batchSize = 6; // Push 6 in parallel for lightning speed
+
+    for (let i = 0; i < bookings.length; i += batchSize) {
+      const batch = bookings.slice(i, i + batchSize);
+      const results = await Promise.all(batch.map((b) => this.postToGoogleSheet(b, customWebhookUrl)));
+      successCount += results.filter(Boolean).length;
     }
+
     return { successCount, totalCount: bookings.length };
   }
 }
+
+

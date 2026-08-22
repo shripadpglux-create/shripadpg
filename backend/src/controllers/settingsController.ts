@@ -57,17 +57,30 @@ export class SettingsController {
   public static async updateSettings(req: Request, res: Response) {
     try {
       const current = await SettingsController.getSettingsData();
-      const { manualBookingSheetUrl, onlineBookingSheetUrl, autoSyncIntervalMinutes } = req.body;
+      let { manualBookingSheetUrl, onlineBookingSheetUrl, autoSyncIntervalMinutes } = req.body;
+
+      // Helper to auto-convert Google Sheet edit URLs to direct CSV export URLs
+      const normalizeSheetUrl = (u?: string) => {
+        if (!u || typeof u !== "string") return u || "";
+        const clean = u.trim();
+        if (clean.includes("docs.google.com/spreadsheets/d/")) {
+          const match = clean.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+          if (match && match[1]) {
+            return `https://docs.google.com/spreadsheets/d/${match[1]}/export?format=csv`;
+          }
+        }
+        return clean;
+      };
 
       const updated: SettingsData = {
         ...current,
         manualBookingSheetUrl:
           manualBookingSheetUrl !== undefined
-            ? String(manualBookingSheetUrl).trim()
+            ? normalizeSheetUrl(manualBookingSheetUrl)
             : current.manualBookingSheetUrl,
         onlineBookingSheetUrl:
           onlineBookingSheetUrl !== undefined
-            ? String(onlineBookingSheetUrl).trim()
+            ? normalizeSheetUrl(onlineBookingSheetUrl)
             : current.onlineBookingSheetUrl,
         autoSyncIntervalMinutes:
           autoSyncIntervalMinutes !== undefined
@@ -78,6 +91,10 @@ export class SettingsController {
 
       await fs.mkdir(DATA_DIR, { recursive: true });
       await fs.writeFile(SETTINGS_FILE, JSON.stringify(updated, null, 2), "utf-8");
+
+      // Restart auto-sync interval with new interval
+      const { GoogleSheetService } = await import("../services/googleSheetService.js");
+      GoogleSheetService.startAutoSync(updated.autoSyncIntervalMinutes || 2);
 
       res.json({
         success: true,
@@ -91,9 +108,17 @@ export class SettingsController {
 
   public static async testSheetUrl(req: Request, res: Response) {
     try {
-      const { url } = req.body;
+      let { url } = req.body;
       if (!url || typeof url !== "string" || !url.startsWith("http")) {
         return res.status(400).json({ success: false, message: "Please provide a valid HTTP/HTTPS URL." });
+      }
+
+      // Auto-convert Google Sheet edit/sharing links to CSV export format
+      if (url.includes("docs.google.com/spreadsheets/d/")) {
+        const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+        if (match && match[1]) {
+          url = `https://docs.google.com/spreadsheets/d/${match[1]}/export?format=csv`;
+        }
       }
 
       console.log(`📡 Testing Google Sheet URL: ${url}`);
@@ -102,17 +127,27 @@ export class SettingsController {
       if (!response.ok) {
         return res.status(400).json({
           success: false,
-          message: `Connection failed with HTTP status ${response.status} (${response.statusText}). Make sure sheet is published as CSV or URL is publicly accessible.`,
+          message: `Connection failed with HTTP status ${response.status} (${response.statusText}). Make sure sheet is published as CSV or General Access is set to 'Anyone with the link'.`,
         });
       }
 
       const text = await response.text();
+
+      // Guard if Google returned login page HTML
+      if (text.includes("<!DOCTYPE") || text.includes("<html") || text.includes("<script") || text.includes("waffle_api")) {
+        return res.status(400).json({
+          success: false,
+          message: "Google Sheet returned a login page. Please set Google Sheet Share settings to 'Anyone with the link can view'.",
+        });
+      }
+
       const linesCount = text.split("\n").filter((l) => l.trim().length > 0).length;
 
       res.json({
         success: true,
         message: `Successfully connected to Google Sheet! (${linesCount} lines retrieved)`,
         linesCount,
+        normalizedUrl: url,
         preview: text.substring(0, 300),
       });
     } catch (error: any) {
@@ -123,6 +158,7 @@ export class SettingsController {
       });
     }
   }
+
 
   public static async getPaymentSettings(req: Request, res: Response) {
     try {

@@ -593,4 +593,146 @@ export class BookingController {
       res.status(500).json({ success: false, message: "Failed to save rent details.", error: error.message });
     }
   }
+
+  /**
+   * Inbound Webhook Endpoint for Google Forms / Google Apps Script onFormSubmit triggers.
+   * Instantly creates or updates online booking records.
+   */
+  public static async handleOnlineBookingWebhook(req: Request, res: Response) {
+    try {
+      const payload = req.body || {};
+      console.log("📥 [Online Booking Webhook] Received payload:", JSON.stringify(payload).slice(0, 300));
+
+      // Universal field extractor supporting flat JSON, namedValues array, or nested values
+      const extractField = (keys: string[], fallback = ""): string => {
+        // 1. Direct key on root payload
+        for (const k of keys) {
+          if (payload[k] !== undefined && payload[k] !== null && String(payload[k]).trim() !== "") {
+            const val = payload[k];
+            return Array.isArray(val) ? String(val[0]).trim() : String(val).trim();
+          }
+        }
+
+        // 2. Inside namedValues (Apps Script standard)
+        if (payload.namedValues && typeof payload.namedValues === "object") {
+          for (const k of keys) {
+            const lk = k.toLowerCase();
+            for (const [nvKey, nvVal] of Object.entries(payload.namedValues)) {
+              if (nvKey.toLowerCase().includes(lk) || lk.includes(nvKey.toLowerCase())) {
+                const val = Array.isArray(nvVal) ? nvVal[0] : nvVal;
+                if (val && String(val).trim() !== "") return String(val).trim();
+              }
+            }
+          }
+        }
+
+        // 3. Case-insensitive key scan
+        for (const [pKey, pVal] of Object.entries(payload)) {
+          const lk = pKey.toLowerCase();
+          for (const target of keys) {
+            if (lk.includes(target.toLowerCase()) || target.toLowerCase().includes(lk)) {
+              const val = Array.isArray(pVal) ? pVal[0] : pVal;
+              if (val && String(val).trim() !== "") return String(val).trim();
+            }
+          }
+        }
+
+        return fallback;
+      };
+
+      const rawName = extractField(["full name", "applicant name", "student name", "resident name", "name"]);
+      const rawPhone = extractField(["phone number", "mobile number", "contact number", "phone", "mobile", "contact"]);
+      const rawGuardian = extractField(["guardian number", "guardian phone", "parent number", "guardianphone", "parent phone", "emergency contact", "guardian"]);
+      const rawEmail = extractField(["email address", "email", "mail"]);
+      const rawDocs = extractField(["documents:- adhar,pan,photo", "documents", "document", "aadhaar", "pan", "photo", "id link", "drive link", "upload", "doc"], "Aadhaar Card Uploaded");
+      const rawBuilding = extractField(["building", "branch", "allocated building", "property"], "PG A");
+      const rawRoomType = extractField(["roomtype", "room type", "sharing type", "sharing", "room"], "Double Sharing");
+      const rawTimestamp = extractField(["timestamp", "date", "submission time"], new Date().toISOString().replace("T", " ").substring(0, 19));
+
+      if (!rawName && !rawPhone) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid webhook payload. 'Name' or 'Phone Number' is required.",
+          receivedPayload: payload,
+        });
+      }
+
+      // Phone formatting helper
+      const formatPhone = (p?: string): string => {
+        if (!p || p === "N/A") return p || "";
+        const digits = p.replace(/\D/g, "");
+        if (digits.length === 10) return `+91${digits}`;
+        if (digits.startsWith("91") && digits.length === 12) return `+${digits}`;
+        if (digits.startsWith("0") && digits.length === 11) return `+91${digits.slice(1)}`;
+        return p.startsWith("+") ? p : (digits ? `+91${digits}` : p);
+      };
+
+      const normalizedName = (rawName || "Online Customer").toUpperCase().trim();
+      const normalizedPhone = formatPhone(rawPhone);
+      const normalizedGuardian = rawGuardian && rawGuardian !== "N/A" ? formatPhone(rawGuardian) : "N/A";
+      const normalizedEmail = (rawEmail || "N/A").toLowerCase().trim();
+
+      const newBookingRecord = {
+        timestamp: rawTimestamp,
+        name: normalizedName,
+        phone: normalizedPhone,
+        guardianPhone: normalizedGuardian,
+        email: normalizedEmail,
+        documents: rawDocs,
+        building: rawBuilding,
+        roomType: rawRoomType,
+        source: "online" as const,
+        status: "pending" as const,
+      };
+
+      const added = await BookingModel.addOrUpdateMany([newBookingRecord]);
+      const all = await BookingModel.getAll();
+      const saved = added[0] || all.find((b) => b.phone === normalizedPhone) || all[0];
+
+      console.log(`✅ [Online Booking Webhook]: Successfully registered online booking for ${normalizedName} (${normalizedPhone})`);
+
+      // WhatsApp acknowledgment notification if enabled
+      if (process.env.WHATSAPP_AUTO_NOTIFY !== "false" && normalizedPhone && normalizedPhone.length >= 10) {
+        const welcomeText = `Hello *${normalizedName}*,\n\n🎉 Thank you for submitting your online room booking application for *Shripad PG Living*.\n\n📋 *Application Details:*\n- Room Type: ${rawRoomType}\n- Status: Under Verification\n\nOur admissions team has received your application and will assign your room shortly.\n\nHelpline: +91 98765 43210`;
+        void WhatsAppService.sendTextMessage(normalizedPhone, welcomeText).catch((err) =>
+          console.warn("[Online Booking Webhook WhatsApp notice]:", err?.message)
+        );
+      }
+
+      res.status(200).json({
+        success: true,
+        message: `🎉 Online booking registered instantly for ${normalizedName}!`,
+        booking: saved,
+      });
+    } catch (error: any) {
+      console.error("❌ Error handling online booking webhook:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to process online booking webhook.",
+        error: error.message,
+      });
+    }
+  }
+
+  /**
+   * Return the ready-to-use Google Apps Script code for Google Forms & Sheets webhook.
+   */
+  public static async getAppsScriptCode(req: Request, res: Response) {
+    try {
+      const host = req.get("host") || "shripadpg.onrender.com";
+      const protocol = req.protocol === "https" || host.includes("onrender.com") ? "https" : "http";
+      const webhookUrl = `${protocol}://${host}/api/bookings/webhook`;
+
+      const scriptCode = GoogleSheetService.getAppsScriptTemplate(webhookUrl);
+
+      res.json({
+        success: true,
+        webhookUrl,
+        scriptCode,
+      });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
 }
+

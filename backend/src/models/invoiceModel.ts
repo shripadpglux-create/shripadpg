@@ -25,6 +25,7 @@ export interface Invoice {
   paidAmount: number;
   balanceDue: number;
   paymentModes: string[];
+  splitAmounts?: Record<string, number>;
   notes: string;
   status: "PAID" | "PARTIAL" | "UNPAID";
   createdAt: string;
@@ -84,6 +85,15 @@ export class InvoiceModel {
         inv.tenantName !== "Resident Name" &&
         ((Number(inv.rentAmount) || 0) > 0 || (Number(inv.paidAmount) || 0) > 0)
     );
+
+    // Normalize building names to current standard
+    validInvoices.forEach((inv) => {
+      const b = (inv.building || "").toLowerCase().trim();
+      if (b === "pg a" || b === "pg shripadpglux-a" || b === "pg shripadlux-a" || !inv.building) {
+        inv.building = "PG ShripadLux-A wing";
+        this.dirtyIds.add(inv.id);
+      }
+    });
 
     this.cache = validInvoices;
     this.isInitialized = true;
@@ -222,6 +232,7 @@ export class InvoiceModel {
         paidAmount,
         balanceDue,
         paymentModes: invoiceData.paymentModes || ["UPI"],
+        splitAmounts: invoiceData.splitAmounts,
         notes: invoiceData.notes || "",
         status,
         createdAt: now,
@@ -253,5 +264,30 @@ export class InvoiceModel {
     }
     return false;
   }
+
+  /**
+   * When a building is renamed, update all past invoices' building field to the new name.
+   */
+  public static async updateBuildingNames(oldName: string, newName: string): Promise<number> {
+    await this.init();
+    let count = 0;
+    const oldClean = oldName.trim().toLowerCase();
+
+    for (const inv of this.cache) {
+      const bld = (inv.building || "").trim().toLowerCase();
+      if (bld === oldClean || bld === "pg a" || bld === "pg shripadpglux-a" || bld === "pg shripadlux-a") {
+        inv.building = newName;
+        this.dirtyIds.add(inv.id);
+        count++;
+      }
+    }
+
+    if (count > 0) {
+      await this.saveToFile();
+      console.log(`🧾 Cascaded building rename in ${count} invoices: "${oldName}" → "${newName}"`);
+    }
+    return count;
+  }
 }
+
 

@@ -1,5 +1,8 @@
 import { Request, Response } from "express";
 import { BuildingModel } from "../models/buildingModel.js";
+import { BookingModel } from "../models/bookingModel.js";
+import { InvoiceModel } from "../models/invoiceModel.js";
+import { ExpenseModel } from "../models/expenseModel.js";
 
 export class BuildingController {
   public static async getAll(req: Request, res: Response) {
@@ -58,6 +61,15 @@ export class BuildingController {
 
       if (!updated) {
         return res.status(404).json({ success: false, message: `Building '${nameOrId}' not found.` });
+      }
+
+      // If the building was renamed, cascade the new name to all residents, invoices, and expenses
+      const oldName = decodeURIComponent(nameOrId).trim();
+      if (updated.name && updated.name.trim().toLowerCase() !== oldName.toLowerCase()) {
+        const bCount = await BookingModel.updateBuildingNames(oldName, updated.name.trim());
+        const iCount = await InvoiceModel.updateBuildingNames(oldName, updated.name.trim());
+        const eCount = await ExpenseModel.updateBuildingNames(oldName, updated.name.trim());
+        console.log(`🏢 Cascaded building rename: "${oldName}" → "${updated.name}" (${bCount} residents, ${iCount} invoices, ${eCount} expenses)`);
       }
 
       const buildings = await BuildingModel.getAll();

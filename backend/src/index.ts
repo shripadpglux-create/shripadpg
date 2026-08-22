@@ -26,6 +26,9 @@ import staffRoutes from "./routes/staffRoutes.js";
 import expenseRoutes from "./routes/expenseRoutes.js";
 import whatsappRoutes from "./routes/whatsappRoutes.js";
 import { WhatsAppController } from "./controllers/whatsappController.js";
+import { BookingController } from "./controllers/bookingController.js";
+import { GoogleSheetService } from "./services/googleSheetService.js";
+import { RentReminderService } from "./services/rentReminderService.js";
 
 dotenv.config();
 
@@ -153,10 +156,11 @@ app.get("/api/health", (_req: Request, res: Response) => {
 // ── Public Auth Routes (no JWT required) ────────────────────────────
 app.use("/api/auth", authRoutes);
 
-// ── Customer login endpoint (public) ────────────────────────────────
-// Keep customer login public since customers need to log in
+// ── Customer login endpoint & Bookings ──────────────────────────────
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/bookings", paymentRoutes);
+app.use("/api/payments", paymentRoutes);
+app.use("/api", paymentRoutes);
 
 // ── Protected Routes (JWT required for write operations) ────────────
 // Admin/staff routes require authentication
@@ -167,9 +171,11 @@ app.use("/api", staffRoutes);
 app.use("/api", expenseRoutes);
 app.use("/api/whatsapp", whatsappRoutes);
 
-// Fallback direct webhook endpoints for OpenWA synchronization
+// Direct Webhook Endpoints (Incoming Google Form / Apps Script / WhatsApp)
 app.post("/webhook", WhatsAppController.handleWebhook);
 app.post("/api/webhook", WhatsAppController.handleWebhook);
+app.post("/webhook/booking", BookingController.handleOnlineBookingWebhook);
+app.post("/api/webhook/booking", BookingController.handleOnlineBookingWebhook);
 
 // ── Database diagnostics health endpoint ────────────────────────────
 app.get("/api/health/db", async (_req: Request, res: Response) => {
@@ -208,4 +214,10 @@ app.get("/api/health/db", async (_req: Request, res: Response) => {
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`🛡️ Security: Helmet enabled, Rate limiting active, CORS restricted`);
+
+  // Start background auto-sync polling loop for online Google Sheet bookings
+  GoogleSheetService.startAutoSync(2);
+
+  // Initialize automated daily rent reminder cycle scheduler
+  RentReminderService.init();
 });

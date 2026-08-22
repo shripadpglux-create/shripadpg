@@ -141,6 +141,53 @@ export function CustomerPortal() {
   const [paymentFilter, setPaymentFilter] = useState<"all" | "verified" | "pending" | "rejected">("all");
   const [paymentSearch, setPaymentSearch] = useState("");
 
+  // Dynamic Dues & Outstanding Balance Calculation
+  const customerDues = useMemo(() => {
+    if (!customer) return null;
+    const monthlyRent = Number(customer.rentAmount) || 0;
+    const depositAmount = Number(customer.depositAmount) || 0;
+    const paidDeposit = Number(customer.paidDepositAmount) || 0;
+    const depositDue = Math.max(0, depositAmount - paidDeposit);
+
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+
+    const history = customer.paymentHistory || customer.payments || [];
+    const verifiedHistory = history.filter((p: any) => p.status === "verified");
+
+    const currentMonthPaid = verifiedHistory
+      .filter((p: any) => p.month === currentMonth && p.year === currentYear)
+      .reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0);
+
+    let paidRentAmount = currentMonthPaid;
+    if (paidRentAmount === 0 && (customer.paidAmount !== undefined && customer.paidAmount > 0)) {
+      paidRentAmount = Number(customer.paidAmount);
+    }
+
+    const rentDue = Math.max(0, monthlyRent - paidRentAmount);
+    const totalDue = rentDue + depositDue;
+
+    const dueDate = new Date(currentYear, currentMonth - 1, 5);
+    let daysOverdue = 0;
+    if (totalDue > 0 && now.getTime() > dueDate.getTime()) {
+      daysOverdue = Math.floor((now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+    }
+
+    return {
+      monthlyRent,
+      paidRentAmount,
+      rentDue,
+      depositAmount,
+      paidDepositAmount: paidDeposit,
+      depositDue,
+      totalDue,
+      isOverdue: daysOverdue > 0,
+      daysOverdue,
+      verifiedHistory,
+    };
+  }, [customer]);
+
   // Complaint Form & State
   const [complaintCategory, setComplaintCategory] = useState<ComplaintItem["category"]>("wifi");
   const [complaintTitle, setComplaintTitle] = useState("");
@@ -1051,22 +1098,54 @@ export function CustomerPortal() {
                   </div>
                 </div>
 
-                {/* Card 4: Payment Receipts */}
-                <div className="group rounded-[1.8rem] border border-blue-200/90 bg-gradient-to-br from-emerald-50/40 via-white to-white p-5 lg:p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10 relative overflow-hidden">
+                 {/* Card 4: Outstanding Dues & Balance */}
+                <div className={`group rounded-[1.8rem] border p-5 lg:p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl relative overflow-hidden ${
+                  (customerDues?.totalDue || 0) > 0
+                    ? "border-rose-200 bg-gradient-to-br from-rose-50/70 via-white to-white hover:shadow-rose-500/10"
+                    : "border-blue-200/90 bg-gradient-to-br from-emerald-50/40 via-white to-white hover:shadow-emerald-500/10"
+                }`}>
                   <div className="flex items-center justify-between">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#F0F4FF] text-[#00022E] border border-blue-200 shadow-2xs group-hover:scale-110 transition-transform">
-                      <CreditCard className="h-5 w-5" />
+                    <div className={`flex h-11 w-11 items-center justify-center rounded-2xl border shadow-2xs group-hover:scale-110 transition-transform ${
+                      (customerDues?.totalDue || 0) > 0
+                        ? "bg-rose-100 text-rose-700 border-rose-200"
+                        : "bg-[#F0F4FF] text-[#00022E] border-blue-200"
+                    }`}>
+                      <AlertCircle className="h-5 w-5" />
                     </div>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-[#F0F4FF]/80 px-2.5 py-1 text-[10px] font-extrabold text-[#00022E] border border-blue-200">
-                      🟢 Auto-Verified
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-extrabold border ${
+                      (customerDues?.totalDue || 0) > 0
+                        ? "bg-rose-100 text-rose-800 border-rose-200"
+                        : "bg-emerald-100 text-emerald-800 border-emerald-200"
+                    }`}>
+                      {(customerDues?.totalDue || 0) > 0 ? "⚠️ Pending Due" : "🟢 All Cleared"}
                     </span>
                   </div>
                   <div className="mt-4">
-                    <p className="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-500">Payment Receipts</p>
-                    <p className="mt-1 text-2xl lg:text-3xl font-black text-slate-900">{paymentHistoryList.length}</p>
-                    <p className="mt-1 text-xs font-bold text-[#00022E] flex items-center gap-1">
-                      Recorded Txn Receipts
+                    <p className="text-[10px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-500">Outstanding Balance</p>
+                    <p className={`mt-1 text-2xl lg:text-3xl font-black ${
+                      (customerDues?.totalDue || 0) > 0 ? "text-rose-600" : "text-emerald-700"
+                    }`}>
+                      ₹{(customerDues?.totalDue || 0).toLocaleString("en-IN")}
                     </p>
+                    <div className="mt-1 flex items-center justify-between text-xs font-bold">
+                      <span className={(customerDues?.totalDue || 0) > 0 ? "text-rose-700" : "text-emerald-700"}>
+                        {(customerDues?.totalDue || 0) > 0
+                          ? `Rent: ₹${(customerDues?.rentDue || 0).toLocaleString("en-IN")} • Dep: ₹${(customerDues?.depositDue || 0).toLocaleString("en-IN")}`
+                          : "No outstanding balance"}
+                      </span>
+                      {(customerDues?.totalDue || 0) > 0 && (
+                        <button
+                          onClick={() => {
+                            setActiveTab("payment");
+                            setPayAmount(String(customerDues?.totalDue || ""));
+                            setIsPayModalOpen(true);
+                          }}
+                          className="text-[10px] font-black text-rose-700 hover:underline cursor-pointer"
+                        >
+                          Pay →
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -1247,6 +1326,120 @@ export function CustomerPortal() {
           {/* ==================================== TAB 2: PAYMENT & HISTORY ==================================== */}
           {activeTab === "payment" && (
             <div className="space-y-6 sm:space-y-7 animate-fadeIn">
+              {/* DUES & OUTSTANDING BALANCE HIGHLIGHT CARD */}
+              <div className={`rounded-[2rem] border p-6 sm:p-7 shadow-md space-y-5 ${
+                (customerDues?.totalDue || 0) > 0
+                  ? "bg-gradient-to-r from-rose-900 via-[#0f1b3d] to-slate-900 text-white border-rose-800/60"
+                  : "bg-gradient-to-r from-[#00022E] via-slate-900 to-[#00044A] text-white border-blue-900/60"
+              }`}>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black border ${
+                      (customerDues?.totalDue || 0) > 0
+                        ? "bg-rose-500/20 text-rose-300 border-rose-500/40"
+                        : "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                    }`}>
+                      <AlertCircle className="h-3.5 w-3.5" />
+                      {(customerDues?.totalDue || 0) > 0 ? "Outstanding Dues Statement" : "Payment Status: Fully Cleared ✅"}
+                    </span>
+                    <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+                      {(customerDues?.totalDue || 0) > 0
+                        ? `₹${(customerDues?.totalDue || 0).toLocaleString("en-IN")} Remaining Due`
+                        : "All Dues Paid in Full"}
+                    </h2>
+                    <p className="text-xs text-slate-300 font-medium">
+                      {(customerDues?.totalDue || 0) > 0
+                        ? "Please clear the remaining amount to maintain uninterrupted PG services & meal access."
+                        : "Thank you for clearing your monthly PG dues on time!"}
+                    </p>
+                  </div>
+
+                  {(customerDues?.totalDue || 0) > 0 && (
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button
+                        onClick={() => {
+                          setPayAmount(String(customerDues?.totalDue || ""));
+                          setIsPayModalOpen(true);
+                        }}
+                        className="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20 transition hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-2"
+                      >
+                        <CreditCard className="h-4 w-4" />
+                        <span>Pay Remaining ₹{(customerDues?.totalDue || 0).toLocaleString("en-IN")}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Itemized Dues Table Breakdown */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
+                  {/* Rent Due Box */}
+                  <div className="rounded-2xl bg-white/10 backdrop-blur-md p-4 border border-white/10 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold text-slate-300 uppercase flex items-center gap-1.5">
+                        🏠 Monthly Rent
+                      </span>
+                      <span className={`text-xs font-black px-2 py-0.5 rounded-full ${
+                        (customerDues?.rentDue || 0) > 0
+                          ? "bg-rose-500/30 text-rose-200"
+                          : "bg-emerald-500/30 text-emerald-200"
+                      }`}>
+                        {(customerDues?.rentDue || 0) > 0 ? `₹${(customerDues?.rentDue || 0).toLocaleString("en-IN")} Due` : "Paid ✅"}
+                      </span>
+                    </div>
+                    <div className="flex items-baseline justify-between text-sm">
+                      <span className="text-slate-400 text-xs">Total: ₹{(customerDues?.monthlyRent || 0).toLocaleString("en-IN")}</span>
+                      <span className="text-emerald-400 font-bold text-xs">Paid: ₹{(customerDues?.paidRentAmount || 0).toLocaleString("en-IN")}</span>
+                    </div>
+                    {/* Progress */}
+                    <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${
+                          (customerDues?.rentDue || 0) === 0 ? "bg-emerald-400" : "bg-amber-400"
+                        }`}
+                        style={{
+                          width: `${(customerDues?.monthlyRent || 0) > 0
+                            ? Math.min(100, Math.round(((customerDues?.paidRentAmount || 0) / (customerDues?.monthlyRent || 1)) * 100))
+                            : 100}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Security Deposit Box */}
+                  <div className="rounded-2xl bg-white/10 backdrop-blur-md p-4 border border-white/10 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold text-slate-300 uppercase flex items-center gap-1.5">
+                        🛡️ Security Deposit
+                      </span>
+                      <span className={`text-xs font-black px-2 py-0.5 rounded-full ${
+                        (customerDues?.depositDue || 0) > 0
+                          ? "bg-indigo-500/30 text-indigo-200"
+                          : "bg-emerald-500/30 text-emerald-200"
+                      }`}>
+                        {(customerDues?.depositDue || 0) > 0 ? `₹${(customerDues?.depositDue || 0).toLocaleString("en-IN")} Due` : "Paid ✅"}
+                      </span>
+                    </div>
+                    <div className="flex items-baseline justify-between text-sm">
+                      <span className="text-slate-400 text-xs">Total: ₹{(customerDues?.depositAmount || 0).toLocaleString("en-IN")}</span>
+                      <span className="text-emerald-400 font-bold text-xs">Paid: ₹{(customerDues?.paidDepositAmount || 0).toLocaleString("en-IN")}</span>
+                    </div>
+                    {/* Progress */}
+                    <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${
+                          (customerDues?.depositDue || 0) === 0 ? "bg-emerald-400" : "bg-indigo-400"
+                        }`}
+                        style={{
+                          width: `${(customerDues?.depositAmount || 0) > 0
+                            ? Math.min(100, Math.round(((customerDues?.paidDepositAmount || 0) / (customerDues?.depositAmount || 1)) * 100))
+                            : 100}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="rounded-[2rem] border border-slate-200/90 bg-white p-6 sm:p-7 shadow-md space-y-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200">
                   <div>
@@ -2132,7 +2325,7 @@ export function CustomerPortal() {
 
                   <a
                     href={`https://wa.me/${(effectivePaymentSettings.wardenPhone || effectivePaymentSettings.adminPhone || "919876543210").replace(/\D/g, "")}?text=${encodeURIComponent(
-                      `Hello Warden, I am ${customer.name} (Resident ID: ${customer.customerId || "Allocated Resident"}), staying at ${customer.allocatedBuilding || "PG A"} Room ${customer.allocatedRoom || "-"}. I need assistance.`
+                      `Hello Warden, I am ${customer.name} (Resident ID: ${customer.customerId || "Allocated Resident"}), staying at ${customer.allocatedBuilding || "PG ShripadLux-A wing"} Room ${customer.allocatedRoom || "-"}. I need assistance.`
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -2430,7 +2623,7 @@ export function CustomerPortal() {
                         tenantName: viewingInvoiceData.tenantName || customer?.name || "Resident",
                         contact: viewingInvoiceData.contact || customer?.phone || "",
                         email: viewingInvoiceData.email || customer?.email || "",
-                        building: viewingInvoiceData.building || customer?.allocatedBuilding || customer?.building || "PG A",
+                        building: viewingInvoiceData.building || customer?.allocatedBuilding || customer?.building || "PG ShripadLux-A wing",
                         floor: viewingInvoiceData.floor || (customer?.allocatedFloor ? `Floor ${customer.allocatedFloor}` : "Floor 1"),
                         room: viewingInvoiceData.room || (customer?.allocatedRoom ? `Room ${customer.allocatedRoom}` : "Room 101"),
                         bed: viewingInvoiceData.bed || customer?.allocatedBed || "Bed A",
@@ -2448,7 +2641,7 @@ export function CustomerPortal() {
                         tenantName: customer?.name || "Resident",
                         contact: customer?.phone || "",
                         email: customer?.email || "",
-                        building: customer?.allocatedBuilding || customer?.building || "PG A",
+                        building: customer?.allocatedBuilding || customer?.building || "PG ShripadLux-A wing",
                         floor: customer?.allocatedFloor ? `Floor ${customer.allocatedFloor}` : "Floor 1",
                         room: customer?.allocatedRoom ? `Room ${customer.allocatedRoom}` : "Room 101",
                         bed: customer?.allocatedBed || "Bed A",

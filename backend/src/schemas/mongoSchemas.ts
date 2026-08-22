@@ -124,6 +124,7 @@ const invoiceSchema = new Schema(
     paidAmount: { type: Number, default: 0 },
     balanceDue: { type: Number, default: 0 },
     paymentModes: { type: Array, default: ["UPI"] },
+    splitAmounts: { type: Object, default: undefined },
     notes: { type: String },
     status: { type: String, default: "PAID" },
   },

@@ -1,6 +1,6 @@
 {
-  "manualBookingSheetUrl": "https://docs.google.com/spreadsheets/d/1K_MxMvUrikub0ecCSxYs-0nm7n6yi_tzDjSb2Tg_u-s/edit?usp=sharing",
+  "manualBookingSheetUrl": "https://docs.google.com/spreadsheets/d/1K_MxMvUrikub0ecCSxYs-0nm7n6yi_tzDjSb2Tg_u-s/export?format=csv",
   "onlineBookingSheetUrl": "https://docs.google.com/spreadsheets/d/1CkVNLNy0XUh0hzWLb6-k0f6PtpY1SEQjcK9uD--AtAs/export?format=csv",
   "autoSyncIntervalMinutes": 5,
-  "lastSyncedAt": "2026-08-15T10:40:13.790Z"
+  "lastSyncedAt": "2026-08-22T06:45:29.842Z"
 }
