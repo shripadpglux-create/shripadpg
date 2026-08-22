@@ -4368,7 +4368,7 @@ export function AdminDashboard({ tab = "Dashboard", isStaffMode = false }: { tab
                                   onClick={() => {
                                     const targetBooking = bookings.find((b) => b.id === due.bookingId);
                                     if (targetBooking) {
-                                      setSelectedResident(targetBooking);
+                                      setSelectedHistoryResident(targetBooking);
                                       setNewPaymentAmount(due.totalDue || due.rentDue || 0);
                                       setNewPaymentPayerName(due.name);
                                       setIsRecordPaymentOpen(true);
